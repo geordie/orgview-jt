@@ -2,37 +2,37 @@
 
 <h1>Employees</h1>
 
-<table>
-	<thead>
-		<tr>
-			<th>Name</th>
-			<th>Title</th>
-			<th>Job Function</th>
-			<th>Seniority</th>
-			<th>Start Date</th>
-			<th>Manager</th>
-			<th>Direct Reports</th>
-      <th>Show Details</th>
-		</tr>
-	</thead>
-	<tbody>
-		<% @employees.each do |employee| %>
-			<tr>
-				<td><%= employee.name %></td>
-				<td><%= employee.title %></td>
-				<td><%= employee.job_function %></td>
-				<td><%= employee.seniority %></td>
-				<td><%= employee.start_date %></td>
-				<td><%= employee.manager.try(:name) %></td>
-				<td>
-					<% employee.subordinates.each do |subordinate| %>
-						<%= subordinate.name %><br>
-					<% end %>
-				</td>
-        <td><%= link_to "Show this employee", employee %></td>
-			</tr>
-		<% end %>
-	</tbody>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Title</th>
+      <th>Job Function</th>
+      <th>Seniority</th>
+      <th>Start Date</th>
+      <th>Manager</th>
+      <th>Direct Reports</th>
+    <th>Show Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @employees.each do |employee| %>
+      <tr>
+        <td><%= employee.name %></td>
+        <td><%= employee.title %></td>
+        <td><%= employee.job_function %></td>
+        <td><%= employee.seniority %></td>
+        <td><%= employee.start_date %></td>
+        <td><%= employee.manager.try(:name) %></td>
+        <td>
+          <% employee.subordinates.each do |subordinate| %>
+            <%= subordinate.name %><br>
+          <% end %>
+        </td>
+    <td><%= link_to "Show this employee", employee %></td>
+      </tr>
+    <% end %>
+  </tbody>
 </table>
 
 <%= link_to "New employee", new_employee_path %>
