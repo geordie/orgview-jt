@@ -1,0 +1,42 @@
+<div id="<%= dom_id employee %>" class="container">
+	<h1>Employee Details</h1>
+
+	<div class="row">
+		<div class="col-md-6">
+			<h3>Name:</h3>
+			<p><%= @employee.name %></p>
+
+			<h3>Title:</h3>
+			<p><%= @employee.title %></p>
+
+			<h3>Job Function:</h3>
+			<p><%= @employee.job_function %></p>
+
+			<h3>Seniority:</h3>
+			<p><%= @employee.seniority %></p>
+
+			<h3>Start Date:</h3>
+			<p><%= @employee.start_date %></p>
+		</div>
+
+		<div class="col-md-6">
+			<h3>Manager:</h3>
+			<% if @employee.manager %>
+				<p><%= @employee.manager.name %></p>
+			<% else %>
+				<p>No manager assigned</p>
+			<% end %>
+
+			<h3>Direct Reports:</h3>
+			<% if @employee.subordinates.any? %>
+				<ul>
+					<% @employee.subordinates.each do |subordinate| %>
+						<li><%= subordinate.name %></li>
+					<% end %>
+				</ul>
+			<% else %>
+				<p>No direct reports</p>
+			<% end %>
+		</div>
+	</div>
+</div>
