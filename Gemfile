@@ -30,6 +30,9 @@ gem "jbuilder"
 gem 'jquery-rails', '~> 4.4.0'
 gem 'bootstrap-sass', '~> 3.4.1'
 
+# Faker to generate data
+gem 'faker', '~> 3.3.1'
+
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 

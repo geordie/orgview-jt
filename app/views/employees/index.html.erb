@@ -35,4 +35,14 @@
   </tbody>
 </table>
 
-<%= link_to "New employee", new_employee_path %>
+<%= form_with url: new_employee_path, method: :get do %>
+  <%= submit_tag 'New employee' %>
+<% end %>
+
+<%= form_with url: employees_create_samples_path, method: :post do %>
+  <%= submit_tag 'Generate Employees' %>
+<% end %>
+
+<%= form_with url: employees_destroy_all_path, method: :delete do %>
+  <%= submit_tag 'Delete All Employees' %>
+<% end %>

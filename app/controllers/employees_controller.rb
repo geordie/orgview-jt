@@ -1,5 +1,6 @@
 class EmployeesController < ApplicationController
-  before_action :set_employee, only: %i[ show edit update destroy ]
+  include EmployeeGenerator
+  before_action :set_employee, only: [ :show, :edit, :update, :destroy ]
 
   # GET /employees or /employees.json
   def index
@@ -55,6 +56,11 @@ class EmployeesController < ApplicationController
       format.html { redirect_to employees_url, notice: "Employee was successfully destroyed." }
       format.json { head :no_content }
     end
+  end
+
+  def destroy_all
+    Employee.delete_all
+    redirect_to employees_path, notice: 'All employees have been deleted.'
   end
 
   private
