@@ -28,9 +28,9 @@
 			<% end %>
 
 			<h3>Direct Reports:</h3>
-			<% if @employee.subordinates.any? %>
+			<% if @employee.direct_reports.any? %>
 				<ul>
-					<% @employee.subordinates.each do |subordinate| %>
+					<% @employee.direct_reports.each do |subordinate| %>
 						<li><%= subordinate.name %></li>
 					<% end %>
 				</ul>
