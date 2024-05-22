@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_16_181306) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_22_094706) do
   create_table "employees", charset: "utf8mb3", force: :cascade do |t|
     t.string "name", null: false
     t.string "title"
@@ -18,6 +18,15 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_16_181306) do
     t.integer "seniority"
     t.integer "manager_id"
     t.date "start_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "roles", charset: "utf8mb3", force: :cascade do |t|
+    t.string "job_function", null: false
+    t.string "role", null: false
+    t.integer "seniority", null: false
+    t.boolean "is_manager", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
