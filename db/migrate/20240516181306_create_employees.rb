@@ -6,6 +6,7 @@ class CreateEmployees < ActiveRecord::Migration[7.1]
       t.string :job_function
       t.integer :seniority
       t.integer :manager_id
+      t.boolean :is_manager
       t.date :start_date
       t.timestamps
     end

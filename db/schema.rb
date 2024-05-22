@@ -17,6 +17,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_22_094706) do
     t.string "job_function"
     t.integer "seniority"
     t.integer "manager_id"
+    t.boolean "is_manager"
     t.date "start_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
