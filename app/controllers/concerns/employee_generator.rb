@@ -5,9 +5,9 @@ module EmployeeGenerator
     ActiveRecord::Base.transaction do
       ceo = create_sr_leader(nil,"CEO")
       cto = create_sr_leader(ceo, "CTO")
-      cpo = create_sr_leader(ceo, "CPO")
+      cpo = create_sr_leader(ceo, "VP, Product Management")
 
-      create_direct_reports(cto, ["Software Development Management", "Software Development"],2)
+      create_direct_reports(cto, ["Software Development Management", "Software Development"],3)
       create_direct_reports(cpo, ["Product Management"],1)
 
     end
@@ -35,12 +35,12 @@ module EmployeeGenerator
     return sr_leader
   end
 
-  def create_direct_reports(manager, arr_job_functions, depth)
+  def create_direct_reports(manager, arr_job_functions, depth, min = 2, max = 12)
     if depth == 0
       return
     end
 
-    rand(2..12).times do |j|
+    rand(min..max).times do |j|
       direct_report = nil
       if depth == 1
         direct_report = create_direct_report_ic(manager, arr_job_functions)
