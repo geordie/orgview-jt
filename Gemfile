@@ -27,8 +27,8 @@ gem "stimulus-rails"
 gem "jbuilder"
 
 # Bootstrap for cleaner presentation
-gem 'jquery-rails', '~> 4.4.0'
-gem 'bootstrap-sass', '~> 3.4.1'
+gem "bootstrap"
+gem "sassc-rails"
 
 # Faker to generate data
 gem 'faker', '~> 3.3.1'
