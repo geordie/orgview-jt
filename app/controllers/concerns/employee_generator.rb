@@ -1,15 +1,14 @@
 module EmployeeGenerator
   extend ActiveSupport::Concern
 
-  max_depth = 4
-
   def create_samples
     ActiveRecord::Base.transaction do
       ceo = create_sr_leader(nil,"CEO")
       cto = create_sr_leader(ceo, "CTO")
       cpo = create_sr_leader(ceo, "CPO")
 
-      create_direct_reports(cto, ["Software Development Management", "Software Development", "Senior Leadership"],2)
+      create_direct_reports(cto, ["Software Development Management", "Software Development"],2)
+      create_direct_reports(cpo, ["Product Management"],1)
 
     end
 
@@ -84,10 +83,13 @@ module EmployeeGenerator
 
   def create_direct_report_ic(manager, arr_job_functions)
     role = Role.where( ['job_function IN (?) ' +
-        'AND ((seniority <= ? AND seniority >=? AND is_manager = 0)) ',
+        'AND ((seniority <= ? AND is_manager = 0)) ',
       arr_job_functions,
-      manager.seniority,
-      manager.seniority - 2]).order("RAND()").first
+      manager.seniority]).order("RAND()").first
+
+    if role.nil?
+      return nil
+    end
 
     direct_report = Employee.create!(
       name: Faker::Name.name,
