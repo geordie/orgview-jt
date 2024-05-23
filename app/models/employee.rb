@@ -10,4 +10,7 @@ class Employee < ApplicationRecord
   has_many :direct_reports, class_name: 'Employee', foreign_key: 'manager_id'
 
   # Other model logic and methods can be added here
+  def get_direct_reports
+    self.direct_reports
+  end
 end

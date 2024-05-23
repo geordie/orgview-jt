@@ -63,7 +63,19 @@ class EmployeesController < ApplicationController
     redirect_to employees_path, notice: 'All employees have been deleted.'
   end
 
+  def structure
+    @managers = Employee.where(manager: nil)
+    @hierarchies = @managers.map { |manager| build_hierarchy(manager) }
+  end
+
   private
+    def build_hierarchy(employee)
+      {
+        employee: employee,
+        direct_reports: employee.get_direct_reports.map { |e| build_hierarchy(e) }
+      }
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_employee
       @employee = Employee.find(params[:id])

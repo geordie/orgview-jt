@@ -8,8 +8,8 @@ Rails.application.routes.draw do
 
   resources :employees, constraints: { id: /\d+/ }
 
+  get 'employees/structure', to: 'employees#structure'
   post 'employees/create_samples', to: 'employees#create_samples'
-
   delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
 
   resources :roles, constraints: { id: /\d+/ }

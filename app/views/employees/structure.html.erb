@@ -1,0 +1,5 @@
+<% @hierarchies.each do |hierarchy| %>
+  <ul>
+    <%= render partial: 'structure', locals: { employee: hierarchy } %>
+  </ul>
+<% end %>

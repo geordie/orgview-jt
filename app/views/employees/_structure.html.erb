@@ -1,0 +1,8 @@
+<li>
+  <%= employee[:employee].name %> ( <%= employee[:employee].title %> )
+  <% unless employee[:direct_reports].empty? %>
+    <ul>
+      <%= render partial: 'structure', collection: employee[:direct_reports], as: :employee %>
+    </ul>
+  <% end %>
+</li>
