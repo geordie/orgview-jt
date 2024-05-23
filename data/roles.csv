@@ -5,12 +5,12 @@ Software Development,Senior Software Developer,6,0
 Software Development,Staff Software Developer,7,0
 Software Development,Principal Software Developer,8,0
 Software Development,Sr Principal Software Developer,9,0
-Senior Leadership,Distinguished Software Developer,10,0
+Software Development,Distinguished Software Developer,10,0
 Software Development Management,Software Development Manager,6,1
 Software Development Management,Senior Software Development Manager,7,1
 Software Development Management,"Director, Software Development",8,1
 Software Development Management,"Senior Director, Software Development",9,1
-Senior Leadership,"VP, Software Development",10,1
+Software Development Management,"VP, Software Development",10,1
 Product Management,Associate Product Manager,4,0
 Product Management,Product Manager,5,0
 Product Management,Senior Product Manager,6,0
@@ -18,7 +18,7 @@ Product Management,Principal Product Manager,7,0
 Product Management,Senior Principal Product Manager,8,1
 Product Management,Director of Product Management,8,1
 Product Management,Senior Director of Product Management,9,1
-Senior Leadership,"VP, Product Management",10,1
-Senior Leadership,CTO,11,1
-Senior Leadership,CPO,11,1
+Product Management,"VP, Product Management",10,1
+Software Development Management,CTO,11,1
+Product Management,CPO,11,1
 Senior Leadership,CEO,12,1
