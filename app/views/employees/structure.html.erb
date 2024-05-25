@@ -1,5 +1,30 @@
-<% @hierarchies.each do |hierarchy| %>
-  <ul>
-    <%= render partial: 'structure', locals: { employee: hierarchy } %>
-  </ul>
+<% content_for :head do %>
+  <%= javascript_import_module_tag "bootstrap" %>
 <% end %>
+
+<script>
+document.querySelectorAll('.accordion-button').forEach(button => {
+  button.addEventListener('click', () => {
+    let icon = button.querySelector('.bi-chevron-down') || button.querySelector('.bi-chevron-right');
+    if (icon) {
+      if (icon.classList.contains('bi-chevron-down')) {
+        icon.classList.remove('bi-chevron-down');
+        icon.classList.add('bi-chevron-right');
+      } else {
+        console.log("Haves ICON", icon.classList);
+        icon.classList.remove('bi-chevron-right');
+        icon.classList.add('bi-chevron-down');
+      }
+    }
+  });
+});
+</script>
+
+
+<div id="org-structure">
+	<% @hierarchies.each do |hierarchy| %>
+	<ul>
+		<%= render partial: 'structure', locals: { employee: hierarchy } %>
+	</ul>
+	<% end %>
+</div>
