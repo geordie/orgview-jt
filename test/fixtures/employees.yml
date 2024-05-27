@@ -1,0 +1,152 @@
+
+employee_2181:
+  id: 2181
+  name: Petra Crist
+  title: CEO
+  job_function: Senior Leadership
+  seniority: 12
+  manager_id:
+  is_manager: true
+  start_date: 2014-06-27
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.944841000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:21.944841000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.944841000 Z
+    zone: *1
+    time: 2024-05-23 05:20:21.944841000 Z
+
+employee_2182:
+  id: 2182
+  name: Amb. Tommie Robel
+  title: CTO
+  job_function: Software Development Management
+  seniority: 11
+  manager_id: 2181
+  is_manager: true
+  start_date: 2012-12-26
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.966888000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:21.966888000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.966888000 Z
+    zone: *1
+    time: 2024-05-23 05:20:21.966888000 Z
+
+employee_2183:
+  id: 2183
+  name: Malinda Kunde
+  title: VP, Product Management
+  job_function: Product Management
+  seniority: 10
+  manager_id: 2181
+  is_manager: true
+  start_date: 2009-09-26
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.985802000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:21.985802000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.985802000 Z
+    zone: *1
+    time: 2024-05-23 05:20:21.985802000 Z
+
+employee_2184:
+  id: 2184
+  name: Winford Olson
+  title: VP, Software Development
+  job_function: Software Development Management
+  seniority: 10
+  manager_id: 2182
+  is_manager: true
+  start_date: 2022-09-14
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.998261000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:21.998261000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:21.998261000 Z
+    zone: *1
+    time: 2024-05-23 05:20:21.998261000 Z
+
+employee_2185:
+  id: 2185
+  name: Hans Smith
+  title: Director, Software Development
+  job_function: Software Development Management
+  seniority: 8
+  manager_id: 2184
+  is_manager: true
+  start_date: 2022-09-20
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.008041000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:22.008041000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.008041000 Z
+    zone: *1
+    time: 2024-05-23 05:20:22.008041000 Z
+
+employee_2186:
+  id: 2186
+  name: Bryan Macejkovic
+  title: Staff Software Developer
+  job_function: Software Development
+  seniority: 7
+  manager_id: 2185
+  is_manager: false
+  start_date: 2022-06-29
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.019112000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:22.019112000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.019112000 Z
+    zone: *1
+    time: 2024-05-23 05:20:22.019112000 Z
+
+employee_2187:
+  id: 2187
+  name: Seymour Dietrich V
+  title: Software Developer
+  job_function: Software Development
+  seniority: 5
+  manager_id: 2185
+  is_manager: false
+  start_date: 2023-04-16
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.032114000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:22.032114000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.032114000 Z
+    zone: *1
+    time: 2024-05-23 05:20:22.032114000 Z
+
+employee_2188:
+  id: 2188
+  name: Benedict Hartmann
+  title: Principal Software Developer
+  job_function: Software Development
+  seniority: 8
+  manager_id: 2185
+  is_manager: false
+  start_date: 2023-08-30
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.043759000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 05:20:22.043759000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 05:20:22.043759000 Z
+    zone: *1
+    time: 2024-05-23 05:20:22.043759000 Z
