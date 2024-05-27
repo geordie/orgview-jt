@@ -3,23 +3,6 @@
 <% end %>
 
 <script>
-
-function expand(element) {
-	var url = this.dataset.url;
-	var target = document.querySelector(this.dataset.bsTarget);
-	if (target.innerHTML.trim() === '' || !target.firstChild.innerHTML) {
-		fetch(url)
-			.then(response => response.text())
-			.then(html => {
-				target.innerHTML = html;
-				target.querySelectorAll('.accordion-button').forEach(button => {
-					button.addEventListener('click', expand)
-				});
-			})
-	}
-}
-
-
 document.addEventListener('DOMContentLoaded', function() {
 	document.querySelectorAll('.accordion-button').forEach(button => {
 		button.addEventListener('click', function () {
@@ -35,10 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
 						});
 					})
 			}
+
+			updateIcon(button);
 		});
 	});
 });
-
 
 document.querySelectorAll('.accordion-button').forEach(button => {
   button.addEventListener('click', () => {
@@ -55,6 +39,39 @@ document.querySelectorAll('.accordion-button').forEach(button => {
     }
   });
 });
+
+function expand(element) {
+	var url = this.dataset.url;
+	var target = document.querySelector(this.dataset.bsTarget);
+	if (target.innerHTML.trim() === '' || !target.firstChild.innerHTML) {
+		fetch(url)
+			.then(response => response.text())
+			.then(html => {
+				target.innerHTML = html;
+				target.querySelectorAll('.accordion-button').forEach(button => {
+					if( button.dataset.directsCount && button.dataset.directsCount > 0){
+						button.addEventListener('click', expand)
+					}
+				});
+			})
+	}
+
+	updateIcon(this);
+}
+
+function updateIcon(element){
+	let icon = element.querySelector('.bi-chevron-down') || element.querySelector('.bi-chevron-right');
+	if (icon) {
+		if (icon.classList.contains('bi-chevron-down')) {
+			icon.classList.remove('bi-chevron-down');
+			icon.classList.add('bi-chevron-right');
+		}
+		else {
+			icon.classList.remove('bi-chevron-right');
+			icon.classList.add('bi-chevron-down');
+		}
+	}
+}
 </script>
 
 
