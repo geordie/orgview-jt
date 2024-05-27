@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'reports/roles'
+  get 'reports/seniority'
   resources :roles
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -14,6 +16,9 @@ Rails.application.routes.draw do
   get 'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
 
   resources :roles, constraints: { id: /\d+/ }
+
+  get 'reports/roles', to: 'reports#roles'
+  get 'reports/seniority', to: 'reports#seniority'
 
   # Defines the root path route ("/")
   root "employees#index"
