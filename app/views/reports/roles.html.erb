@@ -1,3 +1,5 @@
+<%= include_gon %>
+
 <h1>Roles Report</h1>
 <div class="container-md">
 	<div class="row justify-content-center">
@@ -15,10 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
   new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: ['Role 1', 'Role 2', 'Role 3', 'Role 4', 'Role 5'],
+        labels: gon.labels,
         datasets: [{
             label: '# of Employees',
-            data: [12, 19, 3, 5, 2],
+            data: gon.data,
             backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
                 'rgba(54, 162, 235, 0.2)',
@@ -46,6 +48,11 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             y: {
                 type: 'category',
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
             }
         }
     }
