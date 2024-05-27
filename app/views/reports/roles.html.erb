@@ -1,2 +1,54 @@
-<h1>Reports#roles</h1>
-<p>Find me in app/views/reports/roles.html.erb</p>
+<h1>Roles Report</h1>
+<div class="container-md">
+	<div class="row justify-content-center">
+		<canvas id="rolesChart"></canvas>
+	</div>
+</div>
+
+<script type="module">
+import { Chart, LinearScale, CategoryScale, BarController, BarElement, Title, Tooltip, Legend } from "chart.js";
+
+Chart.register(LinearScale, CategoryScale, BarController, BarElement, Title, Tooltip, Legend);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const ctx = document.getElementById('rolesChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Role 1', 'Role 2', 'Role 3', 'Role 4', 'Role 5'],
+        datasets: [{
+            label: '# of Employees',
+            data: [12, 19, 3, 5, 2],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)'
+            ],
+            borderWidth: 1
+        }],
+        indexAxis: 'y',
+    },
+    options: {
+		indexAxis: 'y',
+        scales: {
+            x: {
+                type: 'linear',
+                beginAtZero: true
+            },
+            y: {
+                type: 'category',
+            }
+        }
+    }
+  });
+});
+</script>
