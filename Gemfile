@@ -30,6 +30,9 @@ gem "jbuilder"
 gem "bootstrap"
 gem "sassc-rails"
 
+# gon to pass data from controller to javascript
+gem "gon", '~> 6.4'
+
 # Faker to generate data
 gem 'faker', '~> 3.3.1'
 
