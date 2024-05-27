@@ -83,6 +83,7 @@ class EmployeesController < ApplicationController
       end
       {
         employee: employee,
+        directs_count: employee.direct_reports.count,
         direct_reports: directs
       }
     end
