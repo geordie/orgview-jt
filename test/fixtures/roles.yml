@@ -1,0 +1,160 @@
+
+one:
+  id: 24
+  job_function: Software Development
+  role: Associate Software Developer
+  seniority: 4
+  is_manager: false
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.378393000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.378393000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.378393000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.378393000 Z
+
+two:
+  id: 25
+  job_function: Software Development
+  role: Software Developer
+  seniority: 5
+  is_manager: false
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.392811000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.392811000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.392811000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.392811000 Z
+
+role_26:
+  id: 26
+  job_function: Software Development
+  role: Senior Software Developer
+  seniority: 6
+  is_manager: false
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.412889000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.412889000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.412889000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.412889000 Z
+
+role_27:
+  id: 27
+  job_function: Software Development
+  role: Staff Software Developer
+  seniority: 7
+  is_manager: false
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.441295000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.441295000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.441295000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.441295000 Z
+
+role_28:
+  id: 28
+  job_function: Software Development
+  role: Principal Software Developer
+  seniority: 8
+  is_manager: false
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.457449000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.457449000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.457449000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.457449000 Z
+
+role_29:
+  id: 29
+  job_function: Software Development
+  role: Sr Principal Software Developer
+  seniority: 9
+  is_manager: false
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.482423000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.482423000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.482423000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.482423000 Z
+
+role_30:
+  id: 30
+  job_function: Software Development
+  role: Distinguished Software Developer
+  seniority: 10
+  is_manager: false
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.505598000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.505598000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.505598000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.505598000 Z
+
+role_31:
+  id: 31
+  job_function: Software Development Management
+  role: Software Development Manager
+  seniority: 6
+  is_manager: true
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.535094000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.535094000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.535094000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.535094000 Z
+
+role_32:
+  id: 32
+  job_function: Software Development Management
+  role: Senior Software Development Manager
+  seniority: 7
+  is_manager: true
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.567665000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.567665000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.567665000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.567665000 Z
+
+role_33:
+  id: 33
+  job_function: Software Development Management
+  role: Director, Software Development
+  seniority: 8
+  is_manager: true
+  created_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.716237000 Z
+    zone: &1 !ruby/object:ActiveSupport::TimeZone
+      name: Etc/UTC
+    time: 2024-05-23 04:23:00.716237000 Z
+  updated_at: !ruby/object:ActiveSupport::TimeWithZone
+    utc: 2024-05-23 04:23:00.716237000 Z
+    zone: *1
+    time: 2024-05-23 04:23:00.716237000 Z
