@@ -27,11 +27,8 @@ gem "stimulus-rails"
 gem "jbuilder"
 
 # Bootstrap for cleaner presentation
-gem "bootstrap"
+gem "bootstrap", "~> 5.3.3"
 gem "sassc-rails"
-
-# gon to pass data from controller to javascript
-gem "gon", '~> 6.4'
 
 # Faker to generate data
 gem 'faker', '~> 3.3.1'
