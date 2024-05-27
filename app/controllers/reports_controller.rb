@@ -19,5 +19,40 @@ class ReportsController < ApplicationController
   end
 
   def seniority
+
+    employee_seniority = Employee.all.group(:seniority).count.sort_by { |k, v| k }.reverse.to_h
+    @seniorities = employee_seniority.keys
+    @counts = employee_seniority.values
+
+    # sum the counts
+    sum = 0
+    employee_seniority.each do |seniority, count|
+      sum += count
+    end
+
+    # build an array of percentages
+    @percentages = []
+    employee_seniority.each do |seniority, count|
+      @percentages << (count.to_f / sum * 100).round(2)
+    end
+  end
+
+  def job_function
+
+    employee_job_functions = Employee.all.group(:job_function).count.sort_by { |k, v| v }.reverse.to_h
+    @job_functions = employee_job_functions.keys
+    @counts = employee_job_functions.values
+
+    # sum the counts
+    sum = 0
+    employee_job_functions.each do |job_function, count|
+      sum += count
+    end
+
+    # build an array of percentages
+    @percentages = []
+    employee_job_functions.each do |job_function, count|
+      @percentages << (count.to_f / sum * 100).round(2)
+    end
   end
 end
