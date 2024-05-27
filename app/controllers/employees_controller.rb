@@ -64,15 +64,26 @@ class EmployeesController < ApplicationController
   end
 
   def structure
-    @managers = Employee.where(manager: nil)
-    @hierarchies = @managers.map { |manager| build_hierarchy(manager) }
+    employee = Employee.where(manager: nil)
+    @employees = employee.map { |manager| build_hierarchy(manager, false) }
+  end
+
+  def direct_reports
+    manager = Employee.find(params[:id])
+    direct_reports = Employee.where(manager_id: manager.id)
+    @employees = direct_reports.map { |employee| build_hierarchy(employee, false) }
+    render partial: 'structure', locals: { employees: @employees }
   end
 
   private
-    def build_hierarchy(employee)
+    def build_hierarchy(employee, recursive = true)
+      directs = []
+      if recursive
+        directs = employee.direct_reports.map { |direct| build_hierarchy(direct, false) }
+      end
       {
         employee: employee,
-        direct_reports: employee.get_direct_reports.map { |e| build_hierarchy(e) }
+        direct_reports: directs
       }
     end
 

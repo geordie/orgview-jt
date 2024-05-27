@@ -1,22 +1,23 @@
-<div class="container-md accordion">
-  <div class="accordion-item">
-    <h2 class="accordion-header" id="heading<%= employee[:employee].id %>">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= employee[:employee].id %>" aria-expanded="false" aria-controls="collapse<%= employee[:employee].id %>" >
-        <% unless employee[:direct_reports].empty? %>
-          <i class="bi bi-chevron-right me-2" id="icon<%= employee[:employee].id %>"></i>
-        <% end %>
-        <%= employee[:employee].name %> ( <%= employee[:employee].title %> )
-      </button>
-    </h2>
-    <% unless employee[:direct_reports].empty? %>
+
+<% employees.each do |employee| %>
+  <ul>
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading<%= employee[:employee].id %>">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= employee[:employee].id %>" aria-expanded="false" aria-controls="collapse<%= employee[:employee].id %>" data-url="<%= direct_reports_path(employee[:employee].id) %>">
+          <% unless employee[:direct_reports].empty? %>
+            <i class="bi bi-chevron-right me-2" id="icon<%= employee[:employee].id %>"></i>
+          <% end %>
+          <%= employee[:employee].name %> ( <%= employee[:employee].title %> )
+        </button>
+      </h2>
+
       <div id="collapse<%= employee[:employee].id %>" class="accordion-collapse collapse" aria-labelledby="heading<%= employee[:employee].id %>">
         <div class="accordion-body">
-          <ul>
-            <%= render partial: 'structure', collection: employee[:direct_reports], as: :employee %>
-          </ul>
+          <% unless employee[:direct_reports].empty? %>
+            <%= render partial: 'structure', locals: { employees: employee[:direct_reports] } %>
+          <% end %>
         </div>
       </div>
-    <% end %>
-    <span class="badge bg-primary position-absolute top-0 start-90 translate-middle badge rounded-pill">10</span>
-  </div>
-</div>
+    </div>
+  </ul>
+<% end %>

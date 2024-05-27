@@ -3,6 +3,43 @@
 <% end %>
 
 <script>
+
+function expand(element) {
+	var url = this.dataset.url;
+	var target = document.querySelector(this.dataset.bsTarget);
+	if (target.innerHTML.trim() === '' || !target.firstChild.innerHTML) {
+		fetch(url)
+			.then(response => response.text())
+			.then(html => {
+				target.innerHTML = html;
+				target.querySelectorAll('.accordion-button').forEach(button => {
+					button.addEventListener('click', expand)
+				});
+			})
+	}
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+	document.querySelectorAll('.accordion-button').forEach(button => {
+		button.addEventListener('click', function () {
+			var url = this.dataset.url;
+			var target = document.querySelector(this.dataset.bsTarget);
+			if (target.innerHTML.trim() === '' || !target.firstChild.innerHTML) {
+				fetch(url)
+					.then(response => response.text())
+					.then(html => {
+						target.innerHTML = html;
+						target.querySelectorAll('.accordion-button').forEach(button => {
+							button.addEventListener('click', expand)
+						});
+					})
+			}
+		});
+	});
+});
+
+
 document.querySelectorAll('.accordion-button').forEach(button => {
   button.addEventListener('click', () => {
     let icon = button.querySelector('.bi-chevron-down') || button.querySelector('.bi-chevron-right');
@@ -22,9 +59,7 @@ document.querySelectorAll('.accordion-button').forEach(button => {
 
 
 <div id="org-structure">
-	<% @hierarchies.each do |hierarchy| %>
-	<ul>
-		<%= render partial: 'structure', locals: { employee: hierarchy } %>
-	</ul>
-	<% end %>
+	<div class="container-md accordion">
+		<%= render partial: 'structure', locals: { employees: @employees } %>
+	</div>
 </div>
