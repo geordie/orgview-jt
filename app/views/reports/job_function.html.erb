@@ -1,0 +1,6 @@
+<h1>Seniority Report</h1>
+
+<%= render partial: 'countTable', locals: { labelheader: 'Seniority', labels: @job_functions, counts: @counts, percentages: @percentages } %>
+
+<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @job_functions, data: @counts, percentages: @percentages } %>
+
