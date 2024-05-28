@@ -4,7 +4,7 @@ class EmployeesController < ApplicationController
 
   # GET /employees or /employees.json
   def index
-    @employees = Employee.all
+    @employees = Employee.all.paginate(page: params[:page], per_page: 20)
   end
 
   # GET /employees/1 or /employees/1.json
@@ -95,7 +95,7 @@ class EmployeesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def employee_params
-      params.require(:employee).permit(:name, :title, :job_function, :seniority, :start_date, :manager_id, :is_manager)
+      params.require(:employee).permit(:name, :title, :job_function, :seniority, :start_date, :manager_id, :is_manager, :page, :per_page, :sort_by, :sort_order, :search)
     end
 
 end
