@@ -1,4 +1,5 @@
 .accordion-button:not(.collapsed)::after,
+
 .accordion-button::after {
   background-image: unset !important;
 }
