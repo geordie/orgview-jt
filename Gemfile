@@ -30,6 +30,9 @@ gem "jbuilder"
 gem "bootstrap", "~> 5.3.3"
 gem "sassc-rails"
 
+# For pagination
+gem 'will_paginate', '~> 4.0'
+
 # Faker to generate data
 gem 'faker', '~> 3.3.1'
 
