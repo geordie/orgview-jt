@@ -35,14 +35,22 @@
   </tbody>
 </table>
 
-<%= form_with url: new_employee_path, method: :get do %>
-  <%= submit_tag 'New employee' %>
-<% end %>
+<div class="row justify-content-center">
+  <div class="col-auto">
+    <%= form_with url: new_employee_path, method: :get do %>
+      <%= submit_tag 'New employee', class: 'btn btn-primary' %>
+    <% end %>
+  </div>
 
-<%= form_with url: employees_create_samples_path, method: :post do %>
-  <%= submit_tag 'Generate Employees' %>
-<% end %>
+  <div class="col-auto">
+    <%= form_with url: employees_create_samples_path, method: :post do %>
+      <%= submit_tag 'Generate Employees', class: 'btn btn-success' %>
+    <% end %>
+  </div>
 
-<%= form_with url: employees_destroy_all_path, method: :delete do %>
-  <%= submit_tag 'Delete All Employees' %>
-<% end %>
+  <div class="col-auto">
+    <%= form_with url: employees_destroy_all_path, method: :delete do %>
+      <%= submit_tag 'Delete All Employees', class: 'btn btn-danger' %>
+    <% end %>
+  </div>
+</div>
