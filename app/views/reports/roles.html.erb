@@ -2,11 +2,5 @@
 
 <%= render partial: 'countTable', locals: { labelheader: 'Role', labels: @titles, counts: @counts, percentages: @percentages } %>
 
-<div class="container-md">
-	<div class="row justify-content-center">
-		<canvas id="rolesChart"></canvas>
-	</div>
-</div>
-
 <%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @titles, data: @counts, percentages: @percentages } %>
 
