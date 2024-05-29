@@ -1,0 +1,38 @@
+
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+	google.charts.load('current', {packages:["orgchart"]});
+	google.charts.setOnLoadCallback(drawChart);
+
+	var orgChart = null;
+	var orgData = <%= @google_chart_data.to_json.html_safe %>
+
+	function drawChart() {
+		var data = new google.visualization.DataTable();
+		data.addColumn('string', 'Name');
+		data.addColumn('string', 'Manager');
+		data.addColumn('string', 'ToolTip');
+
+		// For each orgchart box, provide the name, manager, and tooltip to show.
+		data.addRows(orgData);
+
+		// Create the chart.
+		orgChart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+
+		google.visualization.events.addListener(orgChart, 'select', selectHandler);
+
+		// Draw the chart, setting the allowHtml option to true for the tooltips.
+		orgChart.draw(data, {'allowHtml':true, 'allowCollapse':true});
+	}
+
+	function selectHandler(e) {
+		if (orgChart.getSelection().length == 0) {
+			return;
+		}
+		console.log(orgChart.getSelection()[0]['row']);
+	}
+</script>
+
+<div id="chart_div"></div>
+

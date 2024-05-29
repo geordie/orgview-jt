@@ -75,6 +75,24 @@ class EmployeesController < ApplicationController
     render partial: 'structure', locals: { employees: @employees }
   end
 
+  def treeview
+    employee = Employee.find_by(manager: nil)
+    employees = [employee]
+    direct_reports = Employee.where(manager_id: employee.id)
+    direct_reports.each do |direct|
+      employees << direct
+    end
+    @google_chart_data = employees.map do |employee|
+      [
+        {
+          v: employee.id.to_s,
+          f: employee.name,
+        },
+        employee.manager_id.to_s,
+        employee.title
+      ]
+    end
+  end
   private
     def build_hierarchy(employee, recursive = true)
       directs = []

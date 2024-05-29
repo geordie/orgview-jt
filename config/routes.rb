@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   resources :employees, constraints: { id: /\d+/ }
 
   get 'employees/structure', to: 'employees#structure'
+  get 'employees/treeview', to: 'employees#treeview'
   post 'employees/create_samples', to: 'employees#create_samples'
   delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
   get 'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
