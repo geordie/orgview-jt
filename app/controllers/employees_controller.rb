@@ -96,11 +96,8 @@ class EmployeesController < ApplicationController
 
   def treeview2
     employee = Employee.find_by(manager: nil)
-    employees = [employee]
-    direct_reports = Employee.where(manager_id: employee.id)
-    direct_reports.each do |direct|
-      employees << direct
-    end
+    @employees = [employee]
+    fill_with_direct_reports(@employees)
   end
 
   private
@@ -114,6 +111,17 @@ class EmployeesController < ApplicationController
         directs_count: employee.direct_reports.count,
         direct_reports: directs
       }
+    end
+
+    def fill_with_direct_reports(employees)
+      employees = employees.to_a
+      employees.each do |employee|
+        direct_reports = employee.get_direct_reports
+        direct_reports.each do |direct|
+          employees << direct
+        end
+        fill_with_direct_reports(direct_reports)
+      end
     end
 
     # Use callbacks to share common setup or constraints between actions.

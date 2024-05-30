@@ -8,29 +8,18 @@ var timer = null;
 document.addEventListener('DOMContentLoaded', function () {
 	var options = new primitives.OrgConfig();
 
-	var items = [
-		new primitives.OrgItemConfig({
-			id: 0,
-			parent: null,
-			title: "James Smith ss",
-			description: "VP, Public Sector",
-			image: "/images/photos/a.png"
-		}),
-		new primitives.OrgItemConfig({
-			id: 1,
-			parent: 0,
-			title: "Ted Lucas",
-			description: "VP, Human Resources",
-			image: "/images/photos/b.png"
-		}),
-		new primitives.OrgItemConfig({
-			id: 2,
-			parent: 0,
-			title: "Fritz Stuger",
-			description: "Business Solutions, US",
-			image: "/images/photos/c.png"
-		})
-	];
+	var items = [];
+
+	<% @employees.each do |employee| %>
+		items.push(new primitives.OrgItemConfig({
+			id: <%= employee.id %>,
+			parent: <%= employee.manager_id || "null" %>,
+			title: "<%= employee.name %>",
+			description: "<%= employee.title %>",
+			image: "/images/photos/a.png",
+			groupTitle: "<%= employee.job_function %>"
+		}));
+	<% end %>
 
 	options.items = items;
 	options.cursorItem = 0;
@@ -38,6 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
 });
+
 </script>
 
-<div id="basicdiagram" style="width: 640px; height: 480px; border-style: dotted; border-width: 1px;"></div>
+<div class="container-md">
+    <div class="d-flex justify-content-center">
+        <div class="content-md" id="basicdiagram" style="width: 900px; height: 600px; border-style: dotted; border-width: 1px;"></div>
+    </div>
+</div>
