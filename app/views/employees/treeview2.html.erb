@@ -1,0 +1,43 @@
+
+<script type="module">
+import * as primitives from 'primitives';
+
+var control;
+var timer = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+	var options = new primitives.OrgConfig();
+
+	var items = [
+		new primitives.OrgItemConfig({
+			id: 0,
+			parent: null,
+			title: "James Smith ss",
+			description: "VP, Public Sector",
+			image: "/images/photos/a.png"
+		}),
+		new primitives.OrgItemConfig({
+			id: 1,
+			parent: 0,
+			title: "Ted Lucas",
+			description: "VP, Human Resources",
+			image: "/images/photos/b.png"
+		}),
+		new primitives.OrgItemConfig({
+			id: 2,
+			parent: 0,
+			title: "Fritz Stuger",
+			description: "Business Solutions, US",
+			image: "/images/photos/c.png"
+		})
+	];
+
+	options.items = items;
+	options.cursorItem = 0;
+	options.hasSelectorCheckbox = primitives.Enabled.False;
+
+	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
+});
+</script>
+
+<div id="basicdiagram" style="width: 640px; height: 480px; border-style: dotted; border-width: 1px;"></div>

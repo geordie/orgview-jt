@@ -12,6 +12,7 @@ Rails.application.routes.draw do
 
   get 'employees/structure', to: 'employees#structure'
   get 'employees/treeview', to: 'employees#treeview'
+  get 'employees/treeview2', to: 'employees#treeview2'
   post 'employees/create_samples', to: 'employees#create_samples'
   delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
   get 'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'

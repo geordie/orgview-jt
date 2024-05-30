@@ -93,6 +93,16 @@ class EmployeesController < ApplicationController
       ]
     end
   end
+
+  def treeview2
+    employee = Employee.find_by(manager: nil)
+    employees = [employee]
+    direct_reports = Employee.where(manager_id: employee.id)
+    direct_reports.each do |direct|
+      employees << direct
+    end
+  end
+
   private
     def build_hierarchy(employee, recursive = true)
       directs = []
