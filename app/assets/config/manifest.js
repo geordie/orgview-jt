@@ -2,3 +2,4 @@
 //= link_directory ../stylesheets .css
 //= link application.js
 //= link primitives.js
+//= link @rails--ujs.js
