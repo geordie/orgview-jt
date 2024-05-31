@@ -2,9 +2,16 @@
 
 <%= render @role %>
 
-<div>
-  <%= link_to "Edit this role", edit_role_path(@role) %> |
-  <%= link_to "Back to roles", roles_path %>
-
-  <%= button_to "Destroy this role", @role, method: :delete %>
+<div class="row px-4">
+  <table class="table table-borderless">
+      <thead>
+        <tr>
+          <td>
+              <%= link_to 'Edit', edit_role_path(@role), class: 'btn btn-warning' %>
+              <%= link_to 'Delete', role_path(@role), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+              <%= link_to "Back to roles", roles_path, class: 'btn btn-secondary' %>
+          </td>
+        </tr>
+      </thead>
+  </table>
 </div>
