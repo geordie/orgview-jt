@@ -41,7 +41,9 @@
 					<tr>
 						<td>
 							<%= link_to 'Save', '#', class: 'btn btn-primary', id: 'submit-form' %>
-							<%= link_to 'Delete', employee_path(@employee), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+							<% if !@employee.id.nil? %>
+								<%= link_to 'Delete', employee_path(@employee), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+							<% end %>
 							<%= link_to "Back to employees", employees_path, class: 'btn btn-secondary' %>
 						</td>
 					</tr>
