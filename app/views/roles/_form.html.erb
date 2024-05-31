@@ -32,7 +32,9 @@
             <tr>
               <td>
                 <%= link_to 'Save', '#', class: 'btn btn-primary', id: 'submit-form' %>
-                <%= link_to 'Delete', role_path(@role), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+                <% if !@role.id.nil? %>
+                  <%= link_to 'Delete', role_path(@role), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+                <% end %>
                 <%= link_to "Back to roles", roles_path, class: 'btn btn-secondary' %>
               </td>
             </tr>
