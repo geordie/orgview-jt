@@ -1,59 +1,59 @@
 <%= form_with(model: @employee, local: true) do |form| %>
-  <div class="row px-4">
-    <div class="col-md-3">
-      <h3>Employee Details:</h3>
+	<div class="row px-4">
+		<div class="col-md-3">
+			<h3>Employee Details:</h3>
 
-      <table class="table">
-        <tbody>
-          <tr>
-            <td class="bg-light"><strong>Name</strong></td>
-            <td><%= form.text_field :name, class: 'form-control' %></td>
-          </tr>
-          <tr>
-            <td class="bg-light"><strong>Title</strong></td>
-            <td><%= form.text_field :title, class: 'form-control' %></td>
-          </tr>
-          <tr>
-            <td class="bg-light"><strong>Job Function</strong></td>
-            <td><%= form.text_field :job_function, class: 'form-control' %></td>
-          </tr>
-          <tr>
-            <td class="bg-light"><strong>Seniority</strong></td>
-            <td><%= form.number_field :seniority, class: 'form-control' %></td>
-          </tr>
-          <tr>
-            <td class="bg-light"><strong>Start Date</strong></td>
-            <td><%= form.date_field :start_date, class: 'form-control' %></td>
-          </tr>
-          <tr>
-            <td class="bg-light"><strong>Manager ID</strong></td>
-            <td><%= form.collection_select :manager_id, Employee.all, :id, :name, include_blank: true, class: 'form-control' %></td>
-          </tr>
-          <tr>
-            <td class="bg-light"><strong>Is Manager</strong></td>
-            <td><%= form.select :is_manager, [[ 'Yes', true ], [ 'No', false ]], {}, class: 'form-control' %></td>
-          </tr>
-        </tbody>
-      </table>
+			<table class="table">
+				<tbody>
+					<tr>
+						<td class="bg-light"><strong>Name</strong></td>
+						<td><%= form.text_field :name, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Title</strong></td>
+						<td><%= form.text_field :title, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Job Function</strong></td>
+						<td><%= form.text_field :job_function, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Seniority</strong></td>
+						<td><%= form.number_field :seniority, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Start Date</strong></td>
+						<td><%= form.date_field :start_date, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Manager ID</strong></td>
+						<td><%= form.collection_select :manager_id, Employee.all, :id, :name, include_blank: true, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Is Manager</strong></td>
+						<td><%= form.select :is_manager, [[ 'Yes', true ], [ 'No', false ]], {}, class: 'form-control' %></td>
+					</tr>
+				</tbody>
+			</table>
 
-	  <table class="table table-borderless">
-		<thead>
-			<tr>
-			<td>
-				<%= link_to 'Save', '#', class: 'btn btn-primary', id: 'submit-form' %>
-				<%= link_to 'Delete', employee_path(@employee), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
-				<%= link_to "Back to employees", employees_path, class: 'btn btn-secondary' %>
-			</td>
-			</tr>
-		</thead>
-	  </table>
-    </div>
-  </div>
+			<table class="table table-borderless">
+				<thead>
+					<tr>
+						<td>
+							<%= link_to 'Save', '#', class: 'btn btn-primary', id: 'submit-form' %>
+							<%= link_to 'Delete', employee_path(@employee), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+							<%= link_to "Back to employees", employees_path, class: 'btn btn-secondary' %>
+						</td>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
 <% end %>
 
 <script>
-  document.getElementById('submit-form').addEventListener('click', function(e) {
-    e.preventDefault();
-    document.querySelector('form').submit();
-  });
+	document.getElementById('submit-form').addEventListener('click', function(e) {
+		e.preventDefault();
+		document.querySelector('form').submit();
+	});
 </script>
