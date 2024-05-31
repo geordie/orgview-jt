@@ -1,32 +1,32 @@
 <div id="<%= dom_id role %>">
-  <div class="row p-4">
-    <div class="col-md-3">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-light">Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="bg-light">Job Function</td>
-            <td><%= @role.job_function %></td>
-          </tr>
-          <tr>
-            <td class="bg-light">Role</td>
-            <td><%= @role.role %></td>
-          </tr>
-          <tr>
-            <td class="bg-light">Seniority</td>
-            <td><%= @role.seniority %></td>
-          </tr>
-          <tr>
-            <td class="bg-light">Is Manager</td>
-            <td><%= @role.is_manager ? 'Yes' : 'No' %></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+	<div class="row px-4">
+		<div class="col-md-3">
+			<h3>Role Details:</h3>
+
+			<table class="table">
+				<tbody>
+					<tr>
+						<td class="bg-light"><strong>ID</strong></td>
+						<td><%= @role.id %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Job Function</strong></td>
+						<td><%= @role.job_function %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Role</strong></td>
+						<td><%= @role.role %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Seniority</strong></td>
+						<td><%= @role.seniority %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Is Manager</strong></td>
+						<td><%= @role.is_manager ? 'Yes' : 'No' %></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
 </div>
