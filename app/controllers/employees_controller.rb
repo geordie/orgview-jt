@@ -1,5 +1,5 @@
 class EmployeesController < ApplicationController
-  include EmployeeGenerator
+  include EmployeeGenerator, CbaEmployeeGenerator
   before_action :set_employee, only: [ :show, :edit, :update, :destroy ]
 
   # GET /employees or /employees.json
