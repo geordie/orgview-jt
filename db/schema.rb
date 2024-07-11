@@ -10,8 +10,63 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_22_094706) do
-  create_table "employees", charset: "utf8mb3", force: :cascade do |t|
+ActiveRecord::Schema[7.1].define(version: 2024_07_11_115832) do
+  create_table "emp", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.text "Person ID"
+    t.text "First Name"
+    t.text "Surname"
+    t.text "Worker Type"
+    t.text "Worker Sub-Type"
+    t.text "Country"
+    t.integer "FTE"
+    t.text "PACE Role"
+    t.text "Workday Job Family Group"
+    t.text "Workday Job Family"
+    t.text "Workday Job Profile"
+    t.text "Manager"
+    t.text "Workday Job Profile ID"
+    t.text "PACE Supervisory Org Business Unit"
+    t.text "PACE Supervisory Org 2"
+    t.text "PACE Supervisory Org 3"
+    t.text "PACE Supervisory Org 4"
+    t.text "PACE Supervisory Org 5"
+    t.text "PACE Supervisory Org 6"
+    t.text "PACE Supervisory Org 7"
+    t.text "Demand team - type"
+    t.text "Demand team - name"
+    t.text "Demand team - pattern"
+    t.text "Demand team - Business Unit"
+    t.text "Demand team - Domain L1"
+    t.text "Demand team - Domain L2"
+    t.text "Demand team - Domain L3"
+    t.text "Demand team - Crew/COE"
+    t.text "[Demand team = Crew/COE] v2"
+    t.text "Demand team - Squad/COE Team"
+    t.integer "Cost Center ID"
+    t.text "Cost Center Business Unit"
+    t.integer "Allocated FTE"
+    t.text "Extended Leave"
+    t.text "Workday Supervisory Org Business Unit"
+    t.text "Workday Supervisory Org 2"
+    t.text "Workday Supervisory Org 3"
+    t.text "Workday Supervisory Org 4"
+    t.text "Workday Supervisory Org 5"
+    t.text "Workday Supervisory Org 6"
+    t.text "Workday Supervisory Org 7"
+    t.text "Workday Supervisory Org 8"
+    t.text "Is allocated to a Supply Structure?"
+    t.text "Is allocated to a Demand structure?"
+    t.text "Role Group2"
+    t.text "Retail Tech CC"
+    t.text "Role Group"
+    t.text "Vacancy Status"
+    t.text "Role Vacancy"
+    t.text "Exemption"
+    t.text "Management Level"
+    t.text "Tenure"
+  end
+
+  create_table "employees", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "title"
     t.string "job_function"
@@ -21,15 +76,17 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_22_094706) do
     t.date "start_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "job_function_group"
   end
 
-  create_table "roles", charset: "utf8mb3", force: :cascade do |t|
+  create_table "roles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "job_function", null: false
     t.string "role", null: false
     t.integer "seniority", null: false
     t.boolean "is_manager", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "job_function_group"
   end
 
 end
