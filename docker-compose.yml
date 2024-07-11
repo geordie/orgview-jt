@@ -15,7 +15,7 @@ services:
     volumes:
       - /var/lib/mysql
 
-  app:
+  app-cba:
     build: .
     environment:
       RAILS_ENV: development
