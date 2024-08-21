@@ -55,4 +55,23 @@ class ReportsController < ApplicationController
       @percentages << (count.to_f / sum * 100).round(2)
     end
   end
+
+  def job_function_group
+
+    employee_job_function_groups = Employee.all.group(:job_function_group).count.sort_by { |k, v| v }.reverse.to_h
+    @job_function_groups = employee_job_function_groups.keys
+    @counts = employee_job_function_groups.values
+
+    # sum the counts
+    sum = 0
+    employee_job_function_groups.each do |job_function_group, count|
+      sum += count
+    end
+
+    # build an array of percentages
+    @percentages = []
+    employee_job_function_groups.each do |job_function_group, count|
+      @percentages << (count.to_f / sum * 100).round(2)
+    end
+  end
 end
