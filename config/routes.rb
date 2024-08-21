@@ -23,6 +23,7 @@ Rails.application.routes.draw do
   get 'reports/roles', to: 'reports#roles'
   get 'reports/seniority', to: 'reports#seniority'
   get 'reports/job_function', to: 'reports#job_function'
+  get 'reports/job_function_group', to: 'reports#job_function_group'
 
   # Defines the root path route ("/")
   root "employees#index"
