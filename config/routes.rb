@@ -25,6 +25,10 @@ Rails.application.routes.draw do
   get 'reports/job_function', to: 'reports#job_function'
   get 'reports/job_function_group', to: 'reports#job_function_group'
 
+  resources :squads, constraints: { id: /\d+/ }
+  post 'squads/build_cba_squads_list', to: 'squads#build_cba_squads_list'
+  delete 'squads/destroy_all', to: 'squads#destroy_all', as: 'squads_destroy_all'
+
   # Defines the root path route ("/")
   root "employees#index"
 end
