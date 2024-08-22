@@ -5,9 +5,12 @@ class Employee < ApplicationRecord
   validates :seniority, presence: true, numericality: { only_integer: true }
   validates :start_date, presence: true
 
-
   belongs_to :manager, class_name: 'Employee', optional: true
   has_many :direct_reports, class_name: 'Employee', foreign_key: 'manager_id'
+  
+  # Associations
+  has_many :squads_employees
+  has_many :squads, through: :squads_employees
 
   # Other model logic and methods can be added here
   def get_direct_reports
