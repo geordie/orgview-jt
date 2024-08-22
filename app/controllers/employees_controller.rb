@@ -64,7 +64,7 @@ class EmployeesController < ApplicationController
   end
 
   def structure
-    employee = Employee.where(manager: nil)
+    employee = Employee.where(['manager_id = ? ', 518933])
     @employees = employee.map { |manager| build_hierarchy(manager, false) }
   end
 
@@ -72,11 +72,15 @@ class EmployeesController < ApplicationController
     manager = Employee.find(params[:id])
     direct_reports = Employee.where(manager_id: manager.id)
     @employees = direct_reports.map { |employee| build_hierarchy(employee, false) }
-    render partial: 'structure', locals: { employees: @employees }
+
+    respond_to do |format|
+      format.html { render partial: 'structure', locals: { employees: @employees } }
+      format.json { render json: @employees }
+    end
   end
 
   def treeview
-    employee = Employee.find_by(manager: nil)
+    employee = Employee.where("manager_id NOT IN (SELECT id FROM employees)").first
     employees = [employee]
     direct_reports = Employee.where(manager_id: employee.id)
     direct_reports.each do |direct|
@@ -95,8 +99,8 @@ class EmployeesController < ApplicationController
   end
 
   def treeview2
-    employee = Employee.find_by(manager: nil)
-    @employees = [employee]
+    #@employees = Employee.where("manager_id NOT IN (SELECT id FROM employees)")
+    @employees = Employee.where("id = 517096")
     fill_with_direct_reports(@employees)
   end
 
