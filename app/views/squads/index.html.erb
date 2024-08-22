@@ -1,0 +1,46 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Squads</h1>
+
+<%= will_paginate_with_bootstrap @squads %>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Team Name</th>
+      <th>Team Parent</th>
+      <th>Full Path</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @squads.each do |squad| %>
+      <tr>
+        <td><%= squad.name %></td>
+        <td><%= squad.parent.try(:name) %></td>
+        <td><%= squad.full_path %></td>
+        <td>
+          <%= link_to 'Show', squad %> |
+          <%= link_to 'Edit', edit_squad_path(squad) %> |
+          <%= link_to 'Destroy', squad, method: :delete, data: { confirm: 'Are you sure?' } %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<div class="col-auto">
+	<%= link_to 'New Squad', new_squad_path, class: 'btn btn-primary' %>
+</div>
+
+<div class="col-auto">
+  <%= form_with url: squads_build_cba_squads_list_path, method: :post do %>
+    <%= submit_tag 'Generate Squads', class: 'btn btn-success' %>
+  <% end %>
+</div>
+
+<div class="col-auto">
+  <%= form_with url: squads_destroy_all_path, method: :delete do %>
+    <%= submit_tag 'Delete All Squads', class: 'btn btn-danger' %>
+  <% end %>
+</div>
