@@ -3,13 +3,12 @@
 import * as primitives from 'primitives';
 
 var control;
-var timer = null;
+var items = [];
 
 document.addEventListener('DOMContentLoaded', function () {
+
 	var options = new primitives.OrgConfig();
-
-	var items = [];
-
+	
 	<% @employees.each do |employee| %>
 		items.push(new primitives.OrgItemConfig({
 			id: <%= employee.id %>,
@@ -24,9 +23,49 @@ document.addEventListener('DOMContentLoaded', function () {
 	options.items = items;
 	options.cursorItem = 0;
 	options.hasSelectorCheckbox = primitives.Enabled.False;
+	options.onCursorChanging = function (e, data) {
+
+		if (data.context !== null) {
+			console.log(data);
+			// Get the direct reports of the selected employee
+			getDirectReports(data.context.id);
+		}
+	};
 
 	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
 });
+
+function getDirectReports(managerId) {
+	// Make a GET request to fetch data for the selected employee
+	fetch(`/employees/${managerId}/direct_reports.json`, {
+		method: 'GET'
+	})
+	.then(response => response.json())
+	.then(data => {
+		console.log(data);
+		var newItems = [];
+		// Add child nodes to the clicked node based on data
+		data.forEach(report => {
+			if (!items.some(item => item.id === report.employee.id)) {
+				items.push(new primitives.OrgItemConfig({
+					id: report.employee.id,
+					parent: managerId,
+					title: report.employee.name,
+					description: report.employee.title,
+					image: "/images/photos/a.png",
+					groupTitle: report.employee.job_function
+				}));
+			}
+		});
+		control.setOptions = {items: items};
+		control.update(primitives.UpdateMode.Refresh);
+		console.log(items);
+		
+	})
+	.catch(error => {
+		console.error('Error:', error);
+	});
+}
 
 </script>
 
