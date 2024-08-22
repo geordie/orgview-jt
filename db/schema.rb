@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_11_115832) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_21_223009) do
   create_table "emp", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.text "Person ID"
     t.text "First Name"
@@ -79,6 +79,12 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_11_115832) do
     t.string "job_function_group"
   end
 
+  create_table "employees_squads", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "squad_id", null: false
+    t.bigint "employee_id", null: false
+    t.float "allocation"
+  end
+
   create_table "roles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "job_function", null: false
     t.string "role", null: false
@@ -89,4 +95,25 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_11_115832) do
     t.string "job_function_group"
   end
 
+  create_table "squads", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "parent_id"
+    t.string "full_path", limit: 2048, null: false
+    t.integer "depth", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "squads_employees", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "squad_id", null: false
+    t.bigint "employee_id", null: false
+    t.float "allocation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id"], name: "index_squads_employees_on_employee_id"
+    t.index ["squad_id"], name: "index_squads_employees_on_squad_id"
+  end
+
+  add_foreign_key "squads_employees", "employees"
+  add_foreign_key "squads_employees", "squads"
 end
