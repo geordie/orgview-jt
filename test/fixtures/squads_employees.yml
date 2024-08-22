@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  squad: one
+  employee: one
+  allocation: 1.5
+
+two:
+  squad: two
+  employee: two
+  allocation: 1.5
