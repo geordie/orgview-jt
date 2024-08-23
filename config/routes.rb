@@ -27,6 +27,8 @@ Rails.application.routes.draw do
 
   resources :squads, constraints: { id: /\d+/ }
   post 'squads/build_cba_squads_list', to: 'squads#build_cba_squads_list'
+  get 'squads/treeview', to: 'squads#treeview'
+  get 'squads/:id/sub_teams', to: 'squads#sub_teams', as: 'sub_teams'
   delete 'squads/destroy_all', to: 'squads#destroy_all', as: 'squads_destroy_all'
 
   # Defines the root path route ("/")
