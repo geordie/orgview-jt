@@ -99,9 +99,8 @@ class EmployeesController < ApplicationController
   end
 
   def treeview2
-    #@employees = Employee.where("manager_id NOT IN (SELECT id FROM employees)")
-    @employees = Employee.where("id = 517096")
-    fill_with_direct_reports(@employees)
+    @employees = Employee.where("manager_id NOT IN (SELECT id FROM employees)")
+    #@employees = Employee.where("id = 517096")
   end
 
   private
