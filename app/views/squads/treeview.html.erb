@@ -1,0 +1,83 @@
+
+<script type="module">
+import * as primitives from 'primitives';
+
+var control;
+var items = [];
+
+document.addEventListener('DOMContentLoaded', function () {
+
+	var options = new primitives.OrgConfig();
+
+	<% @squads.each do |squad| %>
+		var itemTitleColor = primitives.Colors.RoyalBlue;
+		<% if squad.sub_teams.count > 0 %>
+			itemTitleColor = primitives.Colors.Green;
+		<% end %>
+		items.push(new primitives.OrgItemConfig({
+			id: <%= squad.id %>,
+			parent: <%= squad.parent_id || "null" %>,
+			title: "<%= squad.name %>",
+			image: "/images/photos/a.png",
+			itemTitleColor: itemTitleColor
+		}));
+	<% end %>
+
+	options.items = items;
+	options.cursorItem = 0;
+	options.hasSelectorCheckbox = primitives.Enabled.False;
+	options.onCursorChanging = function (e, data) {
+
+		if (data.context !== null) {
+			console.log(data);
+			// Get the sub_teams of the selected squad
+			getSubTeams(data.context.id);
+		}
+	};
+
+	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
+});
+
+function getSubTeams(parentId) {
+	// Make a GET request to fetch data for the selected squad
+	fetch(`/squads/${parentId}/sub_teams.json`, {
+		method: 'GET'
+	})
+	.then(response => response.json())
+	.then(data => {
+		console.log(data);
+		var newItems = [];
+		// Add child nodes to the clicked node based on data
+		data.forEach(sub_team => {
+			if (!items.some(item => item.id === sub_team.sub_team.id)) {
+				var itemTitleColor = primitives.Colors.RoyalBlue;
+				if(sub_team.sub_team_count > 0) {
+					itemTitleColor = primitives.Colors.Green;
+				}
+				items.push(new primitives.OrgItemConfig({
+					id: sub_team.sub_team.id,
+					parent: parentId,
+					title: sub_team.sub_team.name,
+					description: sub_team.sub_team.title,
+					image: "/images/photos/a.png",
+					itemTitleColor: itemTitleColor
+				}));
+			}
+		});
+		control.setOptions = {items: items};
+		control.update(primitives.UpdateMode.Refresh);
+		console.log(items);
+		
+	})
+	.catch(error => {
+		console.error('Error:', error);
+	});
+}
+
+</script>
+
+<div class="container-md">
+    <div class="d-flex justify-content-center">
+        <div class="content-md" id="basicdiagram" style="width: 1200px; height: 800px; border-style: dotted; border-width: 1px;"></div>
+    </div>
+</div>
