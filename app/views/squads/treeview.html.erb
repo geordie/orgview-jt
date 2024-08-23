@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	var options = new primitives.OrgConfig();
 
 	<% @squads.each do |squad| %>
-		var itemTitleColor = primitives.Colors.RoyalBlue;
+		var itemTitleColor = primitives.Colors.Red;
 		<% if squad.sub_teams.count > 0 %>
 			itemTitleColor = primitives.Colors.Green;
 		<% end %>
@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
 			image: "/images/photos/a.png",
 			itemTitleColor: itemTitleColor
 		}));
+		<% if squad.sub_teams.count > 0 %>
+			getSubTeams(<%= squad.id %>);
+		<% end %>
 	<% end %>
 
 	options.items = items;
@@ -50,7 +53,7 @@ function getSubTeams(parentId) {
 		// Add child nodes to the clicked node based on data
 		data.forEach(sub_team => {
 			if (!items.some(item => item.id === sub_team.sub_team.id)) {
-				var itemTitleColor = primitives.Colors.RoyalBlue;
+				var itemTitleColor = primitives.Colors.Red;
 				if(sub_team.sub_team_count > 0) {
 					itemTitleColor = primitives.Colors.Green;
 				}
@@ -62,6 +65,9 @@ function getSubTeams(parentId) {
 					image: "/images/photos/a.png",
 					itemTitleColor: itemTitleColor
 				}));
+				if(sub_team.sub_team_count > 0) {
+					getSubTeams(sub_team.sub_team.id);
+				}
 			}
 		});
 		control.setOptions = {items: items};
