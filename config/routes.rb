@@ -8,8 +8,8 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Employees
   resources :employees, constraints: { id: /\d+/ }
-
   get 'employees/structure', to: 'employees#structure'
   get 'employees/treeview', to: 'employees#treeview'
   get 'employees/treeview2', to: 'employees#treeview2'
@@ -18,13 +18,17 @@ Rails.application.routes.draw do
   delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
   get 'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
 
+  # Roles
   resources :roles, constraints: { id: /\d+/ }
 
+  # Reports
   get 'reports/roles', to: 'reports#roles'
   get 'reports/seniority', to: 'reports#seniority'
   get 'reports/job_function', to: 'reports#job_function'
   get 'reports/job_function_group', to: 'reports#job_function_group'
+  get 'reports/squad_size', to: 'reports#squad_size'
 
+  # Squads
   resources :squads, constraints: { id: /\d+/ }
   post 'squads/build_cba_squads_list', to: 'squads#build_cba_squads_list'
   post 'squads/build_squads_stats', to: 'squads#build_squads_stats'
