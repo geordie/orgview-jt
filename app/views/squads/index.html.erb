@@ -40,6 +40,13 @@
 </div>
 
 <div class="col-auto">
+  <%= form_with url: squads_build_squads_stats_path, method: :post do %>
+    <%= submit_tag 'Generate Squad Stats', class: 'btn btn-success' %>
+  <% end %>
+</div>
+
+
+<div class="col-auto">
   <%= form_with url: squads_destroy_all_path, method: :delete do %>
     <%= submit_tag 'Delete All Squads', class: 'btn btn-danger' %>
   <% end %>
