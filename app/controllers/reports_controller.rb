@@ -74,4 +74,22 @@ class ReportsController < ApplicationController
       @percentages << (count.to_f / sum * 100).round(2)
     end
   end
+
+  def squad_size
+    squad_sizes = Squad.all.group(:squad_members).count.sort_by { |k, v| k }.reverse.to_h
+    @sizes = squad_sizes.keys
+    @counts = squad_sizes.values
+
+    # sum the counts
+    sum = 0
+    squad_sizes.each do |size, count|
+      sum += count
+    end
+
+    # build an array of percentages
+    @percentages = []
+    squad_sizes.each do |size, count|
+      @percentages << (count.to_f / sum * 100).round(2)
+    end
+  end
 end
