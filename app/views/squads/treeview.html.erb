@@ -18,7 +18,9 @@ document.addEventListener('DOMContentLoaded', function () {
 			id: <%= squad.id %>,
 			parent: <%= squad.parent_id || "null" %>,
 			title: "<%= squad.name %>",
-			image: "/images/photos/a.png",
+			squad_members: <%= squad.squad_members %>,
+			children: <%= squad.children %>,
+			descendents: <%= squad.descendents %>,
 			itemTitleColor: itemTitleColor
 		}));
 		<% if squad.sub_teams.count > 0 %>
@@ -28,11 +30,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	options.items = items;
 	options.cursorItem = 0;
+	options.templates = [getSquadTemplate()];
+	options.defaultTemplateName = "squadTemplate";
+	options.onItemRender = onTemplateRender;
+	options.normalItemsInterval = 10;
+	options.normalLevelShift = 44;
+	options.padding = { left: 10, top: 20, right: 10, bottom: 10};
 	options.hasSelectorCheckbox = primitives.Enabled.False;
 	options.onCursorChanging = function (e, data) {
 
 		if (data.context !== null) {
-			console.log(data);
 			// Get the sub_teams of the selected squad
 			getSubTeams(data.context.id);
 		}
@@ -41,6 +48,30 @@ document.addEventListener('DOMContentLoaded', function () {
 	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
 });
 
+function onTemplateRender(event, data) {
+	switch (data.renderingMode) {
+		case primitives.RenderingMode.Create:
+			/* Initialize template content here */
+			break;
+		case primitives.RenderingMode.Update:
+			/* Update template content here */
+			break;
+	}
+
+	var itemConfig = data.context;
+
+	if (data.templateName == "squadTemplate") {
+		var element = data.element;
+
+		element.firstChild.style.backgroundColor = itemConfig.itemTitleColor || primitives.Colors.RoyalBlue;
+		element.firstChild.firstChild.textContent = itemConfig.title;
+
+		element.childNodes[1].innerHTML = '<strong>Members:</strong> ' + itemConfig.squad_members;
+		element.childNodes[2].innerHTML = '<strong>Children:</strong> ' + itemConfig.children;
+		element.childNodes[3].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
+	}
+}
+
 function getSubTeams(parentId) {
 	// Make a GET request to fetch data for the selected squad
 	fetch(`/squads/${parentId}/sub_teams.json`, {
@@ -48,7 +79,6 @@ function getSubTeams(parentId) {
 	})
 	.then(response => response.json())
 	.then(data => {
-		console.log(data);
 		var newItems = [];
 		// Add child nodes to the clicked node based on data
 		data.forEach(sub_team => {
@@ -61,7 +91,9 @@ function getSubTeams(parentId) {
 					id: sub_team.sub_team.id,
 					parent: parentId,
 					title: sub_team.sub_team.name,
-					description: sub_team.sub_team.title,
+					squad_members: sub_team.sub_team.squad_members,
+					children: sub_team.sub_team.children,
+					descendents: sub_team.sub_team.descendents,
 					image: "/images/photos/a.png",
 					itemTitleColor: itemTitleColor
 				}));
@@ -72,12 +104,115 @@ function getSubTeams(parentId) {
 		});
 		control.setOptions = {items: items};
 		control.update(primitives.UpdateMode.Refresh);
-		console.log(items);
 		
 	})
 	.catch(error => {
 		console.error('Error:', error);
 	});
+}
+
+function getSquadTemplate() {
+	var result = new primitives.TemplateConfig();
+	result.name = "squadTemplate";
+
+	result.itemSize = new primitives.Size(240, 120);
+	result.minimizedItemSize = new primitives.Size(12, 12);
+
+	result.itemTemplate = ["div",
+		{
+			"style": {
+				width: result.itemSize.width + "px",
+				height: result.itemSize.height + "px"
+			},
+			"class": ["bp-item", "bp-corner-all", "bt-item-frame"]
+		},
+		["div",
+			{
+				name: "titleBackground",
+				style: {
+					top: "2px",
+					left: "2px",
+					width: "238px",
+					height: "20px",
+					overflow: "hidden"
+				},
+				"class": ["bp-item", "bp-corner-all", "bp-title-frame"]
+			},
+			["div",
+				{
+					name: "title",
+					style: {
+						top: "2px",
+						left: "2px",
+						width: "228px",
+						height: "18px",
+						fontSize: "14px",
+						overflow: "hidden"
+					},
+					"class": ["bp-item", "bp-title"]
+				}
+			]
+		],
+		["div",
+			{
+				name: "squad_size",
+				style: {
+					top: "31px",
+					left: "10px",
+					width: "162px",
+					height: "36px",
+					fontSize: "10px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
+				name: "children",
+				style: {
+					top: "52px",
+					left: "10px",
+					width: "162px",
+					height: "36px",
+					fontSize: "10px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
+				name: "descendents",
+				style: {
+					top: "73px",
+					left: "10px",
+					width: "162px",
+					height: "36px",
+					fontSize: "10px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
+				name: "label",
+				style: {
+					top: "-20px",
+					left: "3px",
+					width: "208px",
+					height: "20px",
+					fontSize: "14px",
+					textAlign: "center",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		]
+	];
+
+	return result;
 }
 
 </script>
