@@ -30,6 +30,15 @@
         </ul>
         </li>
         <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="employeesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Squads
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="employeesDropdown">
+          <li><%= link_to "List", squads_path, class: "dropdown-item" %></li>
+          <li><%= link_to "Structure", squads_treeview_path, class: "dropdown-item" %></li>
+        </ul>
+        </li>
+        <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Reports
           </a>
