@@ -51,7 +51,30 @@ module CbaSquadGenerator
     redirect_to squads_path, notice: 'CBA squads created successfully.'
   end
 
+  def build_squads_stats
+    # Get root squads
+    Squad.update_all(children: 0, descendents: 0)
+    @squads = Squad.where("parent_id IS NULL")
+
+    @squads.each do |squad|
+      get_child_squads(squad)
+      p squad.to_json
+    end
+  end
+
   private
+
+  def get_child_squads(parent_squad)
+    parent_squad.squad_members = SquadsEmployee.where(squad_id: parent_squad.id).count
+    child_squads = Squad.where(parent_id: parent_squad.id)
+    child_squads.each do |child_squad|
+      parent_squad.children += 1
+      parent_squad.descendents += 1
+      get_child_squads(child_squad)
+      parent_squad.descendents += child_squad.descendents
+    end
+    parent_squad.save
+  end
 
   def build_squad_path(squad_path)
     squad_path.reject(&:blank?).join(" > ")
