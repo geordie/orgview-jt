@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_21_223009) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_25_132502) do
   create_table "emp", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.text "Person ID"
     t.text "First Name"
@@ -79,12 +79,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_21_223009) do
     t.string "job_function_group"
   end
 
-  create_table "employees_squads", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "squad_id", null: false
-    t.bigint "employee_id", null: false
-    t.float "allocation"
-  end
-
   create_table "roles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "job_function", null: false
     t.string "role", null: false
@@ -102,6 +96,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_21_223009) do
     t.integer "depth", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "children", default: 0, null: false
+    t.integer "descendents", default: 0, null: false
+    t.integer "squad_members", default: 0, null: false
   end
 
   create_table "squads_employees", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
