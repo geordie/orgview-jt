@@ -58,8 +58,9 @@ module CbaSquadGenerator
 
     @squads.each do |squad|
       get_child_squads(squad)
-      p squad.to_json
     end
+
+    redirect_to squads_path, notice: 'CBA squad stats generated successfully.'
   end
 
   private
