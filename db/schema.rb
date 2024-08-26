@@ -99,6 +99,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_25_132502) do
     t.integer "children", default: 0, null: false
     t.integer "descendents", default: 0, null: false
     t.integer "squad_members", default: 0, null: false
+    t.integer "squad_members_managers", default: 0, null: false
   end
 
   create_table "squads_employees", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
