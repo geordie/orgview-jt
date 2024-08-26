@@ -28,6 +28,7 @@ Rails.application.routes.draw do
   get 'reports/job_function_group', to: 'reports#job_function_group'
   get 'reports/squad_size', to: 'reports#squad_size'
   get 'reports/squad_depth', to: 'reports#squad_depth'
+  get 'reports/squad_children', to: 'reports#squad_children'
 
   # Squads
   resources :squads, constraints: { id: /\d+/ }
