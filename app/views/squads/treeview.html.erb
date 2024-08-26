@@ -10,15 +10,19 @@ document.addEventListener('DOMContentLoaded', function () {
 	var options = new primitives.OrgConfig();
 
 	<% @squads.each do |squad| %>
-		var itemTitleColor = primitives.Colors.Red;
-		<% if squad.sub_teams.count > 0 %>
-			itemTitleColor = primitives.Colors.Green;
+		var itemTitleColor = primitives.Colors.Green;
+		<% if squad.squad_health == "red" %>
+			itemTitleColor = primitives.Colors.Red;
+		<% elsif squad.squad_health == "amber" %>
+			itemTitleColor = primitives.Colors.Orange;
 		<% end %>
 		items.push(new primitives.OrgItemConfig({
 			id: <%= squad.id %>,
 			parent: <%= squad.parent_id || "null" %>,
 			title: "<%= squad.name %>",
 			squad_members: <%= squad.squad_members %>,
+			squad_members_managers: <%= squad.squad_members_managers %>,
+			squad_health: "<%= squad.squad_health %>",
 			children: <%= squad.children %>,
 			descendents: <%= squad.descendents %>,
 			itemTitleColor: itemTitleColor
@@ -68,7 +72,8 @@ function onTemplateRender(event, data) {
 
 		element.childNodes[1].innerHTML = '<strong>Members:</strong> ' + itemConfig.squad_members;
 		element.childNodes[2].innerHTML = '<strong>Children:</strong> ' + itemConfig.children;
-		element.childNodes[3].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
+		element.childNodes[3].innerHTML = '<strong>Managers:</strong> ' + itemConfig.squad_members_managers;
+		element.childNodes[4].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
 	}
 }
 
@@ -79,19 +84,26 @@ function getSubTeams(parentId) {
 	})
 	.then(response => response.json())
 	.then(data => {
+		//console.log(data);
 		var newItems = [];
 		// Add child nodes to the clicked node based on data
 		data.forEach(sub_team => {
 			if (!items.some(item => item.id === sub_team.sub_team.id)) {
-				var itemTitleColor = primitives.Colors.Red;
-				if(sub_team.sub_team_count > 0) {
-					itemTitleColor = primitives.Colors.Green;
-				}
+
+				var itemTitleColor = primitives.Colors.Green;
+
+				if ( sub_team.sub_team.squad_health == "red" )
+					itemTitleColor = primitives.Colors.Red;
+				else if ( sub_team.sub_team.squad_health == "amber" )
+					itemTitleColor = primitives.Colors.Orange;
+
 				items.push(new primitives.OrgItemConfig({
 					id: sub_team.sub_team.id,
 					parent: parentId,
 					title: sub_team.sub_team.name,
 					squad_members: sub_team.sub_team.squad_members,
+					squad_members_managers: sub_team.sub_team.squad_members_managers,
+					squad_health: sub_team.sub_team.squad_health,
 					children: sub_team.sub_team.children,
 					descendents: sub_team.sub_team.descendents,
 					image: "/images/photos/a.png",
@@ -157,7 +169,7 @@ function getSquadTemplate() {
 			{
 				name: "squad_size",
 				style: {
-					top: "31px",
+					top: "30px",
 					left: "10px",
 					width: "162px",
 					height: "36px",
@@ -171,7 +183,21 @@ function getSquadTemplate() {
 			{
 				name: "children",
 				style: {
-					top: "52px",
+					top: "50px",
+					left: "10px",
+					width: "162px",
+					height: "36px",
+					fontSize: "10px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
+				name: "member managers",
+				style: {
+					top: "70px",
 					left: "10px",
 					width: "162px",
 					height: "36px",
@@ -185,7 +211,7 @@ function getSquadTemplate() {
 			{
 				name: "descendents",
 				style: {
-					top: "73px",
+					top: "90px",
 					left: "10px",
 					width: "162px",
 					height: "36px",
