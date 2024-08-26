@@ -25,10 +25,10 @@ module CbaSquadGenerator
 
         # Build sub-squads
         (2..7).each do |i|
-          lvl = emp["PACE Supervisory Org #{i}"]
+          lvl = emp["PACE Supervisory Org #{i}"].strip
 
-          # If we've found nil, this is squad the employee belongs to
-          if lvl.nil? || lvl.empty?
+          # If we've found nil or empty, this is the squad the employee belongs to
+          if lvl.nil? || lvl.empty? || i == 7
             SquadsEmployee.create(squad: squad, employee: employee, allocation: 1)
             employee_squads = SquadsEmployee.where(employee_id: employee_id)
             
@@ -41,7 +41,6 @@ module CbaSquadGenerator
           end
           squad_array.push( lvl )
           squad_path = build_squad_path(squad_array)
-
           squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
           squad_parent = squad.id
         end
@@ -66,6 +65,7 @@ module CbaSquadGenerator
   private
 
   def build_squad_stats(parent_squad)
+
     # Get the number of squad members
     parent_squad.squad_members = SquadsEmployee.where(squad_id: parent_squad.id).count
 
