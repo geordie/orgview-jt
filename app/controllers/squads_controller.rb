@@ -4,7 +4,8 @@ class SquadsController < ApplicationController
 
 	# GET /squads or /squads.json
 	def index
-		@squads = Squad.order(:full_path).paginate(page: params[:page], per_page: 20)
+		max_depth = params[:max_depth] ||= 10
+		@squads = Squad.where("depth <= ?", max_depth).order(:full_path).paginate(page: params[:page], per_page: 20)
 	end
 
 	# GET /squads/1 or /squads/1.json
@@ -93,6 +94,6 @@ class SquadsController < ApplicationController
 
 	# Only allow a list of trusted parameters through.
 	def squad_params
-		params.require(:squad).permit(:team_name, :team_parent_id, :full_path)
+		params.require(:squad).permit(:team_name, :team_parent_id, :full_path, :max_depth)
 	end
 end
