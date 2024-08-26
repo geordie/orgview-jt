@@ -7,23 +7,37 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>Team Name</th>
-      <th>Team Parent</th>
-      <th>Full Path</th>
-      <th>Actions</th>
+      <th>Name</th>
+      <th style="text-align: center;">Size</th>
+      <th style="text-align: center;">Managers</th>
+      <th style="text-align: center;">Sub-Teams</th>
+      <th style="text-align: center;">Descendents</th>
+      <th style="text-align: center;">Org Health</th>
+      <th style="text-align: center;">Actions</th>
+    </tr>
     </tr>
   </thead>
   <tbody>
     <% @squads.each do |squad| %>
       <tr>
-        <td><%= squad.name %></td>
-        <td><%= squad.parent.try(:name) %></td>
-        <td><%= squad.full_path %></td>
-        <td>
-          <%= link_to 'Show', squad %> |
-          <%= link_to 'Edit', edit_squad_path(squad) %> |
-          <%= link_to 'Destroy', squad, method: :delete, data: { confirm: 'Are you sure?' } %>
+        <td data-toggle="tooltip" title="<%= squad.full_path %>"><%= squad.name %></td>
+        <td style="text-align: center;"><%= squad.squad_members %></td>
+        <td style="text-align: center;"><%= squad.squad_members_managers %></td>
+        <td style="text-align: center;"><%= squad.children %></td>
+        <td style="text-align: center;"><%= squad.descendents %></td>
+        <td data-toggle="tooltip" title="<%= squad.squad_health_details %>" style="text-align: center;">
+          <% if squad.squad_health == "amber" %>
+        <span style="color: orange;">&#x25cf;</span>
+          <% elsif squad.squad_health == "red" %>
+        <span style="color: red;">&#x25cf;</span>
+          <% else %>
+        <span style="color: green;">&#x25cf;</span>
+          <% end %>
         </td>
+        <td style="text-align: center;">
+          <%= link_to 'Show', squad %>
+        </td>
+      </tr>
       </tr>
     <% end %>
   </tbody>
