@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			squad_members: <%= squad.squad_members %>,
 			squad_members_managers: <%= squad.squad_members_managers %>,
 			squad_health: "<%= squad.squad_health %>",
+			squad_health_details: "<%= squad.squad_health_details %>",
 			children: <%= squad.children %>,
 			descendents: <%= squad.descendents %>,
 			itemTitleColor: itemTitleColor
@@ -71,10 +72,12 @@ function onTemplateRender(event, data) {
 		element.firstChild.firstChild.textContent = itemConfig.title;
 
 		element.childNodes[1].innerHTML = '<strong>ID:</strong> ' + itemConfig.id;
-		element.childNodes[2].innerHTML = '<strong>Members:</strong> ' + itemConfig.squad_members;
+		element.childNodes[2].innerHTML = '<strong>Team Size:</strong> ' + itemConfig.squad_members;
 		element.childNodes[3].innerHTML = '<strong>Managers:</strong> ' + itemConfig.squad_members_managers;
-		element.childNodes[4].innerHTML = '<strong>Children:</strong> ' + itemConfig.children;
+		element.childNodes[4].innerHTML = '<strong>Sub-Teams:</strong> ' + itemConfig.children;
 		element.childNodes[5].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
+		element.childNodes[6].innerHTML = '<strong>Squad Health:</strong> ';
+		element.childNodes[7].innerHTML = itemConfig.squad_health_details;
 	}
 }
 
@@ -105,6 +108,7 @@ function getSubTeams(parentId) {
 					squad_members: sub_team.sub_team.squad_members,
 					squad_members_managers: sub_team.sub_team.squad_members_managers,
 					squad_health: sub_team.sub_team.squad_health,
+					squad_health_details: sub_team.sub_team.squad_health_details,
 					children: sub_team.sub_team.children,
 					descendents: sub_team.sub_team.descendents,
 					image: "/images/photos/a.png",
@@ -128,7 +132,7 @@ function getSquadTemplate() {
 	var result = new primitives.TemplateConfig();
 	result.name = "squadTemplate";
 
-	result.itemSize = new primitives.Size(240, 120);
+	result.itemSize = new primitives.Size(240, 150);
 	result.minimizedItemSize = new primitives.Size(12, 12);
 
 	result.itemTemplate = ["div",
@@ -159,7 +163,7 @@ function getSquadTemplate() {
 						left: "2px",
 						width: "228px",
 						height: "18px",
-						fontSize: "14px",
+						fontSize: "12px",
 						overflow: "hidden"
 					},
 					"class": ["bp-item", "bp-title"]
@@ -174,7 +178,7 @@ function getSquadTemplate() {
 					left: "10px",
 					width: "162px",
 					height: "36px",
-					fontSize: "10px",
+					fontSize: "12px",
 					overflow: "hidden"
 				},
 				"class": "bp-item"
@@ -188,7 +192,7 @@ function getSquadTemplate() {
 					left: "10px",
 					width: "162px",
 					height: "36px",
-					fontSize: "10px",
+					fontSize: "12px",
 					overflow: "hidden"
 				},
 				"class": "bp-item"
@@ -202,7 +206,7 @@ function getSquadTemplate() {
 					left: "10px",
 					width: "162px",
 					height: "36px",
-					fontSize: "10px",
+					fontSize: "12px",
 					overflow: "hidden"
 				},
 				"class": "bp-item"
@@ -216,7 +220,7 @@ function getSquadTemplate() {
 					left: "110px",
 					width: "162px",
 					height: "36px",
-					fontSize: "10px",
+					fontSize: "12px",
 					overflow: "hidden"
 				},
 				"class": "bp-item"
@@ -230,7 +234,35 @@ function getSquadTemplate() {
 					left: "110px",
 					width: "162px",
 					height: "36px",
-					fontSize: "10px",
+					fontSize: "12px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
+				name: "health-heading",
+				style: {
+					top: "90px",
+					left: "10px",
+					width: "200px",
+					height: "24px",
+					fontSize: "12px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
+				name: "health-details",
+				style: {
+					top: "110px",
+					left: "10px",
+					width: "200px",
+					height: "52px",
+					fontSize: "12px",
 					overflow: "hidden"
 				},
 				"class": "bp-item"
