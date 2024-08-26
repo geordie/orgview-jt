@@ -6,5 +6,6 @@ class AddChildrenAndDescendentsToSquads < ActiveRecord::Migration[7.1]
 	add_column :squads, :squad_members, :integer, default: 0, null: false
 	add_column :squads, :squad_members_managers, :integer, default: 0, null: false
 	add_column :squads, :squad_health, :string, default: "green", null: false
+	add_column :squads, :squad_health_details, :string, default: "", null: false
   end
 end
