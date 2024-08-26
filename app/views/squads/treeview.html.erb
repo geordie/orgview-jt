@@ -70,10 +70,11 @@ function onTemplateRender(event, data) {
 		element.firstChild.style.backgroundColor = itemConfig.itemTitleColor || primitives.Colors.RoyalBlue;
 		element.firstChild.firstChild.textContent = itemConfig.title;
 
-		element.childNodes[1].innerHTML = '<strong>Members:</strong> ' + itemConfig.squad_members;
-		element.childNodes[2].innerHTML = '<strong>Children:</strong> ' + itemConfig.children;
+		element.childNodes[1].innerHTML = '<strong>ID:</strong> ' + itemConfig.id;
+		element.childNodes[2].innerHTML = '<strong>Members:</strong> ' + itemConfig.squad_members;
 		element.childNodes[3].innerHTML = '<strong>Managers:</strong> ' + itemConfig.squad_members_managers;
-		element.childNodes[4].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
+		element.childNodes[4].innerHTML = '<strong>Children:</strong> ' + itemConfig.children;
+		element.childNodes[5].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
 	}
 }
 
@@ -167,7 +168,7 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "squad_size",
+				name: "squad_id",
 				style: {
 					top: "30px",
 					left: "10px",
@@ -181,7 +182,7 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "children",
+				name: "members",
 				style: {
 					top: "50px",
 					left: "10px",
@@ -195,7 +196,7 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "member managers",
+				name: "managers",
 				style: {
 					top: "70px",
 					left: "10px",
@@ -209,10 +210,24 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
+				name: "childre",
+				style: {
+					top: "30px",
+					left: "110px",
+					width: "162px",
+					height: "36px",
+					fontSize: "10px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
 				name: "descendents",
 				style: {
-					top: "90px",
-					left: "10px",
+					top: "50px",
+					left: "110px",
 					width: "162px",
 					height: "36px",
 					fontSize: "10px",
