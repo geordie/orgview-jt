@@ -41,7 +41,7 @@ module CbaSquadGenerator
           end
           squad_array.push( lvl )
           squad_path = build_squad_path(squad_array)
-          
+
           squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
           squad_parent = squad.id
         end
@@ -53,7 +53,7 @@ module CbaSquadGenerator
 
   def build_squads_stats
     # Get root squads
-    Squad.update_all(children: 0, descendents: 0)
+    Squad.update_all(children: 0, descendents: 0, squad_members: 0, squad_members_managers: 0, squad_health: "green")
     @squads = Squad.where("parent_id IS NULL")
 
     @squads.each do |squad|
@@ -72,7 +72,6 @@ module CbaSquadGenerator
     managers = Array.new
     parent_squad.employees.each do |employee|
       manager_id = employee.manager_id
-      p "*"*50 + manager_id.to_s
       if !managers.include?(manager_id)
         managers.push(manager_id)
       end
@@ -87,11 +86,49 @@ module CbaSquadGenerator
       build_squad_stats(child_squad)
       parent_squad.descendents += child_squad.descendents
     end
+
+    squad_health = get_squad_health(parent_squad)
+    parent_squad.squad_health = squad_health
+
     parent_squad.save
   end
 
   def build_squad_path(squad_path)
     squad_path.reject(&:blank?).join(" > ")
+  end
+
+  def get_squad_health(squad)
+    squad_health = "green"
+
+    if squad.children.between?(9,10) or squad.children.between?(1,2)
+      squad_health = increment_health(squad_health, "amber")
+    elsif squad.children > 10
+      squad_health = increment_health(squad_health, "red")
+    end
+
+    if squad.squad_members.between?(11,15) or squad.squad_members.between?(3,4)
+      squad_health = increment_health(squad_health, "amber")
+    elsif squad.squad_members.between?(1,2) or squad.squad_members > 15
+      squad_health = increment_health(squad_health, "red")
+    end
+
+    if squad.squad_members_managers.between?(2,3)
+      squad_health = increment_health(squad_health, "amber")
+    elsif squad.squad_members_managers > 3
+      squad_health = increment_health(squad_health, "red")
+    end
+
+    p "*"*50 + squad.children.to_s + "," + squad.squad_members.to_s + "," + squad.squad_members_managers.to_s + "," + squad_health
+    squad_health
+  end
+
+  def increment_health(current_health, updated_health)
+    if current_health == "green"
+      current_health = updated_health
+    elsif current_health == "amber" && updated_health == "red"
+      current_health = updated_health
+    end
+    current_health
   end
 
 end
