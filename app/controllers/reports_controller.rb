@@ -42,6 +42,13 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(squad_depths)
   end
 
+  def squad_children
+    squad_children = Squad.all.group(:children).count.sort_by { |k, v| k }.reverse.to_h
+    @children = squad_children.keys
+    @counts = squad_children.values
+    @percentages = build_percentages(squad_children)
+  end
+
   private
 
   def build_percentages(data)
