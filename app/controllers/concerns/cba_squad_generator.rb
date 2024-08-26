@@ -87,8 +87,9 @@ module CbaSquadGenerator
       parent_squad.descendents += child_squad.descendents
     end
 
-    squad_health = get_squad_health(parent_squad)
+    squad_health, squad_health_details = get_squad_health(parent_squad)
     parent_squad.squad_health = squad_health
+    parent_squad.squad_health_details = squad_health_details.join(" | ")
 
     parent_squad.save
   end
@@ -99,27 +100,42 @@ module CbaSquadGenerator
 
   def get_squad_health(squad)
     squad_health = "green"
+    squad_health_details = Array.new
 
-    if squad.children.between?(9,10) or squad.children.between?(1,2)
+    if squad.children.between?(9,10)
       squad_health = increment_health(squad_health, "amber")
+      squad_health_details.push("Many Sub-Teams (amber)")
+    elsif squad.children.between?(1,2)
+      squad_health = increment_health(squad_health, "amber")
+      squad_health_details.push("Few Sub-Teams (amber)")
     elsif squad.children > 10
       squad_health = increment_health(squad_health, "red")
+      squad_health_details.push("Many Sub-Teams (red)")
     end
 
-    if squad.squad_members.between?(11,15) or squad.squad_members.between?(3,4)
+    if squad.squad_members.between?(11,15)
       squad_health = increment_health(squad_health, "amber")
-    elsif squad.squad_members.between?(1,2) or squad.squad_members > 15
+      squad_health_details.push("Large Team Size (amber)")
+    elsif squad.squad_members.between?(3,4)
+      squad_health = increment_health(squad_health, "amber")
+      squad_health_details.push("Small Team Size (amber)")
+    elsif squad.squad_members.between?(1,2)
       squad_health = increment_health(squad_health, "red")
+      squad_health_details.push("Small Team Size (red)")
+    elsif squad.squad_members > 15
+      squad_health = increment_health(squad_health, "red")
+      squad_health_details.push("Large Team Size (red)")
     end
 
     if squad.squad_members_managers.between?(2,3)
       squad_health = increment_health(squad_health, "amber")
+      squad_health_details.push("Multiple Managers (amber)")
     elsif squad.squad_members_managers > 3
       squad_health = increment_health(squad_health, "red")
+      squad_health_details.push("Multiple Managers (red)")
     end
 
-    p "*"*50 + squad.children.to_s + "," + squad.squad_members.to_s + "," + squad.squad_members_managers.to_s + "," + squad_health
-    squad_health
+    [squad_health, squad_health_details]
   end
 
   def increment_health(current_health, updated_health)
