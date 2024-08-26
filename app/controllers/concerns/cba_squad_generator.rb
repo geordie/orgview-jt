@@ -57,7 +57,7 @@ module CbaSquadGenerator
     @squads = Squad.where("parent_id IS NULL")
 
     @squads.each do |squad|
-      get_child_squads(squad)
+      build_squad_stats(squad)
     end
 
     redirect_to squads_path, notice: 'CBA squad stats generated successfully.'
@@ -65,13 +65,26 @@ module CbaSquadGenerator
 
   private
 
-  def get_child_squads(parent_squad)
+  def build_squad_stats(parent_squad)
+    # Get the number of squad members
     parent_squad.squad_members = SquadsEmployee.where(squad_id: parent_squad.id).count
+
+    managers = Array.new
+    parent_squad.employees.each do |employee|
+      manager_id = employee.manager_id
+      p "*"*50 + manager_id.to_s
+      if !managers.include?(manager_id)
+        managers.push(manager_id)
+      end
+    end
+    parent_squad.squad_members_managers = managers.count
+
+    # Calculate children and descendents
     child_squads = Squad.where(parent_id: parent_squad.id)
     child_squads.each do |child_squad|
       parent_squad.children += 1
       parent_squad.descendents += 1
-      get_child_squads(child_squad)
+      build_squad_stats(child_squad)
       parent_squad.descendents += child_squad.descendents
     end
     parent_squad.save
