@@ -30,6 +30,8 @@ Rails.application.routes.draw do
   get 'reports/squad_depth', to: 'reports#squad_depth'
   get 'reports/squad_members_managers', to: 'reports#squad_members_managers'
   get 'reports/squad_size', to: 'reports#squad_size'
+  get 'reports/squad_health', to: 'reports#squad_health'
+  get 'reports/squad_health_details', to: 'reports#squad_health_details'
 
   # Squads
   resources :squads, constraints: { id: /\d+/ }
