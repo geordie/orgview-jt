@@ -2,5 +2,5 @@
 
 <%= render partial: 'countTable', locals: { labelheader: 'Squad Children', labels: @children, counts: @counts, percentages: @percentages } %>
 
-<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @children, data: @counts, percentages: @percentages } %>
+<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @children, data: @counts, percentages: @percentages, xlabel: '# of Squads' } %>
 
