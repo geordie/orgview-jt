@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data: {
         labels: <%= labels.to_json.html_safe %>,
         datasets: [{
-            label: '# of Employees',
+            label: '<%= local_assigns[:xlabel].present? ? xlabel.html_safe : 'Count' %>',
             data: <%= data.to_json.html_safe %>,
             percentages: <%= percentages.to_json.html_safe %>,
             backgroundColor: [
