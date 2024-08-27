@@ -56,6 +56,20 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(squad_members_managers)
   end
 
+  def squad_health
+    squad_healths = Squad.all.group(:squad_health).count.sort_by { |k, v| v }.reverse.to_h
+    @healths = squad_healths.keys
+    @counts = squad_healths.values
+    @percentages = build_percentages(squad_healths)
+  end
+
+  def squad_health_details
+    squad_health_details = Squad.all.group(:squad_health_details).count.sort_by { |k, v| v }.reverse.to_h
+    @details = squad_health_details.keys
+    @counts = squad_health_details.values
+    @percentages = build_percentages(squad_health_details)
+  end
+
   private
 
   def build_percentages(data)
