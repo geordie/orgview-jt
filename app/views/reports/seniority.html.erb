@@ -2,5 +2,5 @@
 
 <%= render partial: 'countTable', locals: { labelheader: 'Seniority', labels: @seniorities, counts: @counts, percentages: @percentages } %>
 
-<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @seniorities, data: @counts, percentages: @percentages } %>
+<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @seniorities, data: @counts, percentages: @percentages, xlabel: '# of Employees' } %>
 
