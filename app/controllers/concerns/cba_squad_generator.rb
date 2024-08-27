@@ -102,17 +102,6 @@ module CbaSquadGenerator
     squad_health = "green"
     squad_health_details = Array.new
 
-    if squad.children.between?(9,10)
-      squad_health = increment_health(squad_health, "amber")
-      squad_health_details.push("Many Sub-Teams (amber)")
-    elsif squad.children.between?(1,2)
-      squad_health = increment_health(squad_health, "amber")
-      squad_health_details.push("Few Sub-Teams (amber)")
-    elsif squad.children > 10
-      squad_health = increment_health(squad_health, "red")
-      squad_health_details.push("Many Sub-Teams (red)")
-    end
-
     if squad.squad_members.between?(11,15)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Large Team Size (amber)")
@@ -133,6 +122,17 @@ module CbaSquadGenerator
     elsif squad.squad_members_managers > 3
       squad_health = increment_health(squad_health, "red")
       squad_health_details.push("Multiple Managers (red)")
+    end
+
+    if squad.children.between?(9,10)
+      squad_health = increment_health(squad_health, "amber")
+      squad_health_details.push("Many Sub-Teams (amber)")
+    elsif squad.children.between?(1,2)
+      squad_health = increment_health(squad_health, "amber")
+      squad_health_details.push("Few Sub-Teams (amber)")
+    elsif squad.children > 10
+      squad_health = increment_health(squad_health, "red")
+      squad_health_details.push("Many Sub-Teams (red)")
     end
 
     [squad_health, squad_health_details]
