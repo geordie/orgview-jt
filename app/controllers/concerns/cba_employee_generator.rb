@@ -4,7 +4,10 @@ module CbaEmployeeGenerator
   def build_cba_list
     ActiveRecord::Base.transaction do
       Employee.destroy_all
-      Emp.where(['`Vacancy Status` != ?', "Vacant" ]).each do |emp|
+      # 2024-09-06 The original data I received included open reqs
+      # The updated data does not
+      # For the updated data import to work, I had to remove "where(['`Vacancy Status` != ?', "Vacant" ])"
+      Emp.all.each do |emp|
         
         # Get the role based on job title
         title = emp['Workday Job Profile']
@@ -16,8 +19,10 @@ module CbaEmployeeGenerator
         fullname = (first_name + " " + surname).strip
 
         # Build a start date
-        tenure = emp['Tenure']
-        start_date = get_start_date_from_tenure(tenure)
+        # New data download does not include tenure :(
+        # tenure = emp['Tenure']
+        # start_date = get_start_date_from_tenure(tenure)
+        start_date = Faker::Date.between(from: 15.years.ago, to: 0.years.ago)
 
         if Employee.exists?(emp['Person ID'].to_i)
           next
@@ -30,7 +35,7 @@ module CbaEmployeeGenerator
           job_function: role[:job_function],
           job_function_group: role[:job_function_group],
           seniority: role[:seniority],
-          manager_id: emp['Manager'].to_i,
+          manager_id: emp['Manager ID'].to_i,
           is_manager: role[:is_manager],
           start_date: start_date,
         )

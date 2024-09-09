@@ -5,7 +5,8 @@ module CbaSquadGenerator
     ActiveRecord::Base.transaction do
       SquadsEmployee.destroy_all
       Squad.destroy_all
-      Emp.where(['`Vacancy Status` != ?', "Vacant" ]).each do |emp|
+      # Remove where(['`Vacancy Status` != ?', "Vacant" ])
+      Emp.all.each do |emp|
 
         employee_id = emp['Person ID'].to_i
         employee = Employee.find(employee_id)
