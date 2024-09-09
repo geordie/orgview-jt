@@ -58,6 +58,12 @@ class SquadsController < ApplicationController
 		end
 	end
 
+	  def destroy_all
+		SquadsEmployee.delete_all
+		Squad.delete_all
+		redirect_to squads_path, notice: 'All squads have been deleted.'
+	end
+
 	def treeview
 		@squads = Squad.where("parent_id IS NULL")
 	end
