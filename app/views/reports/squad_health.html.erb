@@ -1,6 +1,6 @@
 <h1>Squad Health Report</h1>
 
-<%= render partial: 'countTable', locals: { labelheader: 'Squad Depth', labels: @healths, counts: @counts, percentages: @percentages } %>
+<%= render partial: 'countTable', locals: { labelheader: 'Squad Health', labels: @healths, counts: @counts, percentages: @percentages } %>
 
 <%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @healths, data: @counts, percentages: @percentages, xlabel: '# of Squads' } %>
 
