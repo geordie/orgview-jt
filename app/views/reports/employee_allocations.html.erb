@@ -1,0 +1,6 @@
+<h1>Employee Squad Assignment Counts</h1>
+
+<%= render partial: 'countTable', locals: { labelheader: 'Assigned Squads', labels: @allocations, counts: @counts, percentages: @percentages } %>
+
+<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @allocations, data: @counts, percentages: @percentages, xlabel: '# of Employees' } %>
+
