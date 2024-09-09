@@ -26,6 +26,7 @@ Rails.application.routes.draw do
   get 'reports/seniority', to: 'reports#seniority'
   get 'reports/job_function', to: 'reports#job_function'
   get 'reports/job_function_group', to: 'reports#job_function_group'
+  get 'reports/employee_allocations', to: 'reports#employee_allocations'
   get 'reports/squad_children', to: 'reports#squad_children'
   get 'reports/squad_depth', to: 'reports#squad_depth'
   get 'reports/squad_members_managers', to: 'reports#squad_members_managers'
