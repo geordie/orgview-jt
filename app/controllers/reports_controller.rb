@@ -35,6 +35,14 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(squad_sizes)
   end
 
+  def management_ratios
+    subquery = Employee.group(:manager_id).select('COUNT(*) AS team_size')
+    team_sizes = Employee.from(subquery, :A).group(:team_size).order(team_size: :desc).count
+    @team_sizes = team_sizes.keys
+    @counts = team_sizes.values
+    @percentages = build_percentages(team_sizes)
+  end
+
   def squad_depth
     squad_depths = Squad.all.group(:depth).count.sort_by { |k, v| k }.reverse.to_h
     @depths = squad_depths.keys
