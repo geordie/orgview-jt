@@ -37,10 +37,24 @@ class ReportsController < ApplicationController
 
   def management_ratios
     subquery = Employee.group(:manager_id).select('COUNT(*) AS team_size')
-    team_sizes = Employee.from(subquery, :A).group(:team_size).order(team_size: :desc).count
-    @team_sizes = team_sizes.keys
-    @counts = team_sizes.values
-    @percentages = build_percentages(team_sizes)
+    all_team_sizes = Employee.from(subquery, :A).group(:team_size).order(team_size: :desc).count
+    agg_team_sizes = {"> 15" => 0, "11-15" => 0, "5-10" => 0, "3-4" => 0, "1-2" => 0}
+    all_team_sizes.keys.each do |key|
+      if key > 15
+        agg_team_sizes["> 15"] += all_team_sizes[key]
+      elsif key > 10
+        agg_team_sizes["11-15"] += all_team_sizes[key]
+      elsif key > 4
+        agg_team_sizes["5-10"] += all_team_sizes[key]
+      elsif key > 2
+        agg_team_sizes["3-4"] += all_team_sizes[key]
+      else
+        agg_team_sizes["1-2"] += all_team_sizes[key]
+      end
+    end
+    @team_sizes = agg_team_sizes.keys
+    @counts = agg_team_sizes.values
+    @percentages = build_percentages(agg_team_sizes)
   end
 
   def squad_depth
@@ -83,6 +97,27 @@ class ReportsController < ApplicationController
     @allocations = employee_allocations.keys.map { |k| (1/k).round(0) }
     @counts = employee_allocations.values
     @percentages = build_percentages(employee_allocations)
+  end
+
+  def employee_tenure
+    tenure_ranges = Employee.select(
+      "CASE
+        WHEN start_date >= CURDATE() - INTERVAL 1 YEAR THEN '00 to 01 year'
+        WHEN start_date >= CURDATE() - INTERVAL 3 YEAR AND start_date < CURDATE() - INTERVAL 1 YEAR THEN '01 to 03 years'
+        WHEN start_date >= CURDATE() - INTERVAL 5 YEAR AND start_date < CURDATE() - INTERVAL 3 YEAR THEN '03 to 05 years'
+        WHEN start_date >= CURDATE() - INTERVAL 10 YEAR AND start_date < CURDATE() - INTERVAL 5 YEAR THEN '05 to 10 years'
+        WHEN start_date >= CURDATE() - INTERVAL 15 YEAR AND start_date < CURDATE() - INTERVAL 10 YEAR THEN '10 to 15 years'
+        WHEN start_date >= CURDATE() - INTERVAL 20 YEAR AND start_date < CURDATE() - INTERVAL 15 YEAR THEN '15 to 20 years'
+        WHEN start_date >= CURDATE() - INTERVAL 25 YEAR AND start_date < CURDATE() - INTERVAL 20 YEAR THEN '20 to 25 years'
+        ELSE '25+ years'
+      END AS tenure_range, COUNT(*) AS count"
+    ).where.not(start_date: nil)
+    .group("tenure_range")
+    .order("tenure_range")
+    tenure_ranges = tenure_ranges.map { |tr| [tr.tenure_range, tr.count] }.to_h
+    @tenure_ranges = tenure_ranges.keys
+    @counts = tenure_ranges.values
+    @percentages = build_percentages(tenure_ranges)
   end
 
   private
