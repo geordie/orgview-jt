@@ -5,7 +5,7 @@ module CbaEmployeeGenerator
     ActiveRecord::Base.transaction do
       Employee.destroy_all
       # 2024-09-06 The original data I received included open reqs
-      # The updated data does not
+      # The updated data does not.
       # For the updated data import to work, I had to remove "where(['`Vacancy Status` != ?', "Vacant" ])"
       Emp.all.each do |emp|
         
@@ -19,10 +19,8 @@ module CbaEmployeeGenerator
         fullname = (first_name + " " + surname).strip
 
         # Build a start date
-        # New data download does not include tenure :(
-        # tenure = emp['Tenure']
-        # start_date = get_start_date_from_tenure(tenure)
-        start_date = Faker::Date.between(from: 15.years.ago, to: 0.years.ago)
+        tenure = emp['Tenure']
+        start_date = get_start_date_from_tenure(tenure)
 
         if Employee.exists?(emp['Person ID'].to_i)
           next
