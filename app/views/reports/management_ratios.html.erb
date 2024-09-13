@@ -1,6 +1,6 @@
 <h1>Management Ratio Report</h1>
 
-<%= render partial: 'countTable', locals: { labelheader: 'Team Size', labels: @team_sizes, counts: @counts, percentages: @percentages } %>
+<%= render partial: 'countTable', locals: { labelheader: 'Manager Team Size', labels: @team_sizes, counts: @counts, percentages: @percentages } %>
 
 <%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @team_sizes, data: @counts, percentages: @percentages, xlabel: '# of Squads' } %>
 
