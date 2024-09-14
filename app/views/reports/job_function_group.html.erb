@@ -1,5 +1,13 @@
 <h1>Job Function Group Report</h1>
 
-<%= render partial: 'countTable', locals: { labelheader: 'Job Function Group', labels: @job_function_groups, counts: @counts, percentages: @percentages } %>
+<%= render partial: 'countTable',
+	locals: {
+		labelheader: 'Job Function Group',
+		labels: @job_function_groups,
+		counts: @counts,
+		count_link_controller: "reports",
+		count_link_action: "job_function",
+		count_link_param_name: "job_function_group",
+		percentages: @percentages } %>
 
 <%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @job_function_groups, data: @counts, percentages: @percentages, xlabel: '# of Employees' } %>
