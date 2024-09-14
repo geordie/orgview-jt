@@ -27,6 +27,7 @@ class ReportsController < ApplicationController
     @job_functions = employee_job_functions.keys
     @counts = employee_job_functions.values
     @percentages = build_percentages(employee_job_functions)
+    @ratios = build_ratios(employee_job_functions)
   end
 
   def job_function_group
@@ -142,5 +143,16 @@ class ReportsController < ApplicationController
     end
 
     percentages
+  end
+
+  def build_ratios(data)
+    max = data.values.max
+
+    ratios = []
+    data.each do |key, value|
+      ratios << (max / value.to_f ).round(0)
+    end
+
+    ratios
   end
 end
