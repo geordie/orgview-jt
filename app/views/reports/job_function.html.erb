@@ -9,7 +9,9 @@
 			  count_link_controller: "reports",
 			  count_link_action: "roles",
 			  count_link_param_name: "job_function",
-			  percentages: @percentages } %>
+			  percentages: @percentages,
+			  ratios: @ratios }
+%>
 
 <%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @job_functions, data: @counts, percentages: @percentages, xlabel: '# of Employees' } %>
 
