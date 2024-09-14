@@ -42,16 +42,16 @@ document.addEventListener('DOMContentLoaded', function () {
 	options.normalLevelShift = 44;
 	options.padding = { left: 10, top: 20, right: 10, bottom: 10};
 	options.hasSelectorCheckbox = primitives.Enabled.False;
-	options.onCursorChanging = function (e, data) {
-
-		if (data.context !== null) {
-			// Get the sub_teams of the selected squad
-			getSubTeams(data.context.id);
-		}
-	};
+	options.onCursorChanging = function (e, data) {};
+	options.onCursorChanged = onNodeHighlighted;
 
 	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
 });
+
+function onNodeHighlighted(event, data) {
+	document.getElementById("sidecontainer").innerHTML = data.context.title;
+	console.log(data.context);
+}
 
 function onTemplateRender(event, data) {
 	switch (data.renderingMode) {
@@ -290,8 +290,9 @@ function getSquadTemplate() {
 
 </script>
 
-<div class="container-md">
-    <div class="d-flex justify-content-center">
-        <div class="content-md" id="basicdiagram" style="width: 1200px; height: 800px; border-style: dotted; border-width: 1px;"></div>
-    </div>
+<div style="width: 100%">
+  <div class="d-flex">
+    <div class="content-md" id="basicdiagram" style="width: 80%; height: 800px; border-style: dotted; border-width: 1px; margin: 10px;"></div>
+    <div class="content-md" id="sidecontainer" style="width: 20%; height: 800px; border-style: dotted; border-width: 1px; margin: 10px;"></div>
+  </div>
 </div>
