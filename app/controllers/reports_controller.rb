@@ -1,7 +1,11 @@
 class ReportsController < ApplicationController
 
   def roles
-    employee_titles = Employee.all.group(:title).count.sort_by { |k, v| v }.reverse.to_h
+    if params[:job_function].present?
+      employee_titles = Employee.where(job_function: params[:job_function]).group(:title).count.sort_by { |k, v| v }.reverse.to_h
+    else
+      employee_titles = Employee.all.group(:title).count.sort_by { |k, v| v }.reverse.to_h
+    end
     @titles = employee_titles.keys
     @counts = employee_titles.values
     @percentages = build_percentages(employee_titles)
@@ -15,7 +19,11 @@ class ReportsController < ApplicationController
   end
 
   def job_function
-    employee_job_functions = Employee.all.group(:job_function).count.sort_by { |k, v| v }.reverse.to_h
+    if params[:job_function_group].present?
+      employee_job_functions = Employee.where(job_function_group: params[:job_function_group]).group(:job_function).count.sort_by { |k, v| v }.reverse.to_h
+    else
+      employee_job_functions = Employee.all.group(:job_function).count.sort_by { |k, v| v }.reverse.to_h
+    end
     @job_functions = employee_job_functions.keys
     @counts = employee_job_functions.values
     @percentages = build_percentages(employee_job_functions)
