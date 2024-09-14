@@ -3,7 +3,11 @@ class RolesController < ApplicationController
 
   # GET /roles or /roles.json
   def index
-    @roles = Role.all
+    if params[:job_function].present?
+      @roles = Role.where(job_function: params[:job_function])
+    else
+      @roles = Role.all.order(:job_function_group, :job_function, :seniority)
+    end
   end
 
   # GET /roles/1 or /roles/1.json
