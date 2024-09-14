@@ -6,6 +6,9 @@
 					<th scope="col" class="text-left border"> <%= labelheader %> </th>
 					<th scope="col" class="text-center border"> Count </th>
 					<th scope="col" class="text-center border"> Percentage </th>
+					<% if local_assigns[:ratios] %>
+						<th scope="col" class="text-center border"> Ratio </th>
+					<% end %>
 				</tr>
 			</thead>
 			<tbody>
@@ -27,6 +30,9 @@
 					</td>
 
 					<td class="text-center border"> <%= percentages[index].round(1) %>% </td>
+					<% if local_assigns[:ratios] %>
+						<td class="text-center border"> <%= ratios[index].round(1) %> </td>
+					<% end %>
 				</tr>
 				<% end %>
 				<tr>
