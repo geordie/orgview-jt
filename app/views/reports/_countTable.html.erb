@@ -11,8 +11,21 @@
 			<tbody>
 				<% labels.each_with_index do |label, index| %>
 				<tr>
-					<td class="text-left border"> <%= label %> </td>
-					<td class="text-center border"> <%= counts[index] %> </td>
+					<td class="text-left border">
+						<% if local_assigns[:label_link_controller] && local_assigns[:label_link_param_name] %>
+							<%= link_to label, url_for(controller: label_link_controller, action: 'index', label_link_param_name => label) %>
+						<% else %>
+							<%= label %>
+						<% end %>
+					</td>
+					<td class="text-center border">
+						<% if local_assigns[:count_link_controller] && local_assigns[:count_link_action] && local_assigns[:count_link_param_name] %>
+							<%= link_to counts[index], url_for(controller: count_link_controller, action: count_link_action, count_link_param_name => label) %>
+						<% else %>
+							<%= counts[index] %>
+						<% end %>
+					</td>
+
 					<td class="text-center border"> <%= percentages[index].round(1) %>% </td>
 				</tr>
 				<% end %>
