@@ -7,43 +7,10 @@ module CbaSquadGenerator
       Squad.destroy_all
       # Remove where(['`Vacancy Status` != ?', "Vacant" ])
       Emp.all.each do |emp|
-
-        employee_id = emp['Person ID'].to_i
-        employee = Employee.find(employee_id)
-
-        org_name = emp['PACE Supervisory Org Business Unit'].strip
-        if org_name.nil? or org_name.empty?
-          break
-        end
-
-        squad_parent = nil
-        squad_array = []
-        squad_array.push( org_name )
-
-        # Create top level org if it doesn't already exist
-        squad = Squad.find_or_create_by(name: org_name, full_path: org_name, parent_id: squad_parent, depth: 1)
-        squad_parent = squad.id
-
-        # Build sub-squads
-        (2..7).each do |i|
-          lvl = emp["PACE Supervisory Org #{i}"].strip
-
-          # If we've found nil or empty, this is the squad the employee belongs to
-          if lvl.nil? || lvl.empty? || i == 7
-            SquadsEmployee.create(squad: squad, employee: employee, allocation: 1)
-            employee_squads = SquadsEmployee.where(employee_id: employee_id)
-            
-            if employee_squads.count > 1
-              employee_squads.each do |es|
-                es.update(allocation: (1.0 / employee_squads.count).round(3))
-              end
-            end
-            break
-          end
-          squad_array.push( lvl )
-          squad_path = build_squad_path(squad_array)
-          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
-          squad_parent = squad.id
+        if !emp['Demand team - type'].nil? && !emp['Demand team - type'].empty?
+          build_employee_squad(emp)
+        else
+          build_employee_pace(emp)
         end
       end
     end
@@ -64,6 +31,106 @@ module CbaSquadGenerator
   end
 
   private
+
+  def build_employee_squad(emp)
+    employee_id = emp['Person ID'].to_i
+    employee = Employee.find(employee_id)
+
+    # org_name = emp['Workday Supervisory Org 2'].strip
+    org_name = "Retail Tech Squads"
+
+    squad_parent = nil
+    squad_array = []
+    squad_array.push( org_name )
+
+    # Create top level org if it doesn't already exist
+    squad = Squad.find_or_create_by(name: org_name, full_path: org_name, parent_id: squad_parent, depth: 1)
+    squad_parent = squad.id
+
+    # Build sub-squads
+    (1..4).each do |i|
+      #lvl = emp["PACE Supervisory Org #{i}"].strip
+      lvl = emp["Demand team - Domain L#{i}"].strip
+
+      # If we've found nil or empty, either we've found the crew the person belongs to or we've reached the end of the org path
+      # or they may be on a squad - check for `Demand team - type` = 'squad';
+      if lvl.nil? || lvl.empty? || i == 7
+
+        if ['Squad','COE','Crew','COE Team'].include?(emp['Demand team - type'])
+          lvl = emp['Demand team - Crew/COE'].strip
+          squad_array.push( lvl )
+          squad_path = build_squad_path(squad_array)
+          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
+          squad_parent = squad.id
+        end
+        if ['Squad','COE Team',].include?(emp['Demand team - type'])
+          lvl = emp['Demand team - Squad/COE Team'].strip
+          squad_array.push( lvl )
+          squad_path = build_squad_path(squad_array)
+          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+2)
+        end
+
+        if squad.id.nil?
+          raise "Squad ID is nil: \n" + emp.to_json + "\n" + squad.to_json + "\n" + squad.errors.full_messages.to_json
+        else
+          SquadsEmployee.create(squad: squad, employee: employee, allocation: 1)
+          employee_squads = SquadsEmployee.where(employee_id: employee_id)
+
+          if employee_squads.count > 1
+            employee_squads.each do |es|
+              es.update(allocation: (1.0 / employee_squads.count).round(3))
+            end
+          end
+        end
+
+        break
+      end
+      squad_array.push( lvl )
+      squad_path = build_squad_path(squad_array)
+      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
+      squad_parent = squad.id
+    end
+  end
+
+  def build_employee_pace(emp)
+    employee_id = emp['Person ID'].to_i
+    employee = Employee.find(employee_id)
+
+    org_name = emp['PACE Supervisory Org Business Unit'].strip
+    if org_name.nil? or org_name.empty?
+      return
+    end
+
+    squad_parent = nil
+    squad_array = []
+    squad_array.push( org_name )
+
+    # Create top level org if it doesn't already exist
+    squad = Squad.find_or_create_by(name: org_name, full_path: org_name, parent_id: squad_parent, depth: 1)
+    squad_parent = squad.id
+
+    # Build sub-squads
+    (2..7).each do |i|
+      lvl = emp["PACE Supervisory Org #{i}"].strip
+
+      # If we've found nil or empty, this is the squad the employee belongs to
+      if lvl.nil? || lvl.empty? || i == 7
+        SquadsEmployee.create(squad: squad, employee: employee, allocation: 1)
+        employee_squads = SquadsEmployee.where(employee_id: employee_id)
+
+        if employee_squads.count > 1
+          employee_squads.each do |es|
+            es.update(allocation: (1.0 / employee_squads.count).round(3))
+          end
+        end
+        break
+      end
+      squad_array.push( lvl )
+      squad_path = build_squad_path(squad_array)
+      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
+      squad_parent = squad.id
+    end
+  end
 
   def build_squad_stats(parent_squad)
 
