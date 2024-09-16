@@ -58,7 +58,7 @@ class SquadsController < ApplicationController
 		end
 	end
 
-	  def destroy_all
+	def destroy_all
 		SquadsEmployee.delete_all
 		Squad.delete_all
 		redirect_to squads_path, notice: 'All squads have been deleted.'
@@ -78,6 +78,15 @@ class SquadsController < ApplicationController
 			format.json { render json: @sub_teams }
 		end
   	end
+
+	def squad_members
+		squad = Squad.find(params[:id])
+		@squad_members = squad.squads_employees.includes(:employee)
+		respond_to do |format|
+			format.html { render partial: 'members', locals: { squad_members: @squad_members } }
+			format.json { render json: @squad_members.to_json(include: :employee) }
+		end
+	end
 
   private
 
