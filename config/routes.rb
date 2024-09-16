@@ -43,6 +43,7 @@ Rails.application.routes.draw do
   get 'squads/treeview', to: 'squads#treeview'
   get 'squads/:id/sub_teams', to: 'squads#sub_teams', as: 'sub_teams'
   delete 'squads/destroy_all', to: 'squads#destroy_all', as: 'squads_destroy_all'
+  get 'squads/:id/squad_members', to: 'squads#squad_members', as: 'squad_members'
 
   # Defines the root path route ("/")
   root "employees#index"
