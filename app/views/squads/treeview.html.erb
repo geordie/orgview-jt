@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			id: <%= squad.id %>,
 			parent: <%= squad.parent_id || "null" %>,
 			title: "<%= squad.name %>",
+			org_members: <%= squad.org_members %>,
 			squad_members: <%= squad.squad_members %>,
 			squad_members_managers: <%= squad.squad_members_managers %>,
 			squad_health: "<%= squad.squad_health %>",
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	options.normalLevelShift = 44;
 	options.padding = { left: 10, top: 20, right: 10, bottom: 10};
 	options.hasSelectorCheckbox = primitives.Enabled.False;
-	options.onCursorChanging = function (e, data) {};
+	// options.onCursorChanging = function (e, data) {};
 	options.onCursorChanged = onNodeHighlighted;
 
 	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
@@ -50,7 +51,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function onNodeHighlighted(event, data) {
 	document.getElementById("sidecontainer").innerHTML = data.context.title;
-	console.log(data.context);
+	var squadMembers = getSquadMembers(data.context.id)
+		.then( response => {
+			tableCreate(response);
+		}
+	);
+}
+
+function tableCreate(squadMembers) {
+	const sideContainer = document.getElementById("sidecontainer");
+	var tbl = document.createElement('table');
+	tbl.style.width = '498px';
+	tbl.style.border = '1px solid black';
+
+	squadMembers.forEach(squadMember => {
+		const tr = tbl.insertRow();
+		const td0 = tr.insertCell();
+		const td1 = tr.insertCell();
+		const td2 = tr.insertCell();
+		const td3 = tr.insertCell();
+		td0.appendChild(document.createTextNode(squadMember.employee.id));
+		td1.appendChild(document.createTextNode(squadMember.employee.name));
+		td2.appendChild(document.createTextNode(squadMember.employee.title));
+		td3.appendChild(document.createTextNode(squadMember.employee.manager_id));
+
+		Array.from(tr.cells).forEach(cell => {
+			cell.style.border = '1px solid black';
+			cell.style.padding = '3px';});
+	});
+
+	sideContainer.appendChild(tbl);
 }
 
 function onTemplateRender(event, data) {
@@ -72,14 +102,30 @@ function onTemplateRender(event, data) {
 		element.firstChild.firstChild.textContent = itemConfig.title;
 
 		element.childNodes[1].innerHTML = '<strong>ID:</strong> ' + itemConfig.id;
-		element.childNodes[2].innerHTML = '<strong>Team Size:</strong> ' + itemConfig.squad_members;
-		element.childNodes[3].innerHTML = '<strong>Managers:</strong> ' + itemConfig.squad_members_managers;
-		element.childNodes[4].innerHTML = '<strong>Sub-Teams:</strong> ' + itemConfig.children;
-		element.childNodes[5].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
-		element.childNodes[6].innerHTML = '<strong>Squad Health:</strong> ';
-		element.childNodes[7].innerHTML = itemConfig.squad_health_details;
+		element.childNodes[2].innerHTML = '<strong>Org Size:</strong> ' + itemConfig.org_members;
+		element.childNodes[3].innerHTML = '<strong>Team Size:</strong> ' + itemConfig.squad_members;
+		element.childNodes[4].innerHTML = '<strong>Managers:</strong> ' + itemConfig.squad_members_managers;
+		element.childNodes[5].innerHTML = '<strong>Sub-Teams:</strong> ' + itemConfig.children;
+		element.childNodes[6].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
+		element.childNodes[7].innerHTML = '<strong>Squad Health:</strong> ';
+		element.childNodes[8].innerHTML = itemConfig.squad_health_details;
 	}
 }
+
+function getSquadMembers(squadId) {
+	// Make a GET request to fetch data for the selected squad
+	return fetch(`/squads/${squadId}/squad_members.json`, {
+		method: 'GET'
+	})
+	.then(response => response.json())
+	.then(data => {
+		return data;
+	})
+	.catch(error => {
+		console.error('Error:', error);
+	});
+}
+
 
 function getSubTeams(parentId) {
 	// Make a GET request to fetch data for the selected squad
@@ -88,7 +134,6 @@ function getSubTeams(parentId) {
 	})
 	.then(response => response.json())
 	.then(data => {
-		//console.log(data);
 		var newItems = [];
 		// Add child nodes to the clicked node based on data
 		data.forEach(sub_team => {
@@ -105,6 +150,7 @@ function getSubTeams(parentId) {
 					id: sub_team.sub_team.id,
 					parent: parentId,
 					title: sub_team.sub_team.name,
+					org_members: sub_team.sub_team.org_members,
 					squad_members: sub_team.sub_team.squad_members,
 					squad_members_managers: sub_team.sub_team.squad_members_managers,
 					squad_health: sub_team.sub_team.squad_health,
@@ -186,7 +232,21 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "members",
+				name: "org_members",
+				style: {
+					top: "30px",
+					left: "110px",
+					width: "162px",
+					height: "36px",
+					fontSize: "12px",
+					overflow: "hidden"
+				},
+				"class": "bp-item"
+			}
+		],
+		["div",
+			{
+				name: "team_members",
 				style: {
 					top: "50px",
 					left: "10px",
