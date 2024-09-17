@@ -60,14 +60,14 @@ module CbaSquadGenerator
           lvl = emp['Demand team - Crew/COE'].strip
           squad_array.push( lvl )
           squad_path = build_squad_path(squad_array)
-          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
+          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+2)
           squad_parent = squad.id
         end
         if ['Squad','COE Team',].include?(emp['Demand team - type'])
           lvl = emp['Demand team - Squad/COE Team'].strip
           squad_array.push( lvl )
           squad_path = build_squad_path(squad_array)
-          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+2)
+          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+3)
         end
 
         if squad.id.nil?
@@ -87,7 +87,7 @@ module CbaSquadGenerator
       end
       squad_array.push( lvl )
       squad_path = build_squad_path(squad_array)
-      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
+      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
       squad_parent = squad.id
     end
   end
@@ -127,7 +127,7 @@ module CbaSquadGenerator
       end
       squad_array.push( lvl )
       squad_path = build_squad_path(squad_array)
-      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
+      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
       squad_parent = squad.id
     end
   end
@@ -136,6 +136,7 @@ module CbaSquadGenerator
 
     # Get the number of squad members
     parent_squad.squad_members = SquadsEmployee.where(squad_id: parent_squad.id).count
+    parent_squad.org_members = parent_squad.squad_members
 
     managers = Array.new
     parent_squad.employees.each do |employee|
@@ -153,6 +154,7 @@ module CbaSquadGenerator
       parent_squad.descendents += 1
       build_squad_stats(child_squad)
       parent_squad.descendents += child_squad.descendents
+      parent_squad.org_members += child_squad.org_members
     end
 
     squad_health, squad_health_details = get_squad_health(parent_squad)
@@ -170,7 +172,7 @@ module CbaSquadGenerator
     squad_health = "green"
     squad_health_details = Array.new
 
-    if squad.squad_members.between?(11,15)
+    if squad.squad_members.between?(13,15)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Large Team Size (amber)")
     elsif squad.squad_members.between?(3,4)
@@ -184,7 +186,7 @@ module CbaSquadGenerator
       squad_health_details.push("Large Team Size (red)")
     end
 
-    if squad.squad_members_managers.between?(2,3)
+    if squad.squad_members_managers.between?(3,3)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Multiple Managers (amber)")
     elsif squad.squad_members_managers > 3
@@ -192,13 +194,13 @@ module CbaSquadGenerator
       squad_health_details.push("Multiple Managers (red)")
     end
 
-    if squad.children.between?(9,10)
+    if squad.children.between?(10,12)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Many Sub-Teams (amber)")
     elsif squad.children.between?(1,2)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Few Sub-Teams (amber)")
-    elsif squad.children > 10
+    elsif squad.children > 12
       squad_health = increment_health(squad_health, "red")
       squad_health_details.push("Many Sub-Teams (red)")
     end
