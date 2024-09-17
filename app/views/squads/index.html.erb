@@ -12,6 +12,7 @@
       <th style="text-align: center;">Managers</th>
       <th style="text-align: center;">Sub-Teams</th>
       <th style="text-align: center;">Descendents</th>
+      <th style="text-align: center;">Org Size</th>
       <th style="text-align: center;">Org Health</th>
       <th style="text-align: center;">Actions</th>
     </tr>
@@ -25,6 +26,7 @@
         <td style="text-align: center;"><%= squad.squad_members_managers %></td>
         <td style="text-align: center;"><%= squad.children %></td>
         <td style="text-align: center;"><%= squad.descendents %></td>
+        <td style="text-align: center;"><%= squad.org_members %></td>
         <td data-toggle="tooltip" title="<%= squad.squad_health_details %>" style="text-align: center;">
           <% if squad.squad_health == "amber" %>
         <span style="color: orange;">&#x25cf;</span>
