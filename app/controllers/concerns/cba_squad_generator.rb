@@ -127,7 +127,7 @@ module CbaSquadGenerator
       end
       squad_array.push( lvl )
       squad_path = build_squad_path(squad_array)
-      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
+      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
       squad_parent = squad.id
     end
   end
