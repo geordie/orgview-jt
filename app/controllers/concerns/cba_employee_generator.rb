@@ -36,6 +36,8 @@ module CbaEmployeeGenerator
           manager_id: emp['Manager ID'].to_i,
           is_manager: role[:is_manager],
           start_date: start_date,
+          country: emp['Country'],
+          worker_type: emp['Worker Type'],
         )
       end
 
