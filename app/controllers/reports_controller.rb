@@ -102,8 +102,9 @@ class ReportsController < ApplicationController
   end
 
   def employee_allocations
-    employee_allocations = SquadsEmployee.all.group(:allocation).count.sort_by { |k, v| v }.reverse.to_h
-    @allocations = employee_allocations.keys.map { |k| (1/k).round(0) }
+    employee_allocations = SquadsEmployee.all.group(:allocation).count.sort_by { |k, v| k }.reverse.to_h
+    employee_allocations = employee_allocations.map { |k, v| [(1/k).round(0), v/(1/k).round(0)] }.to_h
+    @allocations = employee_allocations.keys
     @counts = employee_allocations.values
     @percentages = build_percentages(employee_allocations)
   end
@@ -127,6 +128,17 @@ class ReportsController < ApplicationController
     @tenure_ranges = tenure_ranges.keys
     @counts = tenure_ranges.values
     @percentages = build_percentages(tenure_ranges)
+  end
+
+  def retail_tech_org_sizes
+    org_sizes = Squad.where(depth: 2)
+      .where('full_path LIKE ?', 'Retail Tech%')
+      .order(org_members: :desc)
+      .pluck(:name, :org_members)
+      .to_h
+    @org_sizes = org_sizes.keys
+    @counts = org_sizes.values
+    @percentages = build_percentages(org_sizes)
   end
 
   private
