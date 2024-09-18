@@ -60,14 +60,14 @@ module CbaSquadGenerator
           lvl = emp['Demand team - Crew/COE'].strip
           squad_array.push( lvl )
           squad_path = build_squad_path(squad_array)
-          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+2)
+          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
           squad_parent = squad.id
         end
         if ['Squad','COE Team',].include?(emp['Demand team - type'])
           lvl = emp['Demand team - Squad/COE Team'].strip
           squad_array.push( lvl )
           squad_path = build_squad_path(squad_array)
-          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+3)
+          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+2)
         end
 
         if squad.id.nil?
