@@ -29,6 +29,7 @@ Rails.application.routes.draw do
   get 'reports/employee_allocations', to: 'reports#employee_allocations'
   get 'reports/employee_tenure', to: 'reports#employee_tenure'
   get 'reports/management_ratios', to: 'reports#management_ratios'
+  get 'reports/retail_tech_org_sizes', to: 'reports#retail_tech_org_sizes'
   get 'reports/squad_children', to: 'reports#squad_children'
   get 'reports/squad_depth', to: 'reports#squad_depth'
   get 'reports/squad_members_managers', to: 'reports#squad_members_managers'
