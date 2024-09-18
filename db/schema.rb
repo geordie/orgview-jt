@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_09_16_154809) do
+ActiveRecord::Schema[7.1].define(version: 2024_09_18_123000) do
   create_table "emp", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.text "Person ID"
     t.text "First Name"
@@ -200,6 +200,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_16_154809) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "job_function_group"
+    t.string "worker_type"
+    t.string "country"
   end
 
   create_table "roles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
