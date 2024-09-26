@@ -2,18 +2,18 @@
 
 <%= render partial: 'countTable',
 	locals: { 
-		labelheader: 'Manager Team Size', 
-		labels: @worker_types, 
+		labelheader: 'Worker Type',
+		labels: @worker_types,
 		counts: @counts,
-		percentages: @percentages 
+		percentages: @percentages
 		} %>
 
 <%= render partial: 'horizontalBarChart',
 	locals: { 
-		id: 'rolesChart', 
-		labels: @worker_types, 
-		data: @counts, 
-		percentages: @percentages, 
-		xlabel: '# of Squads'
+		id: 'rolesChart',
+		labels: @worker_types,
+		data: @counts,
+		percentages: @percentages,
+		xlabel: '# of People'
 	} %>
 
