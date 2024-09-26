@@ -37,6 +37,28 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(employee_job_function_groups)
   end
 
+  def employee_country
+    employee_countries = Employee.all.group(:country).count.sort_by { |k, v| v }.reverse.to_h
+    @countries = employee_countries.keys
+    @counts = employee_countries.values
+    @percentages = build_percentages(employee_countries)
+  end
+
+  def employee_worker_type
+    employee_worker_types = Employee.all.group(:worker_type).count.sort_by { |k, v| v }.reverse.to_h
+    @worker_types = employee_worker_types.keys
+    @counts = employee_worker_types.values
+    @percentages = build_percentages(employee_worker_types)
+  end
+
+  def employee_country_worker_type
+    employee_country_worker_types = Employee.all.group(:country, :worker_type).count.sort_by { |k, v| k[0] }.reverse.to_h
+    employee_country_worker_types = employee_country_worker_types.map { |k,v| [k[0] + ", " + k[1],v] }.reverse.to_h
+    @country_worker_types = employee_country_worker_types.keys
+    @counts = employee_country_worker_types.values
+    @percentages = build_percentages(employee_country_worker_types)
+  end
+
   def squad_size
     squad_sizes = Squad.all.group(:squad_members).count.sort_by { |k, v| k }.reverse.to_h
     @sizes = squad_sizes.keys
