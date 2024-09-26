@@ -64,12 +64,25 @@ function tableCreate(squadMembers) {
 	tbl.style.width = '498px';
 	tbl.style.border = '1px solid black';
 
+	var tr = tbl.insertRow();
+	var td0 = tr.insertCell();
+	var td1 = tr.insertCell();
+	var td2 = tr.insertCell();
+	var td3 = tr.insertCell();
+	td0.appendChild(document.createTextNode("ID"));
+	td1.appendChild(document.createTextNode("Name"));
+	td2.appendChild(document.createTextNode("Title"));
+	td3.appendChild(document.createTextNode("Manager ID"));
+	Array.from(tr.cells).forEach(cell => {
+			cell.style.border = '1px solid black';
+			cell.style.padding = '3px';});
+
 	squadMembers.forEach(squadMember => {
-		const tr = tbl.insertRow();
-		const td0 = tr.insertCell();
-		const td1 = tr.insertCell();
-		const td2 = tr.insertCell();
-		const td3 = tr.insertCell();
+		tr = tbl.insertRow();
+		td0 = tr.insertCell();
+		td1 = tr.insertCell();
+		td2 = tr.insertCell();
+		td3 = tr.insertCell();
 		td0.appendChild(document.createTextNode(squadMember.employee.id));
 		td1.appendChild(document.createTextNode(squadMember.employee.name));
 		td2.appendChild(document.createTextNode(squadMember.employee.title));
