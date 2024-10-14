@@ -12,10 +12,43 @@ class ReportsController < ApplicationController
   end
 
   def seniority
-    employee_seniority = Employee.all.group(:seniority).count.sort_by { |k, v| k }.reverse.to_h
+    employee_seniority = Employee.all
+      .where(params[:country].present? ? "country = ?" : "1=1", params[:country])
+      .where(params[:worker_type].present? ? "worker_type = ?" : "1=1", params[:worker_type])
+      .group(:seniority).count.sort_by { |k, v| k }.reverse.to_h
     @seniorities = employee_seniority.keys
     @counts = employee_seniority.values
     @percentages = build_percentages(employee_seniority)
+  end
+
+  def team_geos
+    squad_percentages = Squad.joins(:employees)
+      .select('squads.full_path AS full_path, COUNT(CASE WHEN employees.country = \'Australia\' THEN 1 END) * 100.0 / COUNT(employees.id) AS percentage_australian_employees')
+      .where(params[:descendents].present? ? "descendents = ?" : "1=1", params[:descendents])
+      .group('squads.full_path')
+      .order('percentage_australian_employees DESC')
+
+    team_makeup_counts = Hash.new(0)
+
+    squad_percentages.each do |squad|
+      percentage = squad.percentage_australian_employees.to_f
+      team_makeup = case
+        when percentage >= 90
+          'Aus team (>= 90%)'
+        when percentage >= 75
+          'Mostly Aus team (>= 75%)'
+        when percentage <= 10
+          'India team (>= 90%)'
+        when percentage <= 25
+          'Mostly India team (>= 75%)'
+        else
+          'Distributed team'
+        end
+      team_makeup_counts[team_makeup] += 1
+    end
+    @team_geos = team_makeup_counts.keys
+    @counts = team_makeup_counts.values
+    @percentages = build_percentages(team_makeup_counts)
   end
 
   def job_function
@@ -144,12 +177,35 @@ class ReportsController < ApplicationController
         ELSE '25+ years'
       END AS tenure_range, COUNT(*) AS count"
     ).where.not(start_date: nil)
+    .where(params[:country].present? ? "country = ?" : "1=1", params[:country])
+    .where(params[:worker_type].present? ? "worker_type = ?" : "1=1", params[:worker_type])
+    #.where("country = 'India'")
     .group("tenure_range")
     .order("tenure_range")
     tenure_ranges = tenure_ranges.map { |tr| [tr.tenure_range, tr.count] }.to_h
     @tenure_ranges = tenure_ranges.keys
     @counts = tenure_ranges.values
     @percentages = build_percentages(tenure_ranges)
+  end
+
+  def employee_country_tenure
+    employee_country_tenure_ranges = Employee.select(
+      "CASE
+        WHEN start_date >= CURDATE() - INTERVAL 1 YEAR THEN '00 to 01 year'
+        WHEN start_date >= CURDATE() - INTERVAL 3 YEAR AND start_date < CURDATE() - INTERVAL 1 YEAR THEN '01 to 03 years'
+        WHEN start_date >= CURDATE() - INTERVAL 5 YEAR AND start_date < CURDATE() - INTERVAL 3 YEAR THEN '03 to 05 years'
+        WHEN start_date >= CURDATE() - INTERVAL 10 YEAR AND start_date < CURDATE() - INTERVAL 5 YEAR THEN '05 to 10 years'
+        WHEN start_date >= CURDATE() - INTERVAL 15 YEAR AND start_date < CURDATE() - INTERVAL 10 YEAR THEN '10 to 15 years'
+        WHEN start_date >= CURDATE() - INTERVAL 20 YEAR AND start_date < CURDATE() - INTERVAL 15 YEAR THEN '15 to 20 years'
+        WHEN start_date >= CURDATE() - INTERVAL 25 YEAR AND start_date < CURDATE() - INTERVAL 20 YEAR THEN '20 to 25 years'
+        ELSE '25+ years'
+      END AS tenure_range, country, COUNT(*) AS count"
+    ).where.not(start_date: nil).group("country").group("tenure_range").order("country").order("tenure_range")
+    employee_country_tenure_ranges = employee_country_tenure_ranges.map { |tr| [tr.tenure_range.to_s + ", " + tr.country.to_s, tr.count] }.to_h
+    p employee_country_tenure_ranges.to_json
+    @country_tenure_ranges = employee_country_tenure_ranges.keys
+    @counts = employee_country_tenure_ranges.values
+    @percentages = build_percentages(employee_country_tenure_ranges)
   end
 
   def retail_tech_org_sizes
