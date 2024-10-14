@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			id: <%= squad.id %>,
 			parent: <%= squad.parent_id || "null" %>,
 			title: "<%= squad.name %>",
+			full_path: "<%= squad.full_path %>",
 			org_members: <%= squad.org_members %>,
 			squad_members: <%= squad.squad_members %>,
 			squad_members_managers: <%= squad.squad_members_managers %>,
@@ -50,7 +51,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function onNodeHighlighted(event, data) {
-	document.getElementById("sidecontainer").innerHTML = data.context.title;
+	document.getElementById("sidecontainer").innerHTML = data.context.title
+		+ "<br/>" + data.context.full_path;
 	var squadMembers = getSquadMembers(data.context.id)
 		.then( response => {
 			tableCreate(response);
@@ -163,6 +165,7 @@ function getSubTeams(parentId) {
 					id: sub_team.sub_team.id,
 					parent: parentId,
 					title: sub_team.sub_team.name,
+					full_path: sub_team.sub_team.full_path,
 					org_members: sub_team.sub_team.org_members,
 					squad_members: sub_team.sub_team.squad_members,
 					squad_members_managers: sub_team.sub_team.squad_members_managers,
