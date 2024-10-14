@@ -1,0 +1,19 @@
+<h1>Employee Countries</h1>
+
+<%= render partial: 'countTable',
+	locals: { 
+		labelheader: 'Manager Team Size', 
+		labels: @country_tenure_ranges, 
+		counts: @counts,
+		percentages: @percentages 
+		} %>
+
+<%= render partial: 'horizontalBarChart',
+	locals: { 
+		id: 'rolesChart', 
+		labels: @country_tenure_ranges, 
+		data: @counts, 
+		percentages: @percentages, 
+		xlabel: '# of Squads'
+	} %>
+
