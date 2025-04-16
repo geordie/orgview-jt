@@ -16,6 +16,7 @@ default: &default
   username: root
   password: "root"
   host: mysql
+  port: 3308
 
 development:
   <<: *default
