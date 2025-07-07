@@ -52,5 +52,5 @@ Rails.application.routes.draw do
   get 'squads/:id/squad_members', to: 'squads#squad_members', as: 'squad_members'
 
   # Defines the root path route ("/")
-  root "employees#index"
+  root "home#index"
 end
