@@ -1,5 +1,5 @@
 class EmployeesController < ApplicationController
-  include EmployeeGenerator, CbaEmployeeGenerator
+  include EmployeeGenerator, CbaEmployeeGenerator, EmployeeCsvImporter
   before_action :set_employee, only: [ :show, :edit, :update, :destroy ]
 
   # GET /employees or /employees.json
@@ -101,6 +101,17 @@ class EmployeesController < ApplicationController
   def treeview2
     @employees = Employee.where("manager_id NOT IN (SELECT id FROM employees)")
     #@employees = Employee.where("id = 517096")
+  end
+
+    # POST /employees/import_csv
+  def import_csv
+    uploaded_file = params[:csv_file]
+    if uploaded_file.nil?
+      flash[:alert] = "No file selected."
+      redirect_to root_path and return
+    end
+    # Call the concern method with a different name to avoid recursion
+    import_csv_file(uploaded_file)
   end
 
   private
