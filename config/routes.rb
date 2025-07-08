@@ -21,6 +21,7 @@ Rails.application.routes.draw do
 
   # Roles
   resources :roles, constraints: { id: /\d+/ }
+  post 'roles/build_cba_roles', to: 'roles#build_cba_roles', as: 'build_cba_roles'
 
   # Reports
   get 'reports/roles', to: 'reports#roles'

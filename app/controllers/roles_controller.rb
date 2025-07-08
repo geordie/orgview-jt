@@ -1,4 +1,6 @@
 class RolesController < ApplicationController
+  include CbaRolesGenerator
+
   before_action :set_role, only: %i[ show edit update destroy ]
 
   # GET /roles or /roles.json
@@ -59,6 +61,11 @@ class RolesController < ApplicationController
       format.html { redirect_to roles_url, notice: "Role was successfully destroyed." }
       format.json { head :no_content }
     end
+  end
+
+  # POST /roles/build_cba_roles_list
+  def build_cba_roles
+    build_cba_roles_list
   end
 
   private
