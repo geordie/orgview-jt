@@ -4,43 +4,38 @@ module CbaEmployeeGenerator
   def build_cba_list
     ActiveRecord::Base.transaction do
       Employee.destroy_all
-      # 2024-09-06 The original data I received included open reqs
-      # The updated data does not.
-      # For the updated data import to work, I had to remove "where(['`Vacancy Status` != ?', "Vacant" ])"
       Emp.all.each do |emp|
-        
         # Get the role based on job title
-        title = emp['Workday Job Profile']
+        title = emp['workday_job_profile']
         role = Role.where(['role = ?', title]).first
 
         # Build the employee name
-        first_name = emp['First Name'].nil? ? "" : emp['First Name']
-        surname = emp['Surname'].nil? ? "" : emp['Surname']
+        first_name = emp['first_name'].nil? ? "" : emp['first_name']
+        surname = emp['surname'].nil? ? "" : emp['surname']
         fullname = (first_name + " " + surname).strip
 
         # Build a start date
-        tenure = emp['Tenure']
+        tenure = emp['tenure']
         start_date = get_start_date_from_tenure(tenure)
 
-        if Employee.exists?(emp['Person ID'].to_i)
+        if Employee.exists?(emp['person_id'].to_i)
           next
         end
-        
+
         Employee.create!(
-          id: emp['Person ID'].to_i,
+          id: emp['person_id'].to_i,
           name: fullname,
           title: role[:role],
           job_function: role[:job_function],
           job_function_group: role[:job_function_group],
           seniority: role[:seniority],
-          manager_id: emp['Manager ID'].to_i,
+          manager_id: emp['manager_id'].to_i,
           is_manager: role[:is_manager],
           start_date: start_date,
-          country: emp['Country'],
-          worker_type: emp['Worker Type'],
+          country: emp['country'],
+          worker_type: emp['worker_type'],
         )
       end
-
     end
 
     redirect_to employees_path, notice: 'CBA employees created successfully.'
