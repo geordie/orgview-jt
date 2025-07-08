@@ -14,7 +14,7 @@ Rails.application.routes.draw do
   get 'employees/treeview', to: 'employees#treeview'
   get 'employees/treeview2', to: 'employees#treeview2'
   post 'employees/create_samples', to: 'employees#create_samples'
-  post 'employees/build_cba_list', to: 'employees#build_cba_list'
+  post 'employees/build_cba_list', to: 'employees#build_cba_list', as: 'build_cba_list_employees'
   delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
   get 'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
   post 'employees/import_csv', to: 'employees#import_csv', as: 'import_csv_employees'
