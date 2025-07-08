@@ -3,39 +3,45 @@ module CbaEmployeeGenerator
 
   def build_cba_list
     ActiveRecord::Base.transaction do
-      Employee.destroy_all
-      Emp.all.each do |emp|
-        # Get the role based on job title
-        title = emp['workday_job_profile']
-        role = Role.where(['role = ?', title]).first
+      SquadsEmployee.delete_all
+      Squad.delete_all
+      Employee.delete_all
 
-        # Build the employee name
+      batch = []
+      batch_size = 5000
+
+      emp_with_roles = Emp.joins("LEFT JOIN roles ON roles.role = emp.workday_job_profile \
+        AND roles.seniority = emp.seniority \
+        AND roles.is_manager = case when emp.is_manager = 'Yes' then 1 else 0 end")
+        .select('emp.*, roles.role AS role_name, roles.job_function, roles.job_function_group, roles.seniority AS role_seniority, roles.is_manager AS role_is_manager')
+
+      emp_with_roles.each_with_index do |emp, i|
         first_name = emp['first_name'].nil? ? "" : emp['first_name']
         surname = emp['surname'].nil? ? "" : emp['surname']
         fullname = (first_name + " " + surname).strip
 
-        # Build a start date
-        tenure = emp['tenure']
-        start_date = get_start_date_from_tenure(tenure)
-
-        if Employee.exists?(emp['person_id'].to_i)
-          next
+        if i % 1000 == 5
+          p "Processing record #{i + 1} with Person ID: #{emp['person_id']}"
         end
 
-        Employee.create!(
-          id: emp['person_id'].to_i,
+        batch << {
+          person_id: emp['person_id'],
           name: fullname,
-          title: role[:role],
-          job_function: role[:job_function],
-          job_function_group: role[:job_function_group],
-          seniority: role[:seniority],
-          manager_id: emp['manager_id'].to_i,
-          is_manager: role[:is_manager],
-          start_date: start_date,
+          title: emp['role_name'],
+          job_function: emp['job_function'],
+          job_function_group: emp['job_function_group'],
+          seniority: emp['role_seniority'],
+          manager_id: emp['manager_id'],
+          is_manager: emp['role_is_manager'],
           country: emp['country'],
           worker_type: emp['worker_type'],
-        )
+        }
+        if batch.size >= batch_size
+          Employee.insert_all!(batch)
+          batch.clear
+        end
       end
+      Employee.insert_all!(batch) if batch.any?
     end
 
     redirect_to employees_path, notice: 'CBA employees created successfully.'
