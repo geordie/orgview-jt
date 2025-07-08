@@ -31,6 +31,17 @@
   </div>
 </div>
 
+<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+  <div class="col-4">
+    <h5>Step 3: Generate Employees</h5>
+  </div>
+  <div class="col-3">
+    <%= form_with url: build_cba_list_employees_path, method: :post, style: "display: inline-block; margin: 0;" do %>
+      <%= submit_tag 'Go', class: 'btn btn-success' %>
+    <% end %>
+  </div>
+</div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     var fileInput = document.getElementById("file-input");
