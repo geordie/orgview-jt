@@ -2,6 +2,9 @@ module EmployeeCsvImporter
   extend ActiveSupport::Concern
 
   require 'csv'
+  require Rails.root.join('app/lib/cba_utils')
+
+  include CbaUtils
 
   EXPECTED_CSV_HEADERS = [
     "Person ID",
@@ -116,11 +119,16 @@ module EmployeeCsvImporter
     employees_cache = Emp.all.pluck(:person_id)
     batch = []
     batch_size = 5000
-    CSV.foreach(temp_file, encoding: 'ISO-8859-1', headers: true) do |row|
-      raw_person_id = row["Person ID"]
+
+    uploaded_csv.each do |row|
+      raw_person_id = row["Person ID"] # Assuming "Person ID" is the first column
       next if employees_cache.include?(raw_person_id)
+      if batch.size % 1000 == 5
+        p "Processing record #{batch.size + 1} with Person ID: #{raw_person_id}"
+      end
+      seniority = get_seniority_from_management_level(row["Management Level"])
       batch << {
-        person_id: row["Person ID"],
+        person_id: raw_person_id,
         first_name: row["First Name"],
         surname: row["Surname"],
         worker_type: row["Worker Type"],
@@ -184,7 +192,8 @@ module EmployeeCsvImporter
         demand_allocation_start_date: row["Demand allocation start date"],
         demand_allocation_last_updated: row["Demand allocation last updated"],
         demand_team_id: row["demand team - id"],
-        supply_team_id: row["supply team - id"]
+        supply_team_id: row["supply team - id"],
+        seniority: seniority
       }
       if batch.size >= batch_size
         begin
