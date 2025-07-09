@@ -52,30 +52,4 @@ module CbaEmployeeGenerator
 
     redirect_to employees_path, notice: 'CBA employees created successfully.'
   end
-
-  private
-
-  def get_start_date_from_tenure(tenure)
-    case tenure.strip
-    when "0 to 1"
-      start_date = Faker::Date.between(from: 1.years.ago, to: Date.today)
-    when "1 to 3"
-      start_date = Faker::Date.between(from: 3.years.ago, to: 1.years.ago)
-    when "3 to 5"
-      start_date = Faker::Date.between(from: 5.years.ago, to: 3.years.ago)
-    when "5 to 10"
-      start_date = Faker::Date.between(from: 10.years.ago, to: 5.years.ago)
-    when "10 to 15"
-      start_date = Faker::Date.between(from: 15.years.ago, to: 10.years.ago)
-    when "15 to 20"
-      start_date = Faker::Date.between(from: 20.years.ago, to: 15.years.ago)
-    when "20 to 25"
-      start_date = Faker::Date.between(from: 25.years.ago, to: 20.years.ago)
-    when "25+"
-      start_date = Faker::Date.between(from: 30.years.ago, to: 25.years.ago)
-    else
-      start_date = Date.today
-    end
-    return start_date
-  end
 end
