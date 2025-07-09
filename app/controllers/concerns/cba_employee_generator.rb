@@ -9,6 +9,7 @@ module CbaEmployeeGenerator
 
       batch = []
       batch_size = 5000
+      person_ids = {}
 
       emp_with_roles = Emp.joins("LEFT JOIN roles ON roles.role = emp.workday_job_profile \
         AND roles.seniority = emp.seniority \
@@ -23,6 +24,11 @@ module CbaEmployeeGenerator
         if i % 1000 == 5
           p "Processing record #{i + 1} with Person ID: #{emp['person_id']}"
         end
+
+        # Ensure person_id is unique
+        person_ids[emp['person_id']] ||= 0
+        person_ids[emp['person_id']] += 1
+        next if person_ids[emp['person_id']] > 1
 
         batch << {
           person_id: emp['person_id'],
