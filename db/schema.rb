@@ -12,6 +12,75 @@
 
 ActiveRecord::Schema[7.1].define(version: 2024_09_18_123000) do
   create_table "emp", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "person_id", limit: 32
+    t.string "first_name", limit: 128
+    t.string "surname", limit: 128
+    t.string "worker_type", limit: 50
+    t.string "worker_sub_type", limit: 50
+    t.string "city", limit: 50
+    t.string "state", limit: 50
+    t.string "country", limit: 50
+    t.integer "fte"
+    t.string "management_level", limit: 50
+    t.string "pace_role", limit: 512
+    t.integer "workday_position_id"
+    t.string "position_title", limit: 256
+    t.string "workday_job_family_group", limit: 50
+    t.string "workday_job_family", limit: 50
+    t.string "workday_job_profile", limit: 128
+    t.string "workday_job_profile_id", limit: 50
+    t.string "is_manager", limit: 50
+    t.string "company", limit: 128
+    t.integer "manager_id"
+    t.string "manager_name", limit: 128
+    t.integer "manager_position_id"
+    t.string "supply_team_name", limit: 128, collation: "utf8mb4_0900_as_cs"
+    t.string "supply_team_type", limit: 50
+    t.integer "supply_team_layer_in_the_org"
+    t.string "chapter_area", limit: 256
+    t.string "chapter", limit: 256
+    t.string "pace_supervisory_org_business_unit", limit: 128
+    t.string "pace_supervisory_org_2", limit: 128
+    t.string "pace_supervisory_org_3", limit: 128
+    t.string "pace_supervisory_org_4", limit: 128
+    t.string "pace_supervisory_org_5", limit: 128
+    t.string "pace_supervisory_org_6", limit: 128
+    t.string "pace_supervisory_org_7", limit: 128
+    t.string "demand_team_type", limit: 50
+    t.string "demand_team_name", limit: 128, collation: "utf8mb4_0900_as_cs"
+    t.string "demand_team_pattern", limit: 50
+    t.integer "demand_team_layer_in_the_org"
+    t.string "demand_team_business_unit", limit: 128
+    t.string "demand_team_domain_l1", limit: 128
+    t.string "demand_team_domain_l2", limit: 128
+    t.string "demand_team_domain_l3", limit: 128
+    t.string "demand_team_crew_coe", limit: 128
+    t.string "demand_team_squad_coe_team", limit: 128
+    t.float "allocated_fte", limit: 53
+    t.integer "cost_center_id"
+    t.string "cost_center_business_unit", limit: 128
+    t.string "extended_leave", limit: 50
+    t.string "workday_supervisory_org_business_unit", limit: 128
+    t.string "workday_supervisory_org_2", limit: 128
+    t.string "workday_supervisory_org_3", limit: 128
+    t.string "workday_supervisory_org_4", limit: 128
+    t.string "workday_supervisory_org_5", limit: 128
+    t.string "workday_supervisory_org_6", limit: 128
+    t.string "workday_supervisory_org_7", limit: 128
+    t.string "workday_supervisory_org_8", limit: 128
+    t.string "is_allocated_to_a_supply_structure", limit: 50
+    t.string "is_allocated_to_a_demand_structure", limit: 128
+    t.string "etp_role_type", limit: 50
+    t.string "etp_initiative", limit: 50
+    t.string "date_person_was_added_to_teamform", limit: 50
+    t.string "demand_allocation_start_date", limit: 50
+    t.string "demand_allocation_last_updated", limit: 50
+    t.string "demand_team_id", limit: 50
+    t.string "supply_team_id", limit: 50
+    t.integer "seniority", default: 0, null: false
+  end
+
+  create_table "emp_old", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.text "Person ID"
     t.text "First Name"
     t.text "Surname"
@@ -74,11 +143,12 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_18_123000) do
   end
 
   create_table "employees", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "person_id", limit: 32, null: false
     t.string "name", null: false
     t.string "title"
     t.string "job_function"
     t.integer "seniority"
-    t.integer "manager_id"
+    t.string "manager_id", limit: 32
     t.boolean "is_manager"
     t.date "start_date"
     t.datetime "created_at", null: false
@@ -86,6 +156,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_18_123000) do
     t.string "job_function_group"
     t.string "worker_type"
     t.string "country"
+    t.index ["manager_id"], name: "employees_manager_id_IDX"
+    t.index ["person_id"], name: "employees_person_id_IDX", type: :fulltext
   end
 
   create_table "roles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -99,7 +171,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_18_123000) do
   end
 
   create_table "squads", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "name", null: false
+    t.string "name", null: false, collation: "utf8mb4_0900_as_cs"
     t.integer "parent_id"
     t.string "full_path", limit: 2048, null: false
     t.integer "depth", default: 0
@@ -112,6 +184,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_18_123000) do
     t.integer "squad_members_managers", default: 0, null: false
     t.string "squad_health", default: "green", null: false
     t.string "squad_health_details", default: "(green)", null: false
+    t.string "team_id", limit: 32
     t.index ["name", "parent_id", "depth"], name: "index_squads_on_name_and_parent_id_and_depth", unique: true
   end
 
