@@ -42,6 +42,17 @@
   </div>
 </div>
 
+<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+  <div class="col-4">
+    <h5>Step 4: Generate Squads</h5>
+  </div>
+  <div class="col-3">
+    <%= form_with url: '/squads/build_cba_squads_list', method: :post, style: "display: inline-block; margin: 0;" do %>
+      <%= submit_tag 'Go', class: 'btn btn-success' %>
+    <% end %>
+  </div>
+</div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     var fileInput = document.getElementById("file-input");
