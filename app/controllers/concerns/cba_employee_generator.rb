@@ -50,6 +50,6 @@ module CbaEmployeeGenerator
       Employee.insert_all!(batch) if batch.any?
     end
 
-    redirect_to employees_path, notice: 'CBA employees created successfully.'
+    redirect_to root_path, notice: 'CBA employees created successfully.'
   end
 end
