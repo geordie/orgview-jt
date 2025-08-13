@@ -2,20 +2,27 @@ module CbaSquadGenerator
   extend ActiveSupport::Concern
 
   def build_cba_squads_list
-    ActiveRecord::Base.transaction do
-      SquadsEmployee.destroy_all
-      Squad.destroy_all
-      # Remove where(['`Vacancy Status` != ?', "Vacant" ])
-      Emp.all.each do |emp|
-        if !emp['Demand team - type'].nil? && !emp['Demand team - type'].empty?
-          build_employee_squad(emp)
-        else
-          build_employee_pace(emp)
-        end
-      end
-    end
+    batch = []
+    batch_size = 1000
+    # Build a hash map of person_id => employee.id for fast lookup
+    employee_id_map = Employee.pluck(:person_id, :id).to_h
+    # Build a hash map for squads: [name, full_path, parent_id, depth] => squad
+    squad_map = {}
 
-    redirect_to squads_path, notice: 'CBA squads created successfully.'
+    SquadsEmployee.delete_all
+    Squad.delete_all
+
+    # Build the demand team list
+    create_demand_teams()
+    create_supply_teams()
+
+    update_teams_parent_ids()
+
+    all_squads = Squad.pluck(:full_path, :id).to_h
+
+    build_employee_teams(all_squads, employee_id_map)
+
+    redirect_to root_path, notice: 'CBA squads created successfully.'
   end
 
   def build_squads_stats
@@ -27,107 +34,264 @@ module CbaSquadGenerator
       build_squad_stats(squad)
     end
 
-    redirect_to squads_path, notice: 'CBA squad stats generated successfully.'
+    redirect_to root_path, notice: 'CBA squad stats generated successfully.'
   end
 
   private
 
-  def build_employee_squad(emp)
-    employee_id = emp['Person ID'].to_i
-    employee = Employee.find(employee_id)
+  def build_employee_teams( squad_ids, employee_id_map)
 
-    # org_name = emp['Workday Supervisory Org 2'].strip
-    org_name = "Retail Tech Squads"
+    batch_size = 1000
 
-    squad_parent = nil
-    squad_array = []
-    squad_array.push( org_name )
+    demand_employees_to_insert = []
+    supply_employees_to_insert = []
 
-    # Create top level org if it doesn't already exist
-    squad = Squad.find_or_create_by(name: org_name, full_path: org_name, parent_id: squad_parent, depth: 1)
-    squad_parent = squad.id
-
-    # Build sub-squads
-    (1..4).each do |i|
-      #lvl = emp["PACE Supervisory Org #{i}"].strip
-      lvl = emp["Demand team - Domain L#{i}"].strip
-
-      # If we've found nil or empty, either we've found the crew the person belongs to or we've reached the end of the org path
-      # or they may be on a squad - check for `Demand team - type` = 'squad';
-      if lvl.nil? || lvl.empty? || i == 7
-
-        if ['Squad','COE','Crew','COE Team'].include?(emp['Demand team - type'])
-          lvl = emp['Demand team - Crew/COE'].strip
-          squad_array.push( lvl )
-          squad_path = build_squad_path(squad_array)
-          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
-          squad_parent = squad.id
-        end
-        if ['Squad','COE Team',].include?(emp['Demand team - type'])
-          lvl = emp['Demand team - Squad/COE Team'].strip
-          squad_array.push( lvl )
-          squad_path = build_squad_path(squad_array)
-          squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+2)
-        end
-
-        if squad.id.nil?
-          raise "Squad ID is nil: \n" + emp.to_json + "\n" + squad.to_json + "\n" + squad.errors.full_messages.to_json
-        else
-          SquadsEmployee.create(squad: squad, employee: employee, allocation: 1)
-          employee_squads = SquadsEmployee.where(employee_id: employee_id)
-
-          if employee_squads.count > 1
-            employee_squads.each do |es|
-              es.update(allocation: (1.0 / employee_squads.count).round(3))
-            end
-          end
-        end
-
-        break
+    Emp.all.each do |emp|
+      if emp['demand_team_type'].nil? || emp['demand_team_type'].empty?
+        supply_employees_to_insert <<
+          build_supply_employee_squad(emp, squad_ids, employee_id_map, supply_employees_to_insert)
+      else
+        demand_employees_to_insert <<
+          build_demand_employee_squad(emp, squad_ids, employee_id_map, demand_employees_to_insert)
       end
-      squad_array.push( lvl )
-      squad_path = build_squad_path(squad_array)
-      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i+1)
-      squad_parent = squad.id
+
+      if supply_employees_to_insert.size >= batch_size
+        SquadsEmployee.insert_all!(supply_employees_to_insert)
+        supply_employees_to_insert.clear
+      end
+
+      if demand_employees_to_insert.size >= batch_size
+        SquadsEmployee.insert_all!(demand_employees_to_insert)
+        demand_employees_to_insert.clear
+      end
+    end
+
+    # Insert any remaining records
+    SquadsEmployee.insert_all!(supply_employees_to_insert) if supply_employees_to_insert.any?
+    supply_employees_to_insert.clear
+
+    SquadsEmployee.insert_all!(demand_employees_to_insert) if demand_employees_to_insert.any?
+    demand_employees_to_insert.clear
+  end
+
+  def build_supply_employee_squad(emp, squad_ids, employee_id_map, squad_employees_to_insert)
+
+    employee_id = employee_id_map[emp['person_id']]
+
+    hierarchy = [
+        'supply-teams',
+        emp['pace_supervisory_org_business_unit']&.strip,
+        emp['pace_supervisory_org_2']&.strip,
+        emp['pace_supervisory_org_3']&.strip,
+        emp['pace_supervisory_org_4']&.strip,
+        emp['pace_supervisory_org_5']&.strip,
+        emp['pace_supervisory_org_6']&.strip,
+        emp['pace_supervisory_org_7']&.strip
+       ].compact
+
+    key = hierarchy.reject(&:blank?).join(" > ")
+
+    squad_id = squad_ids[key]
+
+    if !squad_id
+      raise "Squad with key '#{key}' does not exist in the squad_ids map for employee #{emp['id']}"
+    end
+
+    return { squad_id: squad_id, employee_id: employee_id, allocation: 1 }
+  end
+
+  def build_demand_employee_squad(emp, squad_ids, employee_id_map, squad_employees_to_insert)
+
+    employee_id = employee_id_map[emp['person_id']]
+
+    hierarchy = [
+        'demand-teams',
+        emp['demand_team_business_unit']&.strip,
+        emp['demand_team_domain_l1']&.strip,
+        emp['demand_team_domain_l2']&.strip,
+        emp['demand_team_domain_l3']&.strip,
+        emp['demand_team_name']&.strip].compact
+
+    key = hierarchy.reject(&:blank?).join(" > ")
+
+    squad_id = squad_ids[key]
+
+    if !squad_id
+      raise "Squad with key '#{key}' does not exist in the squad_ids map for employee #{emp['id']}"
+    end
+
+    return { squad_id: squad_id, employee_id: employee_id, allocation: 1 }
+  end
+
+  # Helper method to build a list of all teams
+  def create_demand_teams
+    batchsize = 500
+    team_list = {}
+
+    # Fetch distinct team hierarchy from the database
+    # Emp.distinct.pluck(:master_domain_name, :domain_name, :sub_domain_name, :team_name)
+    demand_teams = Emp.where.not(demand_team_type: nil).distinct.pluck(
+      :demand_team_name,
+      :demand_team_business_unit,
+      :demand_team_domain_l1,
+      :demand_team_domain_l2,
+      :demand_team_domain_l3,
+      :demand_team_id,
+    )
+
+    demand_teams.each do |demand_team_name, demand_team_business_unit,
+      demand_team_domain_l1, demand_team_domain_l2, demand_team_domain_l3,
+      demand_team_id |
+
+      # Build the full hierarchy path
+      hierarchy = [
+        "demand-teams",
+        demand_team_business_unit&.strip,
+        demand_team_domain_l1&.strip,
+        demand_team_domain_l2&.strip,
+        demand_team_domain_l3&.strip,
+        demand_team_name&.strip].compact
+
+      # Add each level of the hierarchy to the team_list
+      hierarchy.each_with_index do |_, index|
+        key = hierarchy[0..index].reject(&:blank?).join(" > ")
+        next if team_list.key?(key) # Skip if already added
+
+        depth = index + 1
+        name = hierarchy[index]
+
+        team_list[key] = { full_path: key, name: name, depth: depth, parent_id: nil }
+      end
+    end
+
+    # Insert teams into the squads table in batches
+    team_list.values.each_slice(batchsize) do |batch|
+      Squad.insert_all!(batch)
     end
   end
 
-  def build_employee_pace(emp)
-    employee_id = emp['Person ID'].to_i
-    employee = Employee.find(employee_id)
+  def create_supply_teams
+    batchsize = 500
+    team_list = {}
+    # Fetch distinct team hierarchy from the database
+    supply_teams = Emp.where(demand_team_type: nil).distinct.pluck(
+      :pace_supervisory_org_business_unit,
+      :pace_supervisory_org_2,
+      :pace_supervisory_org_3,
+      :pace_supervisory_org_4,
+      :pace_supervisory_org_5,
+      :pace_supervisory_org_6,
+      :pace_supervisory_org_7)
 
-    org_name = emp['PACE Supervisory Org Business Unit'].strip
-    if org_name.nil? or org_name.empty?
-      return
+    supply_teams.each do |pace_supervisory_org_business_unit,
+      pace_supervisory_org_2, pace_supervisory_org_3, pace_supervisory_org_4,
+      pace_supervisory_org_5, pace_supervisory_org_6, pace_supervisory_org_7|
+
+      # Build the full hierarchy path
+      hierarchy = [
+        "supply-teams",
+        pace_supervisory_org_business_unit&.strip,
+        pace_supervisory_org_2&.strip,
+        pace_supervisory_org_3&.strip,
+        pace_supervisory_org_4&.strip,
+        pace_supervisory_org_5&.strip,
+        pace_supervisory_org_6&.strip,
+        pace_supervisory_org_7&.strip].compact
+
+      # Add each level of the hierarchy to the team_list
+      hierarchy.each_with_index do |_, index|
+        key = hierarchy[0..index].reject(&:blank?).join(" > ")
+        next if team_list.key?(key) # Skip if already added
+
+        depth = index + 1
+        name = hierarchy[index]
+
+        team_list[key] = { full_path: key, name: name, depth: depth, parent_id: nil}
+      end
     end
+
+    # Insert teams into the squads table in batches
+    team_list.values.each_slice(batchsize) do |batch|
+      Squad.insert_all!(batch)
+    end
+  end
+
+  def update_teams_parent_ids
+    # Get all squads and their IDs, normalized
+    squad_ids = Squad.pluck(:full_path, :id).map { |full_path, id| [full_path.strip, id] }.to_h
+    squad_updates = {}
+
+    # For each squad, find its parent and update the parent_id in memory
+    squad_ids.each do |key, id|
+      parent_path = key.split(" > ")[0...-1].join(" > ")
+      parent_id = squad_ids[parent_path]
+
+      if parent_path.length > 0 && parent_id.nil?
+        raise "Parent squad with key '#{parent_path}' does not exist in the squad_ids map for squad #{key}"
+      end
+
+      if key.include?("AI Powered Engineering (WWA)")
+        # raise "AIPE squad found in #{key}, parent_path: #{parent_path}, parent_id: #{parent_id}"
+      end
+
+      squad_updates[id] = { id: id, parent_id: parent_id }
+    end
+
+    # squad_updates.keys.each do |squad_id|
+    #   Squad.where(id: squad_id).update_all(parent_id: squad_updates[squad_id][:parent_id])
+    # end
+    # Do a bulk update of parent IDs
+    if squad_updates.any?
+      ids = squad_updates.values.map { |u| u[:id] }
+      case_sql = squad_updates.values.map { |u| "WHEN #{u[:id]} THEN #{u[:parent_id].nil? ? 'NULL' : u[:parent_id]}" }.join(" ")
+      Squad.where(id: ids).update_all("parent_id = CASE id #{case_sql} END")
+    end
+  end
+
+  def build_employee_pace(emp, batch, batch_size, employee_id_map, squad_map)
+    employee_id = emp['person_id']
+    employee_db_id = employee_id_map[employee_id]
+    return unless employee_db_id
+
+    org_name = emp['pace_supervisory_org_business_unit'].strip
+    return if org_name.nil? || org_name.empty?
 
     squad_parent = nil
     squad_array = []
     squad_array.push( org_name )
 
-    # Create top level org if it doesn't already exist
-    squad = Squad.find_or_create_by(name: org_name, full_path: org_name, parent_id: squad_parent, depth: 1)
+    key = [org_name, org_name, squad_parent, 1]
+    squad = squad_map[key]
+    unless squad
+      squad = Squad.create!(name: org_name, full_path: org_name, parent_id: squad_parent, depth: 1)
+      squad_map[key] = squad
+    end
     squad_parent = squad.id
 
     # Build sub-squads
     (2..7).each do |i|
-      lvl = emp["PACE Supervisory Org #{i}"].strip
+      lvl = emp["pace_supervisory_org_#{i}"]
 
       # If we've found nil or empty, this is the squad the employee belongs to
       if lvl.nil? || lvl.empty? || i == 7
-        SquadsEmployee.create(squad: squad, employee: employee, allocation: 1)
-        employee_squads = SquadsEmployee.where(employee_id: employee_id)
+        batch << { squad_id: squad.id, employee_id: employee_db_id, allocation: 1 }
+        employee_squads = batch.select { |b| b[:employee_id] == employee_db_id }
 
         if employee_squads.count > 1
-          employee_squads.each do |es|
-            es.update(allocation: (1.0 / employee_squads.count).round(3))
-          end
+          allocation = (1.0 / employee_squads.count).round(3)
+          employee_squads.each { |es| es[:allocation] = allocation }
         end
         break
       end
+      lvl = lvl.strip
       squad_array.push( lvl )
       squad_path = build_squad_path(squad_array)
-      squad = Squad.find_or_create_by(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
+      key = [lvl, squad_path, squad_parent, i]
+      squad = squad_map[key]
+      unless squad
+        squad = Squad.create!(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
+        squad_map[key] = squad
+      end
       squad_parent = squad.id
     end
   end
