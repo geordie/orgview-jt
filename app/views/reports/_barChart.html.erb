@@ -1,0 +1,76 @@
+<div class="container-md">
+	<div class="row justify-content-center">
+		<canvas id="<%= @chart_data.chart_id%>"></canvas>
+	</div>
+</div>
+
+<script type="module">
+import { Chart, LinearScale, CategoryScale, BarController, BarElement, Title, Tooltip, Legend } from "chart.js";
+
+Chart.register(LinearScale, CategoryScale, BarController, BarElement, Title, Tooltip, Legend);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const ctx = document.getElementById('<%= @chart_data.chart_id %>').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: <%= @chart_data.labels.to_json.html_safe %>,
+        datasets: [{
+            label: '<%= @chart_data.label_x_axis.html_safe %>',
+            data: <%= @chart_data.data.to_json.html_safe %>,
+            percentages: <%= @chart_data.percentages.to_json.html_safe %>,
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.2)',
+            ],
+            borderColor: [
+                'rgba(54, 162, 235, 1)',
+            ],
+            borderWidth: 1
+        }],
+        indexAxis: 'y',
+    },
+    options: {
+        indexAxis: 'y',
+        scales: {
+            x: {
+                type: 'linear',
+                beginAtZero: true
+            },
+            y: {
+                type: 'category',
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    },
+    plugins: [{
+        afterDatasetsDraw: function(chart, options) {
+            var ctx = chart.ctx;
+            chart.data.datasets.forEach(function(dataset, i) {
+                var meta = chart.getDatasetMeta(i);
+                if (!meta.hidden) {
+                    meta.data.forEach(function(element, index) {
+                        // Draw the text in black, with the specified font
+                        ctx.fillStyle = 'rgb(200, 200, 200)';
+                        var fontSize = 12;
+                        ctx.font = fontSize + 'px Helvetica';
+                        // Just naively convert to string for now
+                        var dataString = dataset.data[index].toString();
+                        dataString += " (" + dataset.percentages[index].toFixed(0) + "%)";
+                        // Make sure alignment settings are correct
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        var padding = 5;
+                        var position = element.tooltipPosition();
+                        ctx.fillText(dataString, position.x + padding, position.y );
+                    });
+                }
+            });
+        }
+    }]
+  });
+});
+</script>

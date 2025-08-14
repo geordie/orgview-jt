@@ -1,0 +1,40 @@
+<div class="container-md">
+	<div class="row justify-content-center">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<% @table.visible_columns.each do |column| %>
+						<th scope="col" class="<%= 'text-center' if column.type != 'string' %> border"><%= column.label %></th>
+					<% end %>
+				</tr>
+			</thead>
+			<tbody>
+				<% max_rows = @table.columns.map { |col| col.values.size }.max %>
+				<% (0...max_rows).each do |row_index| %>
+					<tr>
+						<% @table.visible_columns.each do |column| %>
+							<td class="<%= 'text-center' if column.type != 'string' %> border">
+								<% cellVal = column.display(row_index) %>
+								<% if column.link_info %>
+									<%= link_to cellVal,
+										url_for(@table.get_cell_links(column.label, row_index))%>
+								<% else %>
+									<%= cellVal %>
+								<% end %>
+							</td>
+						<% end %>
+					</tr>
+				<% end %>
+				<tr>
+					<% @table.visible_columns.each_with_index do |column, index| %>
+						<% if index == 0 %>
+							<td class="text-end border"><strong>Totals</strong></td>
+						<% else %>
+							<td class="<%= 'text-center' if column.type != 'string' %> border"><strong><%= column.summarize %></strong></td>
+						<% end %>
+					<% end %>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
