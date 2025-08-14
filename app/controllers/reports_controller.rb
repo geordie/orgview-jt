@@ -11,6 +11,54 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(employee_titles)
   end
 
+  def roles_generic
+    # Get the data
+    if params[:job_function].present?
+      employee_titles = Employee.where(job_function: params[:job_function]).group(:title).count.sort_by { |k, v| v }.reverse.to_h
+    else
+      employee_titles = Employee.all.group(:title).count.sort_by { |k, v| v }.reverse.to_h
+    end
+
+    # Setup report metadata
+    @report_title = "Roles Report"
+    @report_subtitle = params[:job_function].present? ? "Filtered by Job Function: #{params[:job_function]}" : nil
+
+    # Create table data using the new model
+    @table = TableColumns.new
+    
+    # Add columns
+    @table.add_column(
+      label: "Role", 
+      values: employee_titles.keys, 
+      type: "string"
+    )
+    
+    @table.add_column(
+      label: "Count", 
+      values: employee_titles.values, 
+      type: "numeric"
+    )
+    
+    percentages = build_percentages(employee_titles)
+    @table.add_column(
+      label: "Percentage", 
+      values: percentages, 
+      type: "percentage"
+    )
+
+    # Create chart data
+    @chart_data = ChartData.new(
+      labels: employee_titles.keys,
+      data: employee_titles.values,
+      percentages: percentages,
+      chart_id: "rolesChart",
+      label_x_axis: "# of Employees"
+    )
+
+    # Render the generic view
+    render 'report'
+  end
+
   def seniority
     employee_seniority = Employee.all
       .where(params[:country].present? ? "country = ?" : "1=1", params[:country])

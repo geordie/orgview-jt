@@ -25,6 +25,7 @@ Rails.application.routes.draw do
 
   # Reports
   get 'reports/roles', to: 'reports#roles'
+  get 'reports/roles_generic', to: 'reports#roles_generic'
   get 'reports/seniority', to: 'reports#seniority'
   get 'reports/job_function', to: 'reports#job_function'
   get 'reports/job_function_group', to: 'reports#job_function_group'
