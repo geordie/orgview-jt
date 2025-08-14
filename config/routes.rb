@@ -47,7 +47,7 @@ Rails.application.routes.draw do
   # Squads
   resources :squads, constraints: { id: /\d+/ }
   post 'squads/build_cba_squads_list', to: 'squads#build_cba_squads_list'
-  post 'squads/build_squads_stats', to: 'squads#build_squads_stats'
+  post 'squads/build_all_squads_stats', to: 'squads#build_all_squads_stats'
   get 'squads/treeview', to: 'squads#treeview'
   get 'squads/:id/sub_teams', to: 'squads#sub_teams', as: 'sub_teams'
   delete 'squads/destroy_all', to: 'squads#destroy_all', as: 'squads_destroy_all'

@@ -25,14 +25,11 @@ module CbaSquadGenerator
     redirect_to root_path, notice: 'CBA squads created successfully.'
   end
 
-  def build_squads_stats
+  def build_all_squads_stats
     # Get root squads
     Squad.update_all(children: 0, descendents: 0, squad_members: 0, squad_members_managers: 0, squad_health: "green")
-    @squads = Squad.where("parent_id IS NULL")
 
-    @squads.each do |squad|
-      build_squad_stats(squad)
-    end
+    build_squads_stats
 
     redirect_to root_path, notice: 'CBA squad stats generated successfully.'
   end
@@ -86,7 +83,8 @@ module CbaSquadGenerator
         emp['pace_supervisory_org_4']&.strip,
         emp['pace_supervisory_org_5']&.strip,
         emp['pace_supervisory_org_6']&.strip,
-        emp['pace_supervisory_org_7']&.strip
+        emp['pace_supervisory_org_7']&.strip,
+        emp['supply_team_name']&.strip
        ].compact
 
     key = hierarchy.reject(&:blank?).join(" > ")
@@ -181,11 +179,13 @@ module CbaSquadGenerator
       :pace_supervisory_org_4,
       :pace_supervisory_org_5,
       :pace_supervisory_org_6,
-      :pace_supervisory_org_7)
+      :pace_supervisory_org_7,
+      :supply_team_name)
 
     supply_teams.each do |pace_supervisory_org_business_unit,
       pace_supervisory_org_2, pace_supervisory_org_3, pace_supervisory_org_4,
-      pace_supervisory_org_5, pace_supervisory_org_6, pace_supervisory_org_7|
+      pace_supervisory_org_5, pace_supervisory_org_6, pace_supervisory_org_7,
+      supply_team_name|
 
       # Build the full hierarchy path
       hierarchy = [
@@ -196,7 +196,9 @@ module CbaSquadGenerator
         pace_supervisory_org_4&.strip,
         pace_supervisory_org_5&.strip,
         pace_supervisory_org_6&.strip,
-        pace_supervisory_org_7&.strip].compact
+        pace_supervisory_org_7&.strip,
+        supply_team_name&.strip
+      ].compact
 
       # Add each level of the hierarchy to the team_list
       hierarchy.each_with_index do |_, index|
@@ -296,36 +298,93 @@ module CbaSquadGenerator
     end
   end
 
-  def build_squad_stats(parent_squad)
+  def build_squads_stats
+    # Reset all squad stats
+    Squad.update_all(children: 0, descendents: 0, squad_members: 0, squad_members_managers: 0, squad_health: "green")
 
-    # Get the number of squad members
-    parent_squad.squad_members = SquadsEmployee.where(squad_id: parent_squad.id).count
-    parent_squad.org_members = parent_squad.squad_members
+    # Get only the data you need without loading full objects
+    squad_hierarchy = Squad.pluck(:id, :parent_id, :full_path).map { |id, parent_id, path| 
+      { id: id, parent_id: parent_id, full_path: path, children: 0, descendents: 0, squad_members: 0, org_members: 0 }
+    }
 
-    managers = Array.new
-    parent_squad.employees.each do |employee|
-      manager_id = employee.manager_id
-      if !managers.include?(manager_id)
-        managers.push(manager_id)
-      end
+    # Build lookup hash efficiently
+    squad_map = {}
+    squad_hierarchy.each { |squad| squad_map[squad[:id]] = squad }
+
+    # Get aggregated data
+    squad_employees_count = SquadsEmployee.group(:squad_id).count
+    squad_manager_counts = SquadsEmployee.joins(:employee).where(employees: { is_manager: true }).group(:squad_id).count
+    squad_children = Squad.where.not(parent_id: nil).group(:parent_id).count
+
+    # Calculate stats
+    squad_hierarchy.each do |squad|
+      squad[:squad_members] = squad_employees_count[squad[:id]] || 0
+      squad[:org_members] = squad[:squad_members]
+      squad[:squad_members_managers] = squad_manager_counts[squad[:id]] || 0
+      squad[:children] = squad_children[squad[:id]] || 0
     end
-    parent_squad.squad_members_managers = managers.count
 
-    # Calculate children and descendents
-    child_squads = Squad.where(parent_id: parent_squad.id)
-    child_squads.each do |child_squad|
-      parent_squad.children += 1
-      parent_squad.descendents += 1
-      build_squad_stats(child_squad)
-      parent_squad.descendents += child_squad.descendents
-      parent_squad.org_members += child_squad.org_members
+    # Calculate descendents and org_members in a single pass (bottom-up)
+    root_squads = squad_hierarchy.select { |s| s[:parent_id].nil? }
+
+    root_squads.each do |root_squad|
+      calculate_descendents_recursive(root_squad, squad_map)
     end
 
-    squad_health, squad_health_details = get_squad_health(parent_squad)
-    parent_squad.squad_health = squad_health
-    parent_squad.squad_health_details = squad_health_details.join(" | ")
+    # Calculate health for all squads and batch update
+    squad_updates = []
+    squad_hierarchy.each do |squad|
+      squad_health, squad_health_details = get_squad_health(squad)
+      squad_updates << {
+        id: squad[:id],
+        children: squad[:children],
+        descendents: squad[:descendents],
+        squad_members: squad[:squad_members],
+        squad_members_managers: squad[:squad_members_managers],
+        org_members: squad[:org_members],
+        squad_health: squad_health,
+        squad_health_details: squad_health_details.join(" | ")
+      }
+    end
 
-    parent_squad.save
+    # Batch update all squads
+    if squad_updates.any?
+      ids = squad_updates.map { |u| u[:id] }
+      case_sql_children = squad_updates.map { |u| "WHEN #{u[:id]} THEN #{u[:children]}" }.join(" ")
+      case_sql_descendents = squad_updates.map { |u| "WHEN #{u[:id]} THEN #{u[:descendents]}" }.join(" ")
+      case_sql_squad_members = squad_updates.map { |u| "WHEN #{u[:id]} THEN #{u[:squad_members]}" }.join(" ")
+      case_sql_squad_members_managers = squad_updates.map { |u| "WHEN #{u[:id]} THEN #{u[:squad_members_managers]}" }.join(" ")
+      case_sql_org_members = squad_updates.map { |u| "WHEN #{u[:id]} THEN #{u[:org_members]}" }.join(" ")
+      case_sql_squad_health = squad_updates.map { |u| "WHEN #{u[:id]} THEN '#{u[:squad_health]}'" }.join(" ")
+      case_sql_squad_health_details = squad_updates.map { |u| "WHEN #{u[:id]} THEN '#{u[:squad_health_details].gsub("'", "''")}'" }.join(" ")
+
+      Squad.where(id: ids).update_all(
+        "children = CASE id #{case_sql_children} END, " +
+        "descendents = CASE id #{case_sql_descendents} END, " +
+        "squad_members = CASE id #{case_sql_squad_members} END, " +
+        "squad_members_managers = CASE id #{case_sql_squad_members_managers} END, " +
+        "org_members = CASE id #{case_sql_org_members} END, " +
+        "squad_health = CASE id #{case_sql_squad_health} END, " +
+        "squad_health_details = CASE id #{case_sql_squad_health_details} END"
+      )
+    end
+
+  end
+
+private
+
+  def calculate_descendents_recursive(squad, squad_map)
+    squad[:descendents] = 0
+
+    # Get all children
+    children = squad_map.values.select { |s| s[:parent_id] == squad[:id] }
+
+    children.each do |child|
+      squad[:descendents] += 1
+      calculate_descendents_recursive(child, squad_map)
+      squad[:descendents] += child[:descendents]
+      squad[:org_members] += child[:org_members]
+    end
   end
 
   def build_squad_path(squad_path)
@@ -336,35 +395,39 @@ module CbaSquadGenerator
     squad_health = "green"
     squad_health_details = Array.new
 
-    if squad.squad_members.between?(13,15)
+    squad_members = squad[:squad_members]
+    squad_member_managers = squad[:squad_members_managers]
+    squad_children = squad[:children]
+
+    if squad_members.between?(13,15)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Large Team Size (amber)")
-    elsif squad.squad_members.between?(3,4)
+    elsif squad_members.between?(3,4)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Small Team Size (amber)")
-    elsif squad.squad_members.between?(1,2)
+    elsif squad_members.between?(1,2)
       squad_health = increment_health(squad_health, "red")
       squad_health_details.push("Small Team Size (red)")
-    elsif squad.squad_members > 15
+    elsif squad_members > 15
       squad_health = increment_health(squad_health, "red")
       squad_health_details.push("Large Team Size (red)")
     end
 
-    if squad.squad_members_managers.between?(3,3)
+    if squad_member_managers.between?(3,3)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Multiple Managers (amber)")
-    elsif squad.squad_members_managers > 3
+    elsif squad_member_managers > 3
       squad_health = increment_health(squad_health, "red")
       squad_health_details.push("Multiple Managers (red)")
     end
 
-    if squad.children.between?(10,12)
+    if squad_children.between?(10,12)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Many Sub-Teams (amber)")
-    elsif squad.children.between?(1,2)
+    elsif squad_children.between?(1,2)
       squad_health = increment_health(squad_health, "amber")
       squad_health_details.push("Few Sub-Teams (amber)")
-    elsif squad.children > 12
+    elsif squad_children > 12
       squad_health = increment_health(squad_health, "red")
       squad_health_details.push("Many Sub-Teams (red)")
     end
