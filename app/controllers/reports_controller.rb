@@ -1,17 +1,6 @@
 class ReportsController < ApplicationController
 
   def roles
-    if params[:job_function].present?
-      employee_titles = Employee.where(job_function: params[:job_function]).group(:title).count.sort_by { |k, v| v }.reverse.to_h
-    else
-      employee_titles = Employee.all.group(:title).count.sort_by { |k, v| v }.reverse.to_h
-    end
-    @titles = employee_titles.keys
-    @counts = employee_titles.values
-    @percentages = build_percentages(employee_titles)
-  end
-
-  def roles_generic
     # Get the data
     if params[:job_function].present?
       employee_titles = Employee.where(job_function: params[:job_function]).group(:title).count.sort_by { |k, v| v }.reverse.to_h
