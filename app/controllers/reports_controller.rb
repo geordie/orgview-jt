@@ -26,11 +26,16 @@ class ReportsController < ApplicationController
     # Create table data using the new model
     @table = TableColumns.new
     
-    # Add columns
+    # Add columns with linking to title_density report
     @table.add_column(
       label: "Role", 
       values: employee_titles.keys, 
-      type: "string"
+      type: "string",
+      link_info: LinkInfo.new(
+        controller: 'reports',
+        action: 'title_density',
+        link_params: [LinkParams.new(name: 'title', value_col: 'Role')]
+      )
     )
     
     @table.add_column(
