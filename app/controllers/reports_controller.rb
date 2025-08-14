@@ -59,6 +59,63 @@ class ReportsController < ApplicationController
     render 'report'
   end
 
+  def title_density
+    title = params[:title]
+    max_depth = params[:max_depth] || 1
+
+    @report_title = "Title Density Report"
+    @report_subtitle = title
+
+    # Build data
+    # Get all squads with the specified max depth
+    squads = Squad
+      .where(!max_depth.nil? ? { depth: max_depth } : {})
+      .order('squads.org_members DESC')
+
+    # Initialize squads hash with zero counts
+    squads_hash = squads.map { |squad| [squad.full_path, [0, squad.org_members || 0]] }.to_h
+
+    # Get all squads with the specified title
+    squad_employee_roles = Squad.joins(squads_employees: :employee)
+      .where(!title.nil? ? {employees: { title: title }} : {} )
+      .group(:full_path)
+      .select('squads.full_path, COUNT(employees.id) AS employee_count')
+      .order('squads.full_path')
+
+    squad_employee_roles.each do |squad|
+      squads_hash.each_key do |key|
+        squads_hash[key][0] += squad.employee_count if squad.full_path.starts_with?(key)
+      end
+    end
+
+    teams = squads_hash.keys
+    counts = squads_hash.values.map{ |v| v[0] }
+    org_sizes = squads.map { |squad| squad.org_members || 0 }
+    proportions = squads_hash.values.map { |v| v[1] > 0 ? (v[0].to_f / v[1]) * 100 : 0 }
+    percentages = build_percentages(squads_hash.map{|k, v| [k, v[0]] }.to_h)
+
+    # Build table
+    @table = TableColumns.new
+    @table.add_column(label: "Team", type: "string", values: teams)
+    @table.add_column(label: "# of Employees", type: "numeric", values: counts)
+    @table.add_column(label: "Org Size", type: "numeric", values: org_sizes)
+    @table.add_column(label: "% of Org Size", type: "percentage", values: proportions)
+
+    # Build chart
+    @chart_data = ChartData.new(
+      labels: teams,
+      data: counts,
+      percentages: percentages,
+      chart_id: 'titleDensityChart',
+      label_x_axis: '# of Employees'
+    )
+
+    # Render the report
+    respond_to do |format|
+      format.html { render 'report' }
+    end
+  end
+
   def seniority
     employee_seniority = Employee.all
       .where(params[:country].present? ? "country = ?" : "1=1", params[:country])
