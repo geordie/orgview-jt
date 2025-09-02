@@ -32,6 +32,12 @@ class TableColumns
     # Create the link parameters
     params = {}
     info.link_params.each do |link_param|
+      # If the link parameter has a static value, use it
+      if link_param.value
+        params[link_param.name] = link_param.value
+        next
+      end
+
       # If the link parameter has a default value, use it
       if link_param.default_value
         params[link_param.name] = link_param.default_value
@@ -43,10 +49,15 @@ class TableColumns
       next if lookup_column.nil?
 
       # Find the value in the lookup column for the current row index
-      # and assign it to the link parameter
-      # This assumes that the lookup column has the same number of rows as the current column
-      # and that the row_index is valid for both columns
-      params[link_param.name] = lookup_column.values[row_index]
+      cell_value = lookup_column.values[row_index]
+
+      # If there's a lookup hash, use it to map the value
+      if link_param.lookup && link_param.lookup[cell_value]
+        params[link_param.name] = link_param.lookup[cell_value]
+      else
+        # Otherwise use the cell value directly
+        params[link_param.name] = cell_value
+      end
     end
     return { controller: info.controller, action: info.action, params: params }
   end

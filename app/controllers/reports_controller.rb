@@ -1,42 +1,86 @@
 class ReportsController < ApplicationController
 
   def roles
-    # Get the data
+    # Get the data with optional squad filtering
+    base_employee_query = Employee.all
+
+    # If squad_id is provided, filter to employees in that squad and its descendants
+    if params[:squad_id].present?
+      parent_squad = Squad.find(params[:squad_id])
+
+      # Find all squads that are children of the specified squad (using full_path hierarchy)
+      descendant_squads = Squad.where(
+        "full_path = ? OR full_path LIKE ?",
+        parent_squad.full_path,
+        "#{parent_squad.full_path} > %"
+      )
+
+      # Filter employees to only those in the descendant squads
+      base_employee_query = base_employee_query
+        .joins(:squads_employees)
+        .where(squads_employees: { squad_id: descendant_squads.pluck(:id) })
+    end
+
     if params[:job_function].present?
-      employee_titles = Employee.where(job_function: params[:job_function]).group(:title).count.sort_by { |k, v| v }.reverse.to_h
+      employee_titles = base_employee_query
+        .where(job_function: params[:job_function])
+        .distinct(:person_id)
+        .group(:title)
+        .count
+        .sort_by { |k, v| v }.reverse.to_h
     else
-      employee_titles = Employee.all.group(:title).count.sort_by { |k, v| v }.reverse.to_h
+      employee_titles = base_employee_query
+        .distinct(:person_id)
+        .group(:title)
+        .count
+        .sort_by { |k, v| v }.reverse.to_h
     end
 
     # Setup report metadata
+    squad_subtitle = ""
+    if params[:squad_id].present?
+      parent_squad = Squad.find(params[:squad_id])
+      squad_subtitle = " - #{parent_squad.full_path}"
+    end
+
     @report_title = "Roles Report"
-    @report_subtitle = params[:job_function].present? ? "Filtered by Job Function: #{params[:job_function]}" : nil
+    @report_subtitle = [
+      (params[:job_function].present? ? "Filtered by Job Function: #{params[:job_function]}" : nil),
+      squad_subtitle.present? ? squad_subtitle : nil
+    ].compact.join("")
 
     # Create table data using the new model
     @table = TableColumns.new
-    
+
     # Add columns with linking to title_density report
+    link_params = [LinkParams.new(name: 'title', value_col: 'Role')]
+
+    # If a squad_id parameter is present, pass it along to the title_density report
+    if params[:squad_id].present?
+      link_params << LinkParams.new(name: 'squad_id', value: params[:squad_id])
+    end
+
     @table.add_column(
-      label: "Role", 
-      values: employee_titles.keys, 
+      label: "Role",
+      values: employee_titles.keys,
       type: "string",
       link_info: LinkInfo.new(
         controller: 'reports',
         action: 'title_density',
-        link_params: [LinkParams.new(name: 'title', value_col: 'Role')]
+        link_params: link_params
       )
     )
-    
+
     @table.add_column(
-      label: "Count", 
-      values: employee_titles.values, 
+      label: "Count",
+      values: employee_titles.values,
       type: "numeric"
     )
-    
+
     percentages = build_percentages(employee_titles)
     @table.add_column(
-      label: "Percentage", 
-      values: percentages, 
+      label: "Percentage",
+      values: percentages,
       type: "percentage"
     )
 
@@ -56,24 +100,75 @@ class ReportsController < ApplicationController
   def title_density
     title = params[:title]
     max_depth = params[:max_depth] || 1
+    squad_id = params[:squad_id]
 
     @report_title = "Title Density Report"
-    @report_subtitle = title
+    @report_subtitle = title ? "#{title} (Depth: #{max_depth})" : "All Titles (Depth: #{max_depth})"
+    @back_link = nil
 
-    # Build data
+    # Build data with optional squad filtering
+    base_squad_query = Squad.all
+
+    # If squad_id is provided, filter to that squad and its descendants
+    if squad_id.present?
+      parent_squad = Squad.find(squad_id)
+      squad_title = title ? "#{title} - #{parent_squad.full_path}" : "All Titles - #{parent_squad.full_path}"
+      @report_subtitle = "#{squad_title} (Depth: #{max_depth})"
+
+      # Add back link to the parent squad or general report
+      if parent_squad.parent
+        # When going back to parent, use the current max_depth (same level)
+        back_params = { controller: 'reports', action: 'title_density', squad_id: parent_squad.parent.id, max_depth: max_depth }
+        back_params[:title] = title if title.present?
+
+        @back_link = {
+          text: "← Back to #{parent_squad.parent.full_path}",
+          url: url_for(back_params)
+        }
+      else
+        # When going back to all teams, use max_depth - 1 or default to 1
+        back_max_depth = [max_depth.to_i - 1, 1].max
+        back_params = { controller: 'reports', action: 'title_density', max_depth: back_max_depth }
+        back_params[:title] = title if title.present?
+
+        @back_link = {
+          text: "← Back to All Teams",
+          url: url_for(back_params)
+        }
+      end
+
+      # Find all squads that are children of the specified squad (using full_path hierarchy)
+      base_squad_query = base_squad_query.where(
+        "full_path = ? OR full_path LIKE ?",
+        parent_squad.full_path,
+        "#{parent_squad.full_path} > %"
+      )
+    end
+
     # Get all squads with the specified max depth
-    squads = Squad
+    squads = base_squad_query
       .where(!max_depth.nil? ? { depth: max_depth } : {})
       .order('squads.org_members DESC')
 
     # Initialize squads hash with zero counts
     squads_hash = squads.map { |squad| [squad.full_path, [0, squad.org_members || 0]] }.to_h
 
-    # Get all squads with the specified title
-    squad_employee_roles = Squad.joins(squads_employees: :employee)
+    # Get all squads with the specified title, applying the same squad filter
+    squad_employee_query = Squad.joins(squads_employees: :employee)
       .where(!title.nil? ? {employees: { title: title }} : {} )
+
+    # Apply the same squad filtering to the employee query
+    if squad_id.present?
+      squad_employee_query = squad_employee_query.where(
+        "squads.full_path = ? OR squads.full_path LIKE ?",
+        parent_squad.full_path,
+        "#{parent_squad.full_path} > %"
+      )
+    end
+
+    squad_employee_roles = squad_employee_query
       .group(:full_path)
-      .select('squads.full_path, COUNT(employees.id) AS employee_count')
+      .select('squads.full_path, COUNT(DISTINCT employees.id) AS employee_count')
       .order('squads.full_path')
 
     squad_employee_roles.each do |squad|
@@ -88,9 +183,34 @@ class ReportsController < ApplicationController
     proportions = squads_hash.values.map { |v| v[1] > 0 ? (v[0].to_f / v[1]) * 100 : 0 }
     percentages = build_percentages(squads_hash.map{|k, v| [k, v[0]] }.to_h)
 
+    # Create a mapping of team names to squad IDs for linking
+    squad_id_lookup = squads.map { |squad| [squad.full_path, squad.id] }.to_h
+
     # Build table
     @table = TableColumns.new
-    @table.add_column(label: "Team", type: "string", values: teams)
+
+    # Build link parameters for drilling down into specific squads
+    link_params = [LinkParams.new(name: 'squad_id', value_col: 'Team', lookup: squad_id_lookup)]
+
+    # If we have a title parameter, pass it along
+    if title.present?
+      link_params << LinkParams.new(name: 'title', value: title)
+    end
+
+    # Add incremented max_depth for drill down
+    next_max_depth = max_depth.to_i + 1
+    link_params << LinkParams.new(name: 'max_depth', value: next_max_depth)
+
+    @table.add_column(
+      label: "Team",
+      type: "string",
+      values: teams,
+      link_info: LinkInfo.new(
+        controller: 'reports',
+        action: 'title_density',
+        link_params: link_params
+      )
+    )
     @table.add_column(label: "# of Employees", type: "numeric", values: counts)
     @table.add_column(label: "Org Size", type: "numeric", values: org_sizes)
     @table.add_column(label: "% of Org Size", type: "percentage", values: proportions)

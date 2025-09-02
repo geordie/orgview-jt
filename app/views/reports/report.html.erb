@@ -1,3 +1,9 @@
+<% if @back_link.present? %>
+	<div style="margin-bottom: 1rem;">
+		<%= link_to @back_link[:text], @back_link[:url], class: 'btn btn-outline-secondary btn-sm' %>
+	</div>
+<% end %>
+
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
 	<h2 style="margin: 0;"><%= @report_title %></h2>
 	<span style="margin: 0;"><%= @table.max_items_count %> results</span>
