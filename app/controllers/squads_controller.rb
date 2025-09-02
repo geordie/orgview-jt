@@ -4,12 +4,27 @@ class SquadsController < ApplicationController
 
 	# GET /squads or /squads.json
 	def index
-		max_depth = params[:max_depth] ||= 10
-		@squads = Squad.where("depth <= ?", max_depth).order(:full_path).paginate(page: params[:page], per_page: 20)
+		depth = params[:depth] ||= nil
+		parent_id = params[:parent_id] ||= nil
+		idx_sort_column = index_sort_column
+		sort_direction = params[:direction] || "asc"
+
+		@squads = Squad
+			.where(depth.nil? ? nil : ["depth = ?", depth])
+			.where(parent_id.nil? ? nil : ["parent_id = ?", parent_id])
+			.where(params[:search].present? ? ["name LIKE ?", "%#{params[:search]}%"] : nil)
+			.order("#{idx_sort_column} #{sort_direction}")
+			.paginate(page: params[:page], per_page: 20)
 	end
 
 	# GET /squads/1 or /squads/1.json
 	def show
+		sort_direction = params[:direction] || "asc"
+		@sort_column = sort_column
+		@squad_members = @squad.squads_employees
+													 .includes(:employee)
+													 .order(Arel.sql("#{@sort_column} #{sort_direction}"))
+		@sub_teams = Squad.where(parent_id: @squad.id).order("org_members desc")
 	end
 
 	# GET /squads/new
@@ -110,5 +125,30 @@ class SquadsController < ApplicationController
 	# Only allow a list of trusted parameters through.
 	def squad_params
 		params.require(:squad).permit(:team_name, :team_parent_id, :full_path, :max_depth)
+	end
+
+	private
+
+	def sortable_columns
+		%w[employees.name
+		employees.job_sub_family
+		employees.title
+		employees.seniority
+		employees.manager_id
+		employees.country
+		employees.worker_type
+		employees.start_date]
+	end
+
+	def sort_column
+		sortable_columns.include?(params[:sort]) ? params[:sort] : "employees.name"
+	end
+
+	def index_sortable_columns
+		%w[name squad_members squad_members_managers children descendents org_members squad_health]
+	end
+
+	def index_sort_column
+		index_sortable_columns.include?(params[:sort]) ? params[:sort] : "name"
 	end
 end

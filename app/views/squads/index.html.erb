@@ -4,24 +4,36 @@
 
 <%= will_paginate_with_bootstrap @squads %>
 
+<div class="row mb-3">
+  <div class="col-md-6">
+    <%= form_with url: squads_path, method: :get, local: true do %>
+      <div class="input-group">
+        <%= text_field_tag :search, params[:search], class: "form-control", placeholder: "Search by squad name" %>
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>Name</th>
-      <th style="text-align: center;">Size</th>
-      <th style="text-align: center;">Managers</th>
-      <th style="text-align: center;">Sub-Teams</th>
-      <th style="text-align: center;">Descendents</th>
-      <th style="text-align: center;">Org Size</th>
-      <th style="text-align: center;">Org Health</th>
+      <% common_params = { direction: params[:direction] == "asc" ? "desc" : "asc", depth: params[:depth], parent_id: params[:parent_id] } %>
+        <th><%= link_to "Name", squads_path(common_params.merge(sort: "name")) %></th>
+        <th style="text-align: center;"><%= link_to "Size", squads_path(common_params.merge(sort: "squad_members")) %></th>
+        <th style="text-align: center;"><%= link_to "Managers", squads_path(common_params.merge(sort: "squad_members_managers")) %></th>
+        <th style="text-align: center;"><%= link_to "Sub-Teams", squads_path(common_params.merge(sort: "children")) %></th>
+        <th style="text-align: center;"><%= link_to "Descendents", squads_path(common_params.merge(sort: "descendents")) %></th>
+        <th style="text-align: center;"><%= link_to "Org Size", squads_path(common_params.merge(sort: "org_members")) %></th>
+        <th style="text-align: center;"><%= link_to "Org Health", squads_path(common_params.merge(sort: "squad_health")) %></th>
       <th style="text-align: center;">Actions</th>
-    </tr>
     </tr>
   </thead>
   <tbody>
     <% @squads.each do |squad| %>
       <tr>
-        <td data-toggle="tooltip" title="<%= squad.full_path %>"><%= squad.name %></td>
+        <td data-toggle="tooltip" title="<%= squad.full_path %>">
+          <%= link_to squad.name, squads_path(parent_id: squad.id)%></td>
         <td style="text-align: center;"><%= squad.squad_members %></td>
         <td style="text-align: center;"><%= squad.squad_members_managers %></td>
         <td style="text-align: center;"><%= squad.children %></td>
@@ -36,34 +48,14 @@
         <span style="color: green;">&#x25cf;</span>
           <% end %>
         </td>
+
         <td style="text-align: center;">
-          <%= link_to 'Show', squad %>
+            <div class="btn-group" role="group" style="gap: 8px;">
+              <%= link_to 'Detail', squad, class: 'btn btn-primary btn-sm' %>
+            </div>
         </td>
-      </tr>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<div class="col-auto">
-	<%= link_to 'New Squad', new_squad_path, class: 'btn btn-primary' %>
-</div>
-
-<div class="col-auto">
-  <%= form_with url: squads_build_cba_squads_list_path, method: :post do %>
-    <%= submit_tag 'Generate Squads', class: 'btn btn-success' %>
-  <% end %>
-</div>
-
-<div class="col-auto">
-  <%= form_with url: squads_build_squads_stats_path, method: :post do %>
-    <%= submit_tag 'Generate Squad Stats', class: 'btn btn-success' %>
-  <% end %>
-</div>
-
-
-<div class="col-auto">
-  <%= form_with url: squads_destroy_all_path, method: :delete do %>
-    <%= submit_tag 'Delete All Squads', class: 'btn btn-danger' %>
-  <% end %>
-</div>
