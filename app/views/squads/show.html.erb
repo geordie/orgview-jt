@@ -40,7 +40,8 @@
   <div class="row">
     <div class="col-12">
       <%= link_to "Roles Report for #{@squad.name}", reports_roles_path(squad_id: @squad.id), class: 'btn btn-primary me-2' %>
-      <%= link_to "Title Density Report for #{@squad.name}", reports_title_density_path(squad_id: @squad.id, max_depth: @squad.depth + 1), class: 'btn btn-secondary' %>
+      <%= link_to "Title Density Report for #{@squad.name}", reports_title_density_path(squad_id: @squad.id, max_depth: @squad.depth + 1), class: 'btn btn-secondary me-2' %>
+      <%= link_to "Job Function Density Report for #{@squad.name}", reports_job_function_density_path(squad_id: @squad.id, max_depth: @squad.depth + 1), class: 'btn btn-info' %>
     </div>
   </div>
 </div>
