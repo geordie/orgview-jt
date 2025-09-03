@@ -46,14 +46,14 @@ Rails.application.routes.draw do
   get 'reports/squad_health', to: 'reports#squad_health'
   get 'reports/squad_health_details', to: 'reports#squad_health_details'
 
-  # Squads
-  resources :squads, constraints: { id: /\d+/ }
+  # Squads - custom routes first, then resources
   post 'squads/build_cba_squads_list', to: 'squads#build_cba_squads_list'
   post 'squads/build_all_squads_stats', to: 'squads#build_all_squads_stats'
   get 'squads/treeview', to: 'squads#treeview'
-  get 'squads/:id/sub_teams', to: 'squads#sub_teams', as: 'sub_teams'
   delete 'squads/destroy_all', to: 'squads#destroy_all', as: 'squads_destroy_all'
+  get 'squads/:id/sub_teams', to: 'squads#sub_teams', as: 'sub_teams'
   get 'squads/:id/squad_members', to: 'squads#squad_members', as: 'squad_members'
+  resources :squads, constraints: { id: /\d+/ }
 
   # Defines the root path route ("/")
   root "home#index"
