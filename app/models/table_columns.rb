@@ -53,13 +53,25 @@ class TableColumns
 
       # If there's a lookup hash, use it to map the value
       if link_param.lookup && link_param.lookup[cell_value]
-        params[link_param.name] = link_param.lookup[cell_value]
+        mapped_value = link_param.lookup[cell_value]
+        params[link_param.name] = mapped_value
+        Rails.logger.debug "DEBUG URL generation: Mapped '#{cell_value}' to '#{mapped_value}' for param '#{link_param.name}'"
       else
         # Otherwise use the cell value directly
         params[link_param.name] = cell_value
+        Rails.logger.debug "DEBUG URL generation: Using direct value '#{cell_value}' for param '#{link_param.name}'"
       end
     end
-    return { controller: info.controller, action: info.action, params: params }
+
+    # Only return result if we have valid params
+    if params.empty? || params.values.any?(&:nil?)
+      Rails.logger.debug "DEBUG URL generation: Invalid params, returning nil: #{params.inspect}"
+      return nil
+    end
+
+    result = { controller: info.controller, action: info.action, params: params }
+    Rails.logger.debug "DEBUG URL generation: Final result: #{result.inspect}"
+    return result
   end
 
   def visible_columns

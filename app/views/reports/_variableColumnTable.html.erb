@@ -16,8 +16,12 @@
 							<td class="<%= 'text-center' if column.type != 'string' %> border">
 								<% cellVal = column.display(row_index) %>
 								<% if column.link_info %>
-									<%= link_to cellVal,
-										url_for(@table.get_cell_links(column.label, row_index))%>
+									<% link_data = @table.get_cell_links(column.label, row_index) %>
+									<% if link_data %>
+										<%= link_to cellVal, url_for(link_data) %>
+									<% else %>
+										<%= cellVal %>
+									<% end %>
 								<% else %>
 									<%= cellVal %>
 								<% end %>
