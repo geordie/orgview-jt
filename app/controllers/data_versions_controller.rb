@@ -41,7 +41,7 @@ class DataVersionsController < ApplicationController
 
   def activate
     @data_version.activate!
-    redirect_to data_versions_path, notice: "#{@data_version.name} is now the active version."
+    redirect_back(fallback_location: root_path, notice: "#{@data_version.name} is now the active version.")
   end
 
   def archive
