@@ -793,17 +793,6 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(employee_country_tenure_ranges)
   end
 
-  def retail_tech_org_sizes
-    org_sizes = Squad.where(depth: 2)
-      .where('full_path LIKE ?', 'Retail Tech%')
-      .order(org_members: :desc)
-      .pluck(:name, :org_members)
-      .to_h
-    @org_sizes = org_sizes.keys
-    @counts = org_sizes.values
-    @percentages = build_percentages(org_sizes)
-  end
-
   private
 
   def build_percentages(data)

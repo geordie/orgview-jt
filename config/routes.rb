@@ -46,7 +46,6 @@ Rails.application.routes.draw do
   get 'reports/employee_worker_type', to: 'reports#employee_worker_type'
   get 'reports/employee_country_worker_type', to: 'reports#employee_country_worker_type'
   get 'reports/management_ratios', to: 'reports#management_ratios'
-  get 'reports/retail_tech_org_sizes', to: 'reports#retail_tech_org_sizes'
   get 'reports/team_geos', to: 'reports#team_geos'
   get 'reports/squad_children', to: 'reports#squad_children'
   get 'reports/squad_depth', to: 'reports#squad_depth'
