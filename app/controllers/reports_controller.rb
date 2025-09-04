@@ -819,15 +819,4 @@ class ReportsController < ApplicationController
 
     percentages
   end
-
-  def build_ratios(data)
-    max = data.values.max
-
-    ratios = []
-    data.each do |key, value|
-      ratios << (max / value.to_f ).round(0)
-    end
-
-    ratios
-  end
 end
