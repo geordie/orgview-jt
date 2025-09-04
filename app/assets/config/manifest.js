@@ -3,3 +3,4 @@
 //= link application.js
 //= link primitives.js
 //= link @rails--ujs.js
+//= link data_version_switcher.js
