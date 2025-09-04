@@ -234,6 +234,7 @@ class ReportsController < ApplicationController
   end
 
   def job_function_density
+    current_version = DataVersion.active.first
     job_function = params[:job_function]
     max_depth = params[:max_depth] || 1
     squad_id = params[:squad_id]
@@ -242,12 +243,12 @@ class ReportsController < ApplicationController
     @report_subtitle = job_function ? "#{job_function} (Depth: #{max_depth})" : "All Job Functions (Depth: #{max_depth})"
     @back_link = nil
 
-    # Build data with optional squad filtering
-    base_squad_query = Squad.all
+    # Build data with optional squad filtering - filter by current data version
+    base_squad_query = Squad.where(data_version_id: current_version.id)
 
     # If squad_id is provided, filter to that squad and its descendants
     if squad_id.present?
-      parent_squad = Squad.find(squad_id)
+      parent_squad = Squad.where(data_version_id: current_version.id).find(squad_id)
       squad_title = job_function ? "#{job_function} - #{parent_squad.full_path}" : "All Job Functions - #{parent_squad.full_path}"
       @report_subtitle = "#{squad_title} (Depth: #{max_depth})"
 
@@ -289,8 +290,10 @@ class ReportsController < ApplicationController
     # Initialize squads hash with zero counts
     squads_hash = squads.map { |squad| [squad.full_path, [0, squad.org_members || 0]] }.to_h
 
-    # Get all squads with the specified job_function, applying the same squad filter
+    # Get all squads with the specified job_function, applying the same squad filter - filter by current data version
     squad_employee_query = Squad.joins(squads_employees: :employee)
+      .where(squads: { data_version_id: current_version.id })
+      .where(employees: { data_version_id: current_version.id })
       .where(!job_function.nil? ? {employees: { job_function: job_function }} : {} )
 
     # Apply the same squad filtering to the employee query
@@ -407,8 +410,12 @@ class ReportsController < ApplicationController
   end
 
   def job_function
+
+    # Get the current data version
+    current_version = DataVersion.active.first
+
     # Get the data with optional squad filtering
-    base_employee_query = Employee.all
+    base_employee_query = Employee.current.all
 
     # If squad_id is provided, filter to employees in that squad and its descendants
     if params[:squad_id].present?
@@ -416,9 +423,10 @@ class ReportsController < ApplicationController
 
       # Find all squads that are children of the specified squad (using full_path hierarchy)
       descendant_squads = Squad.where(
-        "full_path = ? OR full_path LIKE ?",
-        parent_squad.full_path,
-        "#{parent_squad.full_path} > %"
+        "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
+        path: parent_squad.full_path,
+        like_path: "#{parent_squad.full_path} > %",
+        data_version_id: current_version.id
       )
 
       # Filter employees to only those in the descendant squads
