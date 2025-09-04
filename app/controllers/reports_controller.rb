@@ -540,7 +540,30 @@ class ReportsController < ApplicationController
   end
 
   def management_ratios
-    subquery = Employee.group(:manager_id).select('COUNT(*) AS team_size')
+    current_version = DataVersion.active.first
+
+    # Get team sizes for current version employees only
+    base_employee_query = Employee.where(data_version_id: current_version.id)
+
+    # If squad_id is provided, filter to employees in that squad and its descendants
+    if params[:squad_id].present?
+      parent_squad = Squad.find(params[:squad_id])
+
+      # Find all squads that are children of the specified squad (using full_path hierarchy)
+      descendant_squads = Squad.where(
+        "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
+        path: parent_squad.full_path,
+        like_path: "#{parent_squad.full_path} > %",
+        data_version_id: current_version.id
+      )
+
+      # Filter employees to only those in the descendant squads
+      base_employee_query = base_employee_query
+        .joins(:squads_employees)
+        .where(squads_employees: { squad_id: descendant_squads.pluck(:id), data_version_id: current_version.id })
+    end
+
+    subquery = base_employee_query.group(:manager_id).select('COUNT(*) AS team_size')
     all_team_sizes = Employee.from(subquery, :A).group(:team_size).order(team_size: :desc).count
     agg_team_sizes = {"> 15" => 0, "11-15" => 0, "5-10" => 0, "3-4" => 0, "1-2" => 0}
     all_team_sizes.keys.each do |key|
@@ -556,9 +579,50 @@ class ReportsController < ApplicationController
         agg_team_sizes["1-2"] += all_team_sizes[key]
       end
     end
-    @team_sizes = agg_team_sizes.keys
-    @counts = agg_team_sizes.values
-    @percentages = build_percentages(agg_team_sizes)
+
+    # Setup report metadata
+    squad_subtitle = ""
+    if params[:squad_id].present?
+      parent_squad = Squad.find(params[:squad_id])
+      squad_subtitle = " - #{parent_squad.full_path}"
+    end
+
+    @report_title = "Management Ratios Report"
+    @report_subtitle = squad_subtitle
+
+    # Create table data using the new model
+    @table = TableColumns.new
+
+    @table.add_column(
+      label: "Manager Team Size",
+      values: agg_team_sizes.keys,
+      type: "string"
+    )
+
+    @table.add_column(
+      label: "Count",
+      values: agg_team_sizes.values,
+      type: "numeric"
+    )
+
+    percentages = build_percentages(agg_team_sizes)
+    @table.add_column(
+      label: "Percentage",
+      values: percentages,
+      type: "percentage"
+    )
+
+    # Create chart data
+    @chart_data = ChartData.new(
+      labels: agg_team_sizes.keys,
+      data: agg_team_sizes.values,
+      percentages: percentages,
+      chart_id: "managementRatiosChart",
+      label_x_axis: "# of Managers"
+    )
+
+    # Render the generic view
+    render 'report'
   end
 
   def squad_depth
