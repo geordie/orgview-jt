@@ -504,10 +504,91 @@ class ReportsController < ApplicationController
   end
 
   def job_function_group
-    employee_job_function_groups = Employee.all.group(:job_function_group).count.sort_by { |k, v| v }.reverse.to_h
-    @job_function_groups = employee_job_function_groups.keys
-    @counts = employee_job_function_groups.values
-    @percentages = build_percentages(employee_job_function_groups)
+    current_version = DataVersion.active.first
+
+    # Get the data with optional squad filtering
+    base_employee_query = Employee.where(data_version_id: current_version.id)
+
+    # If squad_id is provided, filter to employees in that squad and its descendants
+    if params[:squad_id].present?
+      parent_squad = Squad.find(params[:squad_id])
+
+      # Find all squads that are children of the specified squad (using full_path hierarchy)
+      descendant_squads = Squad.where(
+        "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
+        path: parent_squad.full_path,
+        like_path: "#{parent_squad.full_path} > %",
+        data_version_id: current_version.id
+      )
+
+      # Filter employees to only those in the descendant squads
+      base_employee_query = base_employee_query
+        .joins(:squads_employees)
+        .where(squads_employees: { squad_id: descendant_squads.pluck(:id), data_version_id: current_version.id })
+    end
+
+    employee_job_function_groups = base_employee_query
+      .distinct(:person_id)
+      .group(:job_function_group)
+      .count
+      .sort_by { |k, v| v }.reverse.to_h
+
+    # Setup report metadata
+    squad_subtitle = ""
+    if params[:squad_id].present?
+      parent_squad = Squad.find(params[:squad_id])
+      squad_subtitle = " - #{parent_squad.full_path}"
+    end
+
+    @report_title = "Job Function Group Report"
+    @report_subtitle = squad_subtitle
+
+    # Create table data using the new model
+    @table = TableColumns.new
+
+    # Add columns with linking to job_function report
+    link_params = [LinkParams.new(name: 'job_function_group', value_col: 'Job Function Group')]
+
+    # If a squad_id parameter is present, pass it along to the job_function report
+    if params[:squad_id].present?
+      link_params << LinkParams.new(name: 'squad_id', value: params[:squad_id])
+    end
+
+    @table.add_column(
+      label: "Job Function Group",
+      values: employee_job_function_groups.keys,
+      type: "string",
+      link_info: LinkInfo.new(
+        controller: 'reports',
+        action: 'job_function',
+        link_params: link_params
+      )
+    )
+
+    @table.add_column(
+      label: "Count",
+      values: employee_job_function_groups.values,
+      type: "numeric"
+    )
+
+    percentages = build_percentages(employee_job_function_groups)
+    @table.add_column(
+      label: "Percentage",
+      values: percentages,
+      type: "percentage"
+    )
+
+    # Create chart data
+    @chart_data = ChartData.new(
+      labels: employee_job_function_groups.keys,
+      data: employee_job_function_groups.values,
+      percentages: percentages,
+      chart_id: "jobFunctionGroupChart",
+      label_x_axis: "# of Employees"
+    )
+
+    # Render the generic view
+    render 'report'
   end
 
   def employee_country
