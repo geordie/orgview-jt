@@ -4,12 +4,16 @@ class SquadsController < ApplicationController
 
 	# GET /squads or /squads.json
 	def index
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
 		depth = params[:depth] ||= nil
 		parent_id = params[:parent_id] ||= nil
 		idx_sort_column = index_sort_column
 		sort_direction = params[:direction] || "asc"
 
 		@squads = Squad
+			.where(data_version_id: current_version.id)
 			.where(depth.nil? ? nil : ["depth = ?", depth])
 			.where(parent_id.nil? ? nil : ["parent_id = ?", parent_id])
 			.where(params[:search].present? ? ["name LIKE ?", "%#{params[:search]}%"] : nil)
@@ -19,12 +23,16 @@ class SquadsController < ApplicationController
 
 	# GET /squads/1 or /squads/1.json
 	def show
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
 		sort_direction = params[:direction] || "asc"
 		@sort_column = sort_column
 		@squad_members = @squad.squads_employees
+													 .where(data_version_id: current_version.id)
 													 .includes(:employee)
 													 .order(Arel.sql("#{@sort_column} #{sort_direction}"))
-		@sub_teams = Squad.where(parent_id: @squad.id).order("org_members desc")
+		@sub_teams = Squad.where(parent_id: @squad.id, data_version_id: current_version.id).order("org_members desc")
 	end
 
 	# GET /squads/new
@@ -38,7 +46,11 @@ class SquadsController < ApplicationController
 
 	# POST /squads or /squads.json
 	def create
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
 		@squad = Squad.new(squad_params)
+		@squad.data_version = current_version
 
 		respond_to do |format|
 			if @squad.save
@@ -74,29 +86,41 @@ class SquadsController < ApplicationController
 	end
 
 	def destroy_all
-		SquadsEmployee.delete_all
-		Squad.delete_all
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
+		SquadsEmployee.where(data_version_id: current_version.id).delete_all
+		Squad.where(data_version_id: current_version.id).delete_all
 		redirect_to squads_path, notice: 'All squads have been deleted.'
 	end
 
 	def treeview
-		@squads = Squad.where("parent_id IS NULL")
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
+		@squads = Squad.where("parent_id IS NULL AND data_version_id = ?", current_version.id)
 	end
 
 	def sub_teams
-		squad = Squad.find(params[:id])
-		sub_teams = Squad.where(parent_id: squad.id)
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
+		squad = Squad.where(data_version_id: current_version.id).find(params[:id])
+		sub_teams = Squad.where(parent_id: squad.id, data_version_id: current_version.id)
 		@sub_teams = sub_teams.map { |sub_team| build_hierarchy(sub_team, false) }
 
 		respond_to do |format|
 			format.html { render partial: 'structure', locals: { sub_teams: @sub_teams } }
 			format.json { render json: @sub_teams }
 		end
-  	end
+	end
 
 	def squad_members
-		squad = Squad.find(params[:id])
-		@squad_members = squad.squads_employees.includes(:employee)
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
+		squad = Squad.where(data_version_id: current_version.id).find(params[:id])
+		@squad_members = squad.squads_employees.where(data_version_id: current_version.id).includes(:employee)
 		respond_to do |format|
 			format.html { render partial: 'members', locals: { squad_members: @squad_members } }
 			format.json { render json: @squad_members.to_json(include: :employee) }
@@ -107,7 +131,10 @@ class SquadsController < ApplicationController
 
 	# Use callbacks to share common setup or constraints between actions.
 	def set_squad
-		@squad = Squad.find(params[:id])
+		current_version = DataVersion.active.first
+		return redirect_to root_path, alert: 'No active data version found.' unless current_version
+
+		@squad = Squad.where(data_version_id: current_version.id).find(params[:id])
 	end
 
 	def build_hierarchy(sub_team, recursive = true)
