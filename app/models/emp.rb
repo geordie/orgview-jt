@@ -1,3 +1,3 @@
 class Emp < ApplicationRecord
-	self.table_name = "emp_old"
+	self.table_name = "emp"
 end
