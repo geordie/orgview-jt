@@ -1,8 +1,10 @@
 class ReportsController < ApplicationController
 
   def roles
+    current_version = DataVersion.active.first
+
     # Get the data with optional squad filtering
-    base_employee_query = Employee.all
+    base_employee_query = Employee.current.all
 
     # If squad_id is provided, filter to employees in that squad and its descendants
     if params[:squad_id].present?
@@ -10,9 +12,10 @@ class ReportsController < ApplicationController
 
       # Find all squads that are children of the specified squad (using full_path hierarchy)
       descendant_squads = Squad.where(
-        "full_path = ? OR full_path LIKE ?",
-        parent_squad.full_path,
-        "#{parent_squad.full_path} > %"
+        "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
+        path: parent_squad.full_path,
+        like_path: "#{parent_squad.full_path} > %",
+        data_version_id: current_version.id
       )
 
       # Filter employees to only those in the descendant squads
