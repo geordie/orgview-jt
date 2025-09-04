@@ -13,6 +13,7 @@ class DataVersion < ApplicationRecord
   scope :recent, -> { order(snapshot_date: :desc) }
 
   before_save :ensure_single_active_version
+  before_save :sync_status_and_active_flag
 
   def activate!
     transaction do
@@ -40,6 +41,18 @@ class DataVersion < ApplicationRecord
   def ensure_single_active_version
     if is_active_changed? && is_active?
       DataVersion.where.not(id: id).update_all(is_active: false)
+    end
+  end
+
+  def sync_status_and_active_flag
+    # If status is being set to 'active', make sure is_active is true
+    if status_changed? && status == 'active'
+      self.is_active = true
+      # Deactivate all other versions
+      DataVersion.where.not(id: id).update_all(is_active: false, status: 'draft')
+    elsif status_changed? && status != 'active'
+      # If status is not 'active', make sure is_active is false
+      self.is_active = false
     end
   end
 end
