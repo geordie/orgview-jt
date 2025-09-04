@@ -28,6 +28,10 @@ class DataVersion < ApplicationRecord
     update!(status: 'archived', is_active: false)
   end
 
+  def active?
+    is_active
+  end
+
   def employee_count
     employees.count
   end
