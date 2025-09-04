@@ -2,6 +2,15 @@ Rails.application.routes.draw do
   get 'reports/roles'
   get 'reports/seniority'
   resources :roles
+
+  # Data Version Management
+  resources :data_versions do
+    member do
+      patch :activate
+      patch :archive
+    end
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

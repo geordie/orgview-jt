@@ -69,6 +69,114 @@
 
 </div>
 
+<div class="container" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+
+<h2>Data Version Management</h2>
+
+  <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>Current Active Version</h5>
+        <%= link_to "Manage All Versions", data_versions_path, class: "btn btn-primary" %>
+      </div>
+
+      <% if @current_version %>
+        <div class="alert alert-info">
+          <strong><%= @current_version.name %></strong>
+          <span class="badge bg-success">Active</span>
+          <br>
+          <small class="text-muted">
+            Snapshot Date: <%= @current_version.snapshot_date.strftime("%B %d, %Y at %I:%M %p") %>
+          </small>
+          <br>
+          <small class="text-muted">
+            <%= @current_version.description if @current_version.description.present? %>
+          </small>
+          <br>
+          <div class="mt-2">
+            <span class="badge bg-secondary">Employees: <%= @current_version.employee_count %></span>
+            <span class="badge bg-secondary">Squads: <%= @current_version.squad_count %></span>
+          </div>
+        </div>
+      <% else %>
+        <div class="alert alert-warning">
+          No active data version found. Please create and activate a version.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+    <div class="col-12">
+      <h5>Recent Versions</h5>
+      <% if @data_versions.any? %>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Snapshot Date</th>
+                <th>Employees</th>
+                <th>Squads</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @data_versions.each do |version| %>
+                <tr class="<%= 'table-success' if version.is_active? %>">
+                  <td>
+                    <%= link_to version.name, data_version_path(version) %>
+                    <% if version.is_active? %>
+                      <span class="badge bg-success ms-1">Active</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="badge bg-<%= version.status == 'active' ? 'success' : version.status == 'draft' ? 'warning' : 'secondary' %>">
+                      <%= version.status.capitalize %>
+                    </span>
+                  </td>
+                  <td><%= version.snapshot_date.strftime("%m/%d/%Y") %></td>
+                  <td><%= version.employee_count %></td>
+                  <td><%= version.squad_count %></td>
+                  <td>
+                    <% unless version.is_active? %>
+                      <%= link_to "Activate", activate_data_version_path(version),
+                          method: :patch,
+                          class: "btn btn-sm btn-success",
+                          data: { confirm: "Make this the active version?" } %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted">No data versions found.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+    <div class="col-4">
+      <h5>Create New Version</h5>
+    </div>
+    <div class="col-8">
+      <%= form_with model: DataVersion.new, url: data_versions_path, local: true, class: "d-flex align-items-center" do |form| %>
+        <div class="me-2" style="flex: 1;">
+          <%= form.text_field :name, class: "form-control", placeholder: "Version name (e.g., 'september_2025')" %>
+        </div>
+        <div class="me-2" style="flex: 2;">
+          <%= form.text_area :description, class: "form-control", rows: 1, placeholder: "Description (optional)" %>
+        </div>
+        <%= form.submit "Create Version", class: "btn btn-primary" %>
+      <% end %>
+    </div>
+  </div>
+
+</div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     var fileInput = document.getElementById("file-input");
