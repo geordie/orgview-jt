@@ -92,7 +92,7 @@ module CbaSquadGenerator
     squad_id = squad_ids[key]
 
     if !squad_id
-      raise "Squad with key '#{key}' does not exist in the squad_ids map for employee #{emp['id']}"
+      raise "Squad with key '#{key}' does not exist in the squad_ids map for employee #{emp['person_id']}"
     end
 
     return { squad_id: squad_id, employee_id: employee_id, allocation: 1 }
@@ -134,12 +134,10 @@ module CbaSquadGenerator
       :demand_team_domain_l1,
       :demand_team_domain_l2,
       :demand_team_domain_l3,
-      :demand_team_id,
     )
 
     demand_teams.each do |demand_team_name, demand_team_business_unit,
-      demand_team_domain_l1, demand_team_domain_l2, demand_team_domain_l3,
-      demand_team_id |
+      demand_team_domain_l1, demand_team_domain_l2, demand_team_domain_l3|
 
       # Build the full hierarchy path
       hierarchy = [
@@ -172,15 +170,18 @@ module CbaSquadGenerator
     batchsize = 500
     team_list = {}
     # Fetch distinct team hierarchy from the database
-    supply_teams = Emp.where(demand_team_type: nil).distinct.pluck(
-      :pace_supervisory_org_business_unit,
-      :pace_supervisory_org_2,
-      :pace_supervisory_org_3,
-      :pace_supervisory_org_4,
-      :pace_supervisory_org_5,
-      :pace_supervisory_org_6,
-      :pace_supervisory_org_7,
-      :supply_team_name)
+    supply_teams = Emp
+      .where(demand_team_type: [nil, ''])
+      .distinct.pluck(
+        :pace_supervisory_org_business_unit,
+        :pace_supervisory_org_2,
+        :pace_supervisory_org_3,
+        :pace_supervisory_org_4,
+        :pace_supervisory_org_5,
+        :pace_supervisory_org_6,
+        :pace_supervisory_org_7,
+        :supply_team_name
+      )
 
     supply_teams.each do |pace_supervisory_org_business_unit,
       pace_supervisory_org_2, pace_supervisory_org_3, pace_supervisory_org_4,
