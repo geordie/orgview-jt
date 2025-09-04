@@ -68,6 +68,7 @@
                 <td>
                   <div class="btn-group" role="group">
                     <%= link_to "View", data_version_path(version), class: "btn btn-sm btn-outline-primary" %>
+                    <%= link_to "Edit", edit_data_version_path(version), class: "btn btn-sm btn-outline-secondary" %>
                     <% unless version.is_active? %>
                       <%= link_to "Activate", activate_data_version_path(version),
                           method: :patch,
