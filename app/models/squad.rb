@@ -4,6 +4,7 @@ class Squad < ApplicationRecord
   has_many :sub_teams, class_name: 'Squad', foreign_key: 'parent_id'
   has_many :squads_employees
   has_many :employees, through: :squads_employees
+  belongs_to :data_version, optional: true
 
   # Validations
   validates :name, presence: true
