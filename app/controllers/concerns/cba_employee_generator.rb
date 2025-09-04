@@ -2,10 +2,20 @@ module CbaEmployeeGenerator
   extend ActiveSupport::Concern
 
   def build_cba_list
+    # Get the current active data version
+    current_version = DataVersion.active.first
+
     ActiveRecord::Base.transaction do
-      SquadsEmployee.delete_all
-      Squad.delete_all
-      Employee.delete_all
+
+      unless current_version
+        redirect_to root_path, alert: 'No active data version found. Please create and activate a version first.'
+        return
+      end
+
+      # Only delete data for the current active version
+      SquadsEmployee.where(data_version_id: current_version.id).delete_all
+      Squad.where(data_version_id: current_version.id).delete_all
+      Employee.where(data_version_id: current_version.id).delete_all
 
       batch = []
       batch_size = 5000
@@ -41,6 +51,7 @@ module CbaEmployeeGenerator
           is_manager: emp['role_is_manager'],
           country: emp['country'],
           worker_type: emp['worker_type'],
+          data_version_id: current_version.id,
         }
         if batch.size >= batch_size
           Employee.insert_all!(batch)
@@ -50,6 +61,6 @@ module CbaEmployeeGenerator
       Employee.insert_all!(batch) if batch.any?
     end
 
-    redirect_to root_path, notice: 'CBA employees created successfully.'
+    redirect_to root_path, notice: "CBA employees created successfully for version '#{current_version.name}'."
   end
 end

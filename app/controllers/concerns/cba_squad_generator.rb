@@ -2,41 +2,53 @@ module CbaSquadGenerator
   extend ActiveSupport::Concern
 
   def build_cba_squads_list
+    # Get the current active data version
+    current_version = DataVersion.active.first
+
+    unless current_version
+      redirect_to root_path, alert: 'No active data version found. Please create and activate a version first.'
+      return
+    end
+
     batch = []
     batch_size = 1000
-    # Build a hash map of person_id => employee.id for fast lookup
-    employee_id_map = Employee.pluck(:person_id, :id).to_h
+    # Build a hash map of person_id => employee.id for fast lookup (only for current version)
+    employee_id_map = Employee.where(data_version_id: current_version.id).pluck(:person_id, :id).to_h
     # Build a hash map for squads: [name, full_path, parent_id, depth] => squad
     squad_map = {}
 
-    SquadsEmployee.delete_all
-    Squad.delete_all
+    # Only delete data for the current active version
+    SquadsEmployee.where(data_version_id: current_version.id).delete_all
+    Squad.where(data_version_id: current_version.id).delete_all
 
     # Build the demand team list
-    create_demand_teams()
-    create_supply_teams()
+    create_demand_teams(current_version)
+    create_supply_teams(current_version)
 
-    update_teams_parent_ids()
+    update_teams_parent_ids(current_version)
 
-    all_squads = Squad.pluck(:full_path, :id).to_h
+    all_squads = Squad.where(data_version_id: current_version.id).pluck(:full_path, :id).to_h
 
-    build_employee_teams(all_squads, employee_id_map)
+    build_employee_teams(all_squads, employee_id_map, current_version)
 
-    redirect_to root_path, notice: 'CBA squads created successfully.'
+    redirect_to root_path, notice: "CBA squads created successfully for version '#{current_version.name}'."
   end
 
   def build_all_squads_stats
-    # Get root squads
-    Squad.update_all(children: 0, descendents: 0, squad_members: 0, squad_members_managers: 0, squad_health: "green")
+    current_version = DataVersion.active.first
+    return redirect_to root_path, alert: 'No active data version found.' unless current_version
 
-    build_squads_stats
+    # Get root squads
+    Squad.where(data_version_id: current_version.id).update_all(children: 0, descendents: 0, squad_members: 0, squad_members_managers: 0, squad_health: "green")
+
+    build_squads_stats(current_version)
 
     redirect_to root_path, notice: 'CBA squad stats generated successfully.'
   end
 
   private
 
-  def build_employee_teams( squad_ids, employee_id_map)
+  def build_employee_teams(squad_ids, employee_id_map, current_version)
 
     batch_size = 1000
 
@@ -46,10 +58,10 @@ module CbaSquadGenerator
     Emp.all.each do |emp|
       if emp['demand_team_type'].nil? || emp['demand_team_type'].empty?
         supply_employees_to_insert <<
-          build_supply_employee_squad(emp, squad_ids, employee_id_map, supply_employees_to_insert)
+          build_supply_employee_squad(emp, squad_ids, employee_id_map, supply_employees_to_insert, current_version)
       else
         demand_employees_to_insert <<
-          build_demand_employee_squad(emp, squad_ids, employee_id_map, demand_employees_to_insert)
+          build_demand_employee_squad(emp, squad_ids, employee_id_map, demand_employees_to_insert, current_version)
       end
 
       if supply_employees_to_insert.size >= batch_size
@@ -71,7 +83,7 @@ module CbaSquadGenerator
     demand_employees_to_insert.clear
   end
 
-  def build_supply_employee_squad(emp, squad_ids, employee_id_map, squad_employees_to_insert)
+  def build_supply_employee_squad(emp, squad_ids, employee_id_map, squad_employees_to_insert, current_version)
 
     employee_id = employee_id_map[emp['person_id']]
 
@@ -95,10 +107,10 @@ module CbaSquadGenerator
       raise "Squad with key '#{key}' does not exist in the squad_ids map for employee #{emp['person_id']}"
     end
 
-    return { squad_id: squad_id, employee_id: employee_id, allocation: 1 }
+    return { squad_id: squad_id, employee_id: employee_id, allocation: 1, data_version_id: current_version.id }
   end
 
-  def build_demand_employee_squad(emp, squad_ids, employee_id_map, squad_employees_to_insert)
+  def build_demand_employee_squad(emp, squad_ids, employee_id_map, squad_employees_to_insert, current_version)
 
     employee_id = employee_id_map[emp['person_id']]
 
@@ -118,11 +130,11 @@ module CbaSquadGenerator
       raise "Squad with key '#{key}' does not exist in the squad_ids map for employee #{emp['id']}"
     end
 
-    return { squad_id: squad_id, employee_id: employee_id, allocation: 1 }
+    return { squad_id: squad_id, employee_id: employee_id, allocation: 1, data_version_id: current_version.id }
   end
 
   # Helper method to build a list of all teams
-  def create_demand_teams
+  def create_demand_teams(current_version)
     batchsize = 500
     team_list = {}
 
@@ -156,7 +168,7 @@ module CbaSquadGenerator
         depth = index + 1
         name = hierarchy[index]
 
-        team_list[key] = { full_path: key, name: name, depth: depth, parent_id: nil }
+        team_list[key] = { full_path: key, name: name, depth: depth, parent_id: nil, data_version_id: current_version.id }
       end
     end
 
@@ -166,7 +178,7 @@ module CbaSquadGenerator
     end
   end
 
-  def create_supply_teams
+  def create_supply_teams(current_version)
     batchsize = 500
     team_list = {}
     # Fetch distinct team hierarchy from the database
@@ -209,7 +221,7 @@ module CbaSquadGenerator
         depth = index + 1
         name = hierarchy[index]
 
-        team_list[key] = { full_path: key, name: name, depth: depth, parent_id: nil}
+        team_list[key] = { full_path: key, name: name, depth: depth, parent_id: nil, data_version_id: current_version.id}
       end
     end
 
@@ -219,9 +231,9 @@ module CbaSquadGenerator
     end
   end
 
-  def update_teams_parent_ids
+  def update_teams_parent_ids(current_version)
     # Get all squads and their IDs, normalized
-    squad_ids = Squad.pluck(:full_path, :id).map { |full_path, id| [full_path.strip, id] }.to_h
+    squad_ids = Squad.where(data_version_id: current_version.id).pluck(:full_path, :id).map { |full_path, id| [full_path.strip, id] }.to_h
     squad_updates = {}
 
     # For each squad, find its parent and update the parent_id in memory
@@ -247,64 +259,18 @@ module CbaSquadGenerator
     if squad_updates.any?
       ids = squad_updates.values.map { |u| u[:id] }
       case_sql = squad_updates.values.map { |u| "WHEN #{u[:id]} THEN #{u[:parent_id].nil? ? 'NULL' : u[:parent_id]}" }.join(" ")
-      Squad.where(id: ids).update_all("parent_id = CASE id #{case_sql} END")
+      Squad.where(id: ids, data_version_id: current_version.id).update_all("parent_id = CASE id #{case_sql} END")
     end
   end
 
-  def build_employee_pace(emp, batch, batch_size, employee_id_map, squad_map)
-    employee_id = emp['person_id']
-    employee_db_id = employee_id_map[employee_id]
-    return unless employee_db_id
 
-    org_name = emp['pace_supervisory_org_business_unit'].strip
-    return if org_name.nil? || org_name.empty?
 
-    squad_parent = nil
-    squad_array = []
-    squad_array.push( org_name )
-
-    key = [org_name, org_name, squad_parent, 1]
-    squad = squad_map[key]
-    unless squad
-      squad = Squad.create!(name: org_name, full_path: org_name, parent_id: squad_parent, depth: 1)
-      squad_map[key] = squad
-    end
-    squad_parent = squad.id
-
-    # Build sub-squads
-    (2..7).each do |i|
-      lvl = emp["pace_supervisory_org_#{i}"]
-
-      # If we've found nil or empty, this is the squad the employee belongs to
-      if lvl.nil? || lvl.empty? || i == 7
-        batch << { squad_id: squad.id, employee_id: employee_db_id, allocation: 1 }
-        employee_squads = batch.select { |b| b[:employee_id] == employee_db_id }
-
-        if employee_squads.count > 1
-          allocation = (1.0 / employee_squads.count).round(3)
-          employee_squads.each { |es| es[:allocation] = allocation }
-        end
-        break
-      end
-      lvl = lvl.strip
-      squad_array.push( lvl )
-      squad_path = build_squad_path(squad_array)
-      key = [lvl, squad_path, squad_parent, i]
-      squad = squad_map[key]
-      unless squad
-        squad = Squad.create!(name: lvl, full_path: squad_path, parent_id: squad_parent, depth: i)
-        squad_map[key] = squad
-      end
-      squad_parent = squad.id
-    end
-  end
-
-  def build_squads_stats
+  def build_squads_stats(current_version)
     # Reset all squad stats
-    Squad.update_all(children: 0, descendents: 0, squad_members: 0, squad_members_managers: 0, squad_health: "green")
+    Squad.where(data_version_id: current_version.id).update_all(children: 0, descendents: 0, squad_members: 0, squad_members_managers: 0, squad_health: "green")
 
     # Get only the data you need without loading full objects
-    squad_hierarchy = Squad.pluck(:id, :parent_id, :full_path).map { |id, parent_id, path| 
+    squad_hierarchy = Squad.where(data_version_id: current_version.id).pluck(:id, :parent_id, :full_path).map { |id, parent_id, path|
       { id: id, parent_id: parent_id, full_path: path, children: 0, descendents: 0, squad_members: 0, org_members: 0 }
     }
 
@@ -313,9 +279,9 @@ module CbaSquadGenerator
     squad_hierarchy.each { |squad| squad_map[squad[:id]] = squad }
 
     # Get aggregated data
-    squad_employees_count = SquadsEmployee.group(:squad_id).count
-    squad_manager_counts = SquadsEmployee.joins(:employee).where(employees: { is_manager: true }).group(:squad_id).count
-    squad_children = Squad.where.not(parent_id: nil).group(:parent_id).count
+    squad_employees_count = SquadsEmployee.where(data_version_id: current_version.id).group(:squad_id).count
+    squad_manager_counts = SquadsEmployee.where(data_version_id: current_version.id).joins(:employee).where(employees: { is_manager: true, data_version_id: current_version.id }).group(:squad_id).count
+    squad_children = Squad.where(data_version_id: current_version.id).where.not(parent_id: nil).group(:parent_id).count
 
     # Calculate stats
     squad_hierarchy.each do |squad|
@@ -359,7 +325,7 @@ module CbaSquadGenerator
       case_sql_squad_health = squad_updates.map { |u| "WHEN #{u[:id]} THEN '#{u[:squad_health]}'" }.join(" ")
       case_sql_squad_health_details = squad_updates.map { |u| "WHEN #{u[:id]} THEN '#{u[:squad_health_details].gsub("'", "''")}'" }.join(" ")
 
-      Squad.where(id: ids).update_all(
+      Squad.where(id: ids, data_version_id: current_version.id).update_all(
         "children = CASE id #{case_sql_children} END, " +
         "descendents = CASE id #{case_sql_descendents} END, " +
         "squad_members = CASE id #{case_sql_squad_members} END, " +
