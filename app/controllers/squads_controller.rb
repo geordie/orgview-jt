@@ -85,15 +85,6 @@ class SquadsController < ApplicationController
 		end
 	end
 
-	def destroy_all
-		current_version = DataVersion.active.first
-		return redirect_to root_path, alert: 'No active data version found.' unless current_version
-
-		SquadsEmployee.where(data_version_id: current_version.id).delete_all
-		Squad.where(data_version_id: current_version.id).delete_all
-		redirect_to squads_path, notice: 'All squads have been deleted.'
-	end
-
 	def treeview
 		current_version = DataVersion.active.first
 		return redirect_to root_path, alert: 'No active data version found.' unless current_version
