@@ -1,5 +1,4 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 ceo:
   id: 1
   person_id: "EMP001"
@@ -179,3 +178,35 @@ employee_2188:
   worker_type: "Employee"
   country: "USA"
   data_version_id: 1
+
+one:
+  id: 111111
+  employee_id: "CEO001"
+  person_id: 1
+  data_version_id: 1
+  role_id: 1
+  squad_id: 1
+  first_name: "John"
+  last_name: "CEO"
+  email: "john.ceo@example.com"
+  hire_date: <%= 5.years.ago.to_date %>
+  base_salary: 250000
+  full_time_equivalent: 1.0
+  location: "Sydney"
+  manager_id: nil
+
+two:
+  id: 222222
+  employee_id: "CTO001"
+  person_id: 2
+  data_version_id: 1
+  role_id: 2
+  squad_id: 2
+  first_name: "Jane"
+  last_name: "CTO"
+  email: "jane.cto@example.com"
+  hire_date: <%= 4.years.ago.to_date %>
+  base_salary: 220000
+  full_time_equivalent: 1.0
+  location: "Sydney"
+  manager_id: 1
