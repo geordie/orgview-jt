@@ -1,152 +1,181 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-employee_2181:
-  id: 2181
-  name: Petra Crist
-  title: CEO
-  job_function: Senior Leadership
-  seniority: 12
-  manager_id:
+ceo:
+  id: 1
+  person_id: "EMP001"
+  name: "John Doe"
+  title: "CEO"
+  job_function: "Senior Leadership"
+  job_function_group: "Leadership"
+  seniority: 15
+  manager_id: 
   is_manager: true
-  start_date: 2014-06-27
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.944841000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:21.944841000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.944841000 Z
-    zone: *1
-    time: 2024-05-23 05:20:21.944841000 Z
+  start_date: <%= 10.years.ago.to_date %>
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
+
+cto:
+  id: 2
+  person_id: "EMP002"
+  name: "Jane Smith"
+  title: "CTO"
+  job_function: "Engineering"
+  job_function_group: "Technology"
+  seniority: 12
+  manager_id: "EMP001"
+  is_manager: true
+  start_date: <%= 8.years.ago.to_date %>
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
+
+engineer:
+  id: 3
+  person_id: "EMP003"
+  name: "Bob Johnson"
+  title: "Senior Software Engineer"
+  job_function: "Engineering"
+  job_function_group: "Technology"
+  seniority: 5
+  manager_id: "EMP002"
+  is_manager: false
+  start_date: <%= 5.years.ago.to_date %>
+  worker_type: "Employee"
+  country: "Canada"
+  data_version_id: 1
+
+manager:
+  id: 4
+  person_id: "EMP004"
+  name: "Alice Brown"
+  title: "Engineering Manager"
+  job_function: "Engineering"
+  job_function_group: "Technology"
+  seniority: 8
+  manager_id: "EMP002"
+  is_manager: true
+  start_date: <%= 6.years.ago.to_date %>
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
+
+designer:
+  id: 5
+  person_id: "EMP005"
+  name: "Carol White"
+  title: "UX Designer"
+  job_function: "Design"
+  job_function_group: "Product"
+  seniority: 3
+  manager_id: "EMP001"
+  is_manager: false
+  start_date: <%= 3.years.ago.to_date %>
+  worker_type: "Contractor"
+  country: "UK"
+  data_version_id: 1
 
 employee_2182:
   id: 2182
-  name: Amb. Tommie Robel
-  title: CTO
-  job_function: Software Development Management
+  person_id: "EMP2182"
+  name: "Amb. Tommie Robel"
+  title: "CTO"
+  job_function: "Software Development Management"
+  job_function_group: "Technology"
   seniority: 11
-  manager_id: 2181
+  manager_id: "EMP001"
   is_manager: true
-  start_date: 2012-12-26
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.966888000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:21.966888000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.966888000 Z
-    zone: *1
-    time: 2024-05-23 05:20:21.966888000 Z
+  start_date: "2012-12-26"
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
 
 employee_2183:
   id: 2183
-  name: Malinda Kunde
-  title: VP, Product Management
-  job_function: Product Management
-  seniority: 10
-  manager_id: 2181
+  person_id: "EMP2183"
+  name: "Malinda Kunde"
+  title: "VP, Product Management"
+  job_function: "Product Management"
+  job_function_group: "Product"
+  seniority: 9
+  manager_id: "EMP2182"
   is_manager: true
-  start_date: 2009-09-26
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.985802000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:21.985802000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.985802000 Z
-    zone: *1
-    time: 2024-05-23 05:20:21.985802000 Z
+  start_date: "2023-06-08"
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
 
 employee_2184:
   id: 2184
-  name: Winford Olson
-  title: VP, Software Development
-  job_function: Software Development Management
-  seniority: 10
-  manager_id: 2182
-  is_manager: true
-  start_date: 2022-09-14
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.998261000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:21.998261000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:21.998261000 Z
-    zone: *1
-    time: 2024-05-23 05:20:21.998261000 Z
+  person_id: "EMP2184"
+  name: "Cheyenne Ritchie"
+  title: "Principal Software Engineer"
+  job_function: "Software Development"
+  job_function_group: "Technology"
+  seniority: 6
+  manager_id: "EMP2183"
+  is_manager: false
+  start_date: "2023-11-22"
+  worker_type: "Employee"
+  country: "Canada"
+  data_version_id: 1
 
 employee_2185:
   id: 2185
-  name: Hans Smith
-  title: Director, Software Development
-  job_function: Software Development Management
+  person_id: "EMP2185"
+  name: "Hans Smith"
+  title: "Director, Software Development"
+  job_function: "Software Development Management"
+  job_function_group: "Technology"
   seniority: 8
-  manager_id: 2184
+  manager_id: "EMP2184"
   is_manager: true
-  start_date: 2022-09-20
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.008041000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:22.008041000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.008041000 Z
-    zone: *1
-    time: 2024-05-23 05:20:22.008041000 Z
+  start_date: "2022-09-20"
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
 
 employee_2186:
   id: 2186
-  name: Bryan Macejkovic
-  title: Staff Software Developer
-  job_function: Software Development
+  person_id: "EMP2186"
+  name: "Bryan Macejkovic"
+  title: "Staff Software Developer"
+  job_function: "Software Development"
+  job_function_group: "Technology"
   seniority: 7
-  manager_id: 2185
+  manager_id: "EMP2185"
   is_manager: false
-  start_date: 2022-06-29
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.019112000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:22.019112000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.019112000 Z
-    zone: *1
-    time: 2024-05-23 05:20:22.019112000 Z
+  start_date: "2022-06-29"
+  worker_type: "Employee"
+  country: "Canada"
+  data_version_id: 1
 
 employee_2187:
   id: 2187
-  name: Seymour Dietrich V
-  title: Software Developer
-  job_function: Software Development
+  person_id: "EMP2187"
+  name: "Seymour Dietrich V"
+  title: "Software Developer"
+  job_function: "Software Development"
+  job_function_group: "Technology"
   seniority: 5
-  manager_id: 2185
+  manager_id: "EMP2185"
   is_manager: false
-  start_date: 2023-04-16
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.032114000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:22.032114000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.032114000 Z
-    zone: *1
-    time: 2024-05-23 05:20:22.032114000 Z
+  start_date: "2023-04-16"
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
 
 employee_2188:
   id: 2188
-  name: Benedict Hartmann
-  title: Principal Software Developer
-  job_function: Software Development
+  person_id: "EMP2188"
+  name: "Benedict Hartmann"
+  title: "Principal Software Developer"
+  job_function: "Software Development"
+  job_function_group: "Technology"
   seniority: 8
-  manager_id: 2185
+  manager_id: "EMP2185"
   is_manager: false
-  start_date: 2023-08-30
-  created_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.043759000 Z
-    zone: &1 !ruby/object:ActiveSupport::TimeZone
-      name: Etc/UTC
-    time: 2024-05-23 05:20:22.043759000 Z
-  updated_at: !ruby/object:ActiveSupport::TimeWithZone
-    utc: 2024-05-23 05:20:22.043759000 Z
-    zone: *1
-    time: 2024-05-23 05:20:22.043759000 Z
+  start_date: "2023-08-30"
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
