@@ -1,6 +1,0 @@
-<h1>Roles Report</h1>
-
-<%= render partial: 'countTable', locals: { labelheader: 'Role', labels: @org_sizes, counts: @counts, percentages: @percentages } %>
-
-<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @org_sizes, data: @counts, percentages: @percentages, xlabel: '# of Employees' } %>
-
