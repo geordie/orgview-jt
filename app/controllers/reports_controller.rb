@@ -710,10 +710,41 @@ class ReportsController < ApplicationController
   end
 
   def squad_depth
-    squad_depths = Squad.all.group(:depth).count.sort_by { |k, v| k }.reverse.to_h
-    @depths = squad_depths.keys
-    @counts = squad_depths.values
-    @percentages = build_percentages(squad_depths)
+    # Get squad depth data with data version filtering
+    squad_depths = Squad.where(data_version_id: @current_data_version.id)
+      .group(:depth)
+      .count
+      .sort_by { |k, v| k }
+      .reverse
+      .to_h
+
+    @report_title = "Squad Depth Report"
+    @report_subtitle = ""
+
+    # Prepare data for table and chart
+    depths = squad_depths.keys
+    counts = squad_depths.values
+    percentages = build_percentages(squad_depths)
+
+    # Build table
+    @table = TableColumns.new
+    @table.add_column(label: "Squad Depth", type: "string", values: depths)
+    @table.add_column(label: "# of Squads", type: "numeric", values: counts)
+    @table.add_column(label: "% of Total", type: "percentage", values: percentages)
+
+    # Build chart
+    @chart_data = ChartData.new(
+      labels: depths,
+      data: counts,
+      percentages: percentages,
+      chart_id: 'squadDepthChart',
+      label_x_axis: '# of Squads'
+    )
+
+    # Render the generic report template
+    respond_to do |format|
+      format.html { render 'report' }
+    end
   end
 
   def squad_children
