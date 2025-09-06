@@ -8,7 +8,7 @@ ceo:
   job_function: "Senior Leadership"
   job_function_group: "Leadership"
   seniority: 15
-  manager_id: 
+  manager_id:
   is_manager: true
   start_date: <%= 10.years.ago.to_date %>
   worker_type: "Employee"
