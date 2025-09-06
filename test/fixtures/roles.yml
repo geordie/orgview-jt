@@ -179,19 +179,3 @@ role_33:
     utc: 2024-05-23 04:23:00.716237000 Z
     zone: *1
     time: 2024-05-23 04:23:00.716237000 Z
-
-one:
-  id: 34
-  job_function: "Senior Leadership"
-  role: "CEO"
-  seniority: 15
-  is_manager: true
-  data_version_id: 1
-
-two:
-  id: 35
-  job_function: "Engineering"
-  role: "CTO"
-  seniority: 12
-  is_manager: true
-  data_version_id: 1
