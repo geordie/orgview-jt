@@ -29,14 +29,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install Chrome
-      uses: browser-actions/setup-chrome@v1
-      with:
-        chrome-version: stable
-
-    - name: Install ChromeDriver
-      uses: nanasess/setup-chromedriver@v2
-
     - name: Cache Ruby installation
       uses: actions/cache@v3
       with:
