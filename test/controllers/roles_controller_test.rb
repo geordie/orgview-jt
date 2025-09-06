@@ -23,7 +23,7 @@ class RolesControllerTest < ActionDispatch::IntegrationTest
         seniority: @role.seniority,
         is_manager: @role.is_manager
       }
-    } 
+    }
     end
 
     assert_redirected_to role_url(Role.last)
@@ -45,7 +45,7 @@ class RolesControllerTest < ActionDispatch::IntegrationTest
         role: @role.role,
         seniority: @role.seniority,
         is_manager: @role.is_manager
-      } 
+      }
     }
     assert_redirected_to role_url(@role)
   end
