@@ -1,7 +1,7 @@
 <h1>Employee Worker Types</h1>
 
 <%= render partial: 'countTable',
-	locals: { 
+	locals: {
 		labelheader: 'Worker Type',
 		labels: @worker_types,
 		counts: @counts,
@@ -9,7 +9,7 @@
 		} %>
 
 <%= render partial: 'horizontalBarChart',
-	locals: { 
+	locals: {
 		id: 'rolesChart',
 		labels: @worker_types,
 		data: @counts,
