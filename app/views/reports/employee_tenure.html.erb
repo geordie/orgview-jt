@@ -1,6 +1,0 @@
-<h1>Employee Tenure Report</h1>
-
-<%= render partial: 'countTable', locals: { labelheader: 'Employee Tenure Range', labels: @tenure_ranges, counts: @counts, percentages: @percentages } %>
-
-<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @tenure_ranges, data: @counts, percentages: @percentages, xlabel: '# of Squads' } %>
-

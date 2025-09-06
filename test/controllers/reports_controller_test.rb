@@ -28,11 +28,6 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should get employee_tenure" do
-    get reports_employee_tenure_url
-    assert_response :success
-  end
-
   test "should get seniority" do
     get reports_seniority_url
     assert_response :success
@@ -156,7 +151,6 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
       reports_employee_worker_type_url,
       reports_employee_country_worker_type_url,
       reports_employee_allocations_url,
-      reports_employee_tenure_url,
       reports_seniority_url,
       reports_job_function_url,
       reports_job_function_group_url,

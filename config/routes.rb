@@ -40,7 +40,6 @@ Rails.application.routes.draw do
   get 'reports/job_function', to: 'reports#job_function'
   get 'reports/job_function_group', to: 'reports#job_function_group'
   get 'reports/employee_allocations', to: 'reports#employee_allocations'
-  get 'reports/employee_tenure', to: 'reports#employee_tenure'
   get 'reports/employee_country', to: 'reports#employee_country'
   get 'reports/employee_worker_type', to: 'reports#employee_worker_type'
   get 'reports/employee_country_worker_type', to: 'reports#employee_country_worker_type'
