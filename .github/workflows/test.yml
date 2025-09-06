@@ -23,10 +23,30 @@ jobs:
     env:
       RAILS_ENV: test
       DATABASE_URL: mysql2://root:password@127.0.0.1:3306/orgview_cba_test
+      CI: true
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: stable
+
+    - name: Install ChromeDriver
+      uses: nanasess/setup-chromedriver@v2
+
+    - name: Cache Ruby installation
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.rubies
+          ~/.gem
+        key: ${{ runner.os }}-ruby-3.3.1-${{ hashFiles('Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-ruby-3.3.1-
+          ${{ runner.os }}-ruby-
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
