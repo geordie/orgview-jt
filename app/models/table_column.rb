@@ -11,17 +11,17 @@ class TableColumn
 
 
   def display(index)
-    if index.nil? || index > @values.length - 1 
+    if index.nil? || index > @values.length - 1
       return "invalid index"
     end
-    
+
     if @type == "percentage"
       return @values[index].round(1).to_s + "%"
     end
 
     return @values[index]
   end
-    
+
 
   def summarize
     if @type == "numeric"
