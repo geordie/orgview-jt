@@ -33,6 +33,9 @@ gem "sassc-rails"
 # For pagination
 gem 'will_paginate', '~> 4.0'
 
+# CSV support (will be removed from default gems in Ruby 3.4.0)
+gem 'csv'
+
 # Faker to generate data
 gem 'faker', '~> 3.3.1'
 

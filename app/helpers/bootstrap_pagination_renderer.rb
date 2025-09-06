@@ -1,3 +1,5 @@
+require 'will_paginate/view_helpers/action_view'
+
 class BootstrapPaginationRenderer < WillPaginate::ActionView::LinkRenderer
   def container_attributes
     super.except('class').merge({class: 'pagination'})
