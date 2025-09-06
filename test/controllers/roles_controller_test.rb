@@ -2,7 +2,7 @@ require "test_helper"
 
 class RolesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @role = roles(:one)
+    @role = roles(:ceo_role)
   end
 
   test "should get index" do
@@ -21,7 +21,8 @@ class RolesControllerTest < ActionDispatch::IntegrationTest
         job_function: @role.job_function,
         role: @role.role,
         seniority: @role.seniority,
-        is_manager: @role.is_manager
+        is_manager: @role.is_manager,
+        data_version_id: @role.data_version_id
       }
     }
     end
@@ -44,7 +45,8 @@ class RolesControllerTest < ActionDispatch::IntegrationTest
         job_function: @role.job_function,
         role: @role.role,
         seniority: @role.seniority,
-        is_manager: @role.is_manager
+        is_manager: @role.is_manager,
+        data_version_id: @role.data_version_id
       }
     }
     assert_redirected_to role_url(@role)

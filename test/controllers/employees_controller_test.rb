@@ -17,13 +17,19 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
 
   test "should create employee" do
     assert_difference("Employee.count") do
-
       post employees_url, params: { employee: {
+        person_id: "EMP999",
         name: @employee.name,
         title: @employee.title,
         job_function: @employee.job_function,
+        job_function_group: @employee.job_function_group,
         seniority: @employee.seniority,
-        start_date: @employee.start_date
+        manager_id: @employee.manager_id,
+        is_manager: @employee.is_manager,
+        start_date: @employee.start_date,
+        worker_type: @employee.worker_type,
+        country: @employee.country,
+        data_version_id: @employee.data_version_id
       } }
     end
 
@@ -42,11 +48,18 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
 
   test "should update employee" do
     patch employee_url(@employee), params: { employee: {
+      person_id: @employee.person_id,
       name: @employee.name,
       title: @employee.title,
       job_function: @employee.job_function,
+      job_function_group: @employee.job_function_group,
       seniority: @employee.seniority,
-      start_date: @employee.start_date
+      manager_id: @employee.manager_id,
+      is_manager: @employee.is_manager,
+      start_date: @employee.start_date,
+      worker_type: @employee.worker_type,
+      country: @employee.country,
+      data_version_id: @employee.data_version_id
     } }
     assert_redirected_to employee_url(@employee)
   end
