@@ -781,26 +781,6 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(tenure_ranges)
   end
 
-  def employee_country_tenure
-    employee_country_tenure_ranges = Employee.select(
-      "CASE
-        WHEN start_date >= CURDATE() - INTERVAL 1 YEAR THEN '00 to 01 year'
-        WHEN start_date >= CURDATE() - INTERVAL 3 YEAR AND start_date < CURDATE() - INTERVAL 1 YEAR THEN '01 to 03 years'
-        WHEN start_date >= CURDATE() - INTERVAL 5 YEAR AND start_date < CURDATE() - INTERVAL 3 YEAR THEN '03 to 05 years'
-        WHEN start_date >= CURDATE() - INTERVAL 10 YEAR AND start_date < CURDATE() - INTERVAL 5 YEAR THEN '05 to 10 years'
-        WHEN start_date >= CURDATE() - INTERVAL 15 YEAR AND start_date < CURDATE() - INTERVAL 10 YEAR THEN '10 to 15 years'
-        WHEN start_date >= CURDATE() - INTERVAL 20 YEAR AND start_date < CURDATE() - INTERVAL 15 YEAR THEN '15 to 20 years'
-        WHEN start_date >= CURDATE() - INTERVAL 25 YEAR AND start_date < CURDATE() - INTERVAL 20 YEAR THEN '20 to 25 years'
-        ELSE '25+ years'
-      END AS tenure_range, country, COUNT(*) AS count"
-    ).where.not(start_date: nil).group("country").group("tenure_range").order("country").order("tenure_range")
-    employee_country_tenure_ranges = employee_country_tenure_ranges.map { |tr| [tr.tenure_range.to_s + ", " + tr.country.to_s, tr.count] }.to_h
-    p employee_country_tenure_ranges.to_json
-    @country_tenure_ranges = employee_country_tenure_ranges.keys
-    @counts = employee_country_tenure_ranges.values
-    @percentages = build_percentages(employee_country_tenure_ranges)
-  end
-
   private
 
   def build_percentages(data)
