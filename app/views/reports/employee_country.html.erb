@@ -1,19 +1,19 @@
 <h1>Employee Countries</h1>
 
 <%= render partial: 'countTable',
-	locals: { 
-		labelheader: 'Manager Team Size', 
-		labels: @countries, 
+	locals: {
+		labelheader: 'Manager Team Size',
+		labels: @countries,
 		counts: @counts,
-		percentages: @percentages 
+		percentages: @percentages
 		} %>
 
 <%= render partial: 'horizontalBarChart',
-	locals: { 
-		id: 'rolesChart', 
-		labels: @countries, 
-		data: @counts, 
-		percentages: @percentages, 
+	locals: {
+		id: 'rolesChart',
+		labels: @countries,
+		data: @counts,
+		percentages: @percentages,
 		xlabel: '# of Squads'
 	} %>
 
