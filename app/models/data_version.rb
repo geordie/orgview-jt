@@ -1,8 +1,8 @@
 class DataVersion < ApplicationRecord
-  has_many :employees, dependent: :destroy
-  has_many :roles, dependent: :destroy
-  has_many :squads, dependent: :destroy
-  has_many :squads_employees, dependent: :destroy
+  has_many :squads_employees, dependent: :delete_all
+  has_many :squads, dependent: :delete_all
+  has_many :roles, dependent: :delete_all
+  has_many :employees, dependent: :delete_all
 
   validates :name, presence: true, uniqueness: true
   validates :snapshot_date, presence: true
