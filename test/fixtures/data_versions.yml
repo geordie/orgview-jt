@@ -1,0 +1,19 @@
+test_version:
+  id: 1
+  name: "Test Data Version"
+  description: "Test data version for running tests"
+  snapshot_date: <%= 1.week.ago %>
+  is_active: true
+  status: "active"
+  created_at: <%= 1.week.ago %>
+  updated_at: <%= 1.week.ago %>
+
+inactive_version:
+  id: 2
+  name: "Inactive Test Version"
+  description: "Inactive test data version"
+  snapshot_date: <%= 2.weeks.ago %>
+  is_active: false
+  status: "archived"
+  created_at: <%= 2.weeks.ago %>
+  updated_at: <%= 2.weeks.ago %>
