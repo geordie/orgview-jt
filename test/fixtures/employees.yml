@@ -178,3 +178,64 @@ employee_2188:
   worker_type: "Employee"
   country: "USA"
   data_version_id: 1
+
+# Test data for data version filtering tests
+test_employee_v1_usa:
+  id: 1001
+  person_id: "TEST001"
+  name: "Test Employee USA"
+  title: "Test Engineer"
+  job_function: "Engineering"
+  job_function_group: "Technology"
+  seniority: 5
+  manager_id: "EMP001"
+  is_manager: false
+  start_date: <%= 2.years.ago.to_date %>
+  worker_type: "Employee"
+  country: "USA"
+  data_version_id: 1
+
+test_employee_v1_canada:
+  id: 1002
+  person_id: "TEST002"
+  name: "Test Employee Canada"
+  title: "Test Designer"
+  job_function: "Design"
+  job_function_group: "Product"
+  seniority: 3
+  manager_id: "EMP001"
+  is_manager: false
+  start_date: <%= 3.years.ago.to_date %>
+  worker_type: "Employee"
+  country: "Canada"
+  data_version_id: 1
+
+test_employee_v2_uk:
+  id: 1003
+  person_id: "TEST003"
+  name: "Test Employee UK"
+  title: "Test Analyst"
+  job_function: "Analytics"
+  job_function_group: "Data"
+  seniority: 4
+  manager_id: "EMP001"
+  is_manager: false
+  start_date: <%= 1.year.ago.to_date %>
+  worker_type: "Employee"
+  country: "UK"
+  data_version_id: 2
+
+test_employee_v2_germany:
+  id: 1004
+  person_id: "TEST004"
+  name: "Test Employee Germany"
+  title: "Test Manager"
+  job_function: "Management"
+  job_function_group: "Leadership"
+  seniority: 6
+  manager_id: "EMP001"
+  is_manager: true
+  start_date: <%= 4.years.ago.to_date %>
+  worker_type: "Employee"
+  country: "Germany"
+  data_version_id: 2

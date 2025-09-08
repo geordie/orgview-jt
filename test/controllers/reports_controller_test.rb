@@ -11,6 +11,45 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   test "should get employee_country" do
     get reports_employee_country_url
     assert_response :success
+    assert_select "h2", text: /Employee Countries Report/i
+  end
+
+  test "employee_country report should filter by current data version" do
+    # Ensure the correct data version is active (using existing fixtures)
+    data_version_1 = data_versions(:test_version)
+    data_version_2 = data_versions(:inactive_version)
+
+    # Ensure data_version_1 is active (it should be by default in fixtures)
+    data_version_1.update!(is_active: true, status: 'active')
+    data_version_2.update!(is_active: false, status: 'archived')
+
+    # Verify our test data setup using fixtures
+    # Data version 1 should have employees from USA and Canada
+    v1_countries = Employee.where(data_version_id: data_version_1.id).pluck(:country).uniq.sort
+    assert_includes v1_countries, 'USA'
+    assert_includes v1_countries, 'Canada'
+
+    # Data version 2 should have employees from UK and Germany
+    v2_countries = Employee.where(data_version_id: data_version_2.id).pluck(:country).uniq.sort
+    assert_includes v2_countries, 'UK'
+    assert_includes v2_countries, 'Germany'
+
+    # Make request to employee_country report
+    get reports_employee_country_url
+    assert_response :success
+
+    # Should use the generic template (modernized report)
+    assert_select "h2", text: /Employee Countries Report/i
+    assert_select "div.table-container"
+    assert_select "canvas#employeeCountryChart"
+
+    # Should see countries from active version (1) only
+    assert_includes response.body, 'USA'
+    assert_includes response.body, 'Canada'
+
+    # Should NOT see countries from inactive version (2)
+    assert_not_includes response.body, 'Germany',
+      "Germany should not appear because it's only in the inactive data version"
   end
 
   test "should get employee_worker_type" do

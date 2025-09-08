@@ -597,10 +597,46 @@ class ReportsController < ApplicationController
   end
 
   def employee_country
-    employee_countries = Employee.all.group(:country).count.sort_by { |k, v| v }.reverse.to_h
-    @countries = employee_countries.keys
-    @counts = employee_countries.values
-    @percentages = build_percentages(employee_countries)
+    # Get employee country data filtered by current data version
+    employee_countries = Employee.current.group(:country).count.sort_by { |k, v| v }.reverse.to_h
+
+    # Setup report metadata
+    @report_title = "Employee Countries Report"
+    @report_subtitle = "Distribution of employees by country"
+
+    # Create table data using the modernized model
+    @table = TableColumns.new
+
+    @table.add_column(
+      label: "Country",
+      values: employee_countries.keys,
+      type: "string"
+    )
+
+    @table.add_column(
+      label: "Count",
+      values: employee_countries.values,
+      type: "numeric"
+    )
+
+    percentages = build_percentages(employee_countries)
+    @table.add_column(
+      label: "Percentage",
+      values: percentages,
+      type: "percentage"
+    )
+
+    # Create chart data
+    @chart_data = ChartData.new(
+      labels: employee_countries.keys,
+      data: employee_countries.values,
+      percentages: percentages,
+      chart_id: "employeeCountryChart",
+      label_x_axis: "# of Employees"
+    )
+
+    # Render the generic view
+    render 'report'
   end
 
   def employee_worker_type
