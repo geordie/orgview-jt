@@ -512,11 +512,11 @@ class ReportsController < ApplicationController
 
   def job_function_group
     # Get the data with optional squad filtering
-    base_employee_query = Employee.where(data_version_id: @current_data_version.id)
+    base_employee_query = Employee.current.all
 
     # If squad_id is provided, filter to employees in that squad and its descendants
     if params[:squad_id].present?
-      parent_squad = Squad.find(params[:squad_id])
+      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(params[:squad_id])
 
       # Find all squads that are children of the specified squad (using full_path hierarchy)
       descendant_squads = Squad.where(
@@ -541,7 +541,7 @@ class ReportsController < ApplicationController
     # Setup report metadata
     squad_subtitle = ""
     if params[:squad_id].present?
-      parent_squad = Squad.find(params[:squad_id])
+      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(params[:squad_id])
       squad_subtitle = " - #{parent_squad.full_path}"
     end
 
