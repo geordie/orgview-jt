@@ -87,7 +87,17 @@ class ReportsController < ApplicationController
     @table.add_column(
       label: "Count",
       values: employee_titles.values,
-      type: "numeric"
+      type: "numeric",
+      link_info: LinkInfo.new(
+        controller: 'employees',
+        action: 'index',
+        link_params: [
+          LinkParams.new(name: 'title', value_col: 'Role'),
+          params[:squad_id].present? ? LinkParams.new(name: 'squad_id', value: params[:squad_id]) : nil,
+          params[:job_function_group].present? ? LinkParams.new(name: 'job_function_group', value: params[:job_function_group]) : nil,
+          params[:job_function].present? && !params[:job_function_group].present? ? LinkParams.new(name: 'job_function', value: params[:job_function]) : nil
+        ].compact
+      )
     )
 
     percentages = build_percentages(employee_titles)
