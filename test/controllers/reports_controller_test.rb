@@ -55,6 +55,44 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   test "should get employee_worker_type" do
     get reports_employee_worker_type_url
     assert_response :success
+    assert_select "h2", text: /Employee Worker Types Report/i
+  end
+
+  test "employee_worker_type report should filter by current data version" do
+    # Ensure the correct data version is active (using existing fixtures)
+    data_version_1 = data_versions(:test_version)
+    data_version_2 = data_versions(:inactive_version)
+
+    # Ensure data_version_1 is active
+    data_version_1.update!(is_active: true, status: 'active')
+    data_version_2.update!(is_active: false, status: 'archived')
+
+    # Verify our test data setup using fixtures
+    # Data version 1 should have employees with "Employee" and "Contractor" worker types
+    v1_worker_types = Employee.where(data_version_id: data_version_1.id).pluck(:worker_type).uniq.sort
+    assert_includes v1_worker_types, 'Employee'
+    assert_includes v1_worker_types, 'Contractor'
+
+    # Data version 2 should have employees with "Freelancer" worker type
+    v2_worker_types = Employee.where(data_version_id: data_version_2.id).pluck(:worker_type).uniq.sort
+    assert_includes v2_worker_types, 'Freelancer'
+
+    # Make request to employee_worker_type report
+    get reports_employee_worker_type_url
+    assert_response :success
+
+    # Should use the generic template (modernized report)
+    assert_select "h2", text: /Employee Worker Types Report/i
+    assert_select "div.table-container"
+    assert_select "canvas#employeeWorkerTypeChart"
+
+    # Should see worker types from active version (1) only
+    assert_includes response.body, 'Employee'
+    assert_includes response.body, 'Contractor'
+
+    # Should NOT see worker types from inactive version (2)
+    assert_not_includes response.body, 'Freelancer',
+      "Freelancer should not appear because it's only in the inactive data version"
   end
 
   test "should get employee_country_worker_type" do

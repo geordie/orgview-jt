@@ -236,6 +236,6 @@ test_employee_v2_germany:
   manager_id: "EMP001"
   is_manager: true
   start_date: <%= 4.years.ago.to_date %>
-  worker_type: "Employee"
+  worker_type: "Freelancer"
   country: "Germany"
   data_version_id: 2

@@ -640,10 +640,46 @@ class ReportsController < ApplicationController
   end
 
   def employee_worker_type
-    employee_worker_types = Employee.all.group(:worker_type).count.sort_by { |k, v| v }.reverse.to_h
-    @worker_types = employee_worker_types.keys
-    @counts = employee_worker_types.values
-    @percentages = build_percentages(employee_worker_types)
+    # Get employee worker type data filtered by current data version
+    employee_worker_types = Employee.current.group(:worker_type).count.sort_by { |k, v| v }.reverse.to_h
+
+    # Setup report metadata
+    @report_title = "Employee Worker Types Report"
+    @report_subtitle = "Distribution of employees by worker type"
+
+    # Create table data using the modernized model
+    @table = TableColumns.new
+
+    @table.add_column(
+      label: "Worker Type",
+      values: employee_worker_types.keys,
+      type: "string"
+    )
+
+    @table.add_column(
+      label: "Count",
+      values: employee_worker_types.values,
+      type: "numeric"
+    )
+
+    percentages = build_percentages(employee_worker_types)
+    @table.add_column(
+      label: "Percentage",
+      values: percentages,
+      type: "percentage"
+    )
+
+    # Create chart data
+    @chart_data = ChartData.new(
+      labels: employee_worker_types.keys,
+      data: employee_worker_types.values,
+      percentages: percentages,
+      chart_id: "employeeWorkerTypeChart",
+      label_x_axis: "# of Employees"
+    )
+
+    # Render the generic view
+    render 'report'
   end
 
   def employee_country_worker_type
