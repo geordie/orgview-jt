@@ -4,7 +4,37 @@ class EmployeesController < ApplicationController
 
   # GET /employees or /employees.json
   def index
-    @employees = Employee.all.paginate(page: params[:page], per_page: 20)
+    @employees = Employee.current.all
+
+    # Apply filtering based on parameters
+    if params[:title].present?
+      @employees = @employees.where(title: params[:title])
+    end
+
+    if params[:job_function_group].present?
+      @employees = @employees.where(job_function_group: params[:job_function_group])
+    elsif params[:job_function].present?
+      @employees = @employees.where(job_function: params[:job_function])
+    end
+
+    if params[:squad_id].present?
+      squad = Squad.where(data_version_id: @current_data_version.id).find_by(id: params[:squad_id])
+      if squad
+        # Find all squads that are children of the specified squad (using full_path hierarchy)
+        descendant_squads = Squad.where(
+          "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
+          path: squad.full_path,
+          like_path: "#{squad.full_path} > %",
+          data_version_id: @current_data_version.id
+        )
+
+        @employees = @employees
+          .joins(:squads_employees)
+          .where(squads_employees: { squad_id: descendant_squads.pluck(:id) })
+      end
+    end
+
+    @employees = @employees.distinct.paginate(page: params[:page], per_page: 20)
   end
 
   # GET /employees/1 or /employees/1.json
