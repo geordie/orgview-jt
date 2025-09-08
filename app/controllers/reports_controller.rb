@@ -26,7 +26,14 @@ class ReportsController < ApplicationController
       end
     end
 
-    if params[:job_function].present?
+    if params[:job_function_group].present?
+      employee_titles = base_employee_query
+        .where(job_function_group: params[:job_function_group])
+        .distinct(:person_id)
+        .group(:title)
+        .count
+        .sort_by { |k, v| v }.reverse.to_h
+    elsif params[:job_function].present?
       employee_titles = base_employee_query
         .where(job_function: params[:job_function])
         .distinct(:person_id)
@@ -50,7 +57,8 @@ class ReportsController < ApplicationController
 
     @report_title = "Roles Report"
     @report_subtitle = [
-      (params[:job_function].present? ? "Filtered by Job Function: #{params[:job_function]}" : nil),
+      (params[:job_function_group].present? ? "Filtered by Job Function Group: #{params[:job_function_group]}" : nil),
+      (params[:job_function].present? && !params[:job_function_group].present? ? "Filtered by Job Function: #{params[:job_function]}" : nil),
       squad_subtitle.present? ? squad_subtitle : nil
     ].compact.join("")
 
@@ -493,8 +501,7 @@ class ReportsController < ApplicationController
         action: 'roles',
         link_params: [
           LinkParams.new(name: 'job_function', value_col: 'Job Function'),
-          params[:squad_id].present? ? LinkParams.new(name: 'squad_id', value: params[:squad_id]) : nil,
-          params[:job_function_group].present? ? LinkParams.new(name: 'job_function_group', value: params[:job_function_group]) : nil
+          params[:squad_id].present? ? LinkParams.new(name: 'squad_id', value: params[:squad_id]) : nil
         ].compact
       )
     )
@@ -582,7 +589,15 @@ class ReportsController < ApplicationController
     @table.add_column(
       label: "Count",
       values: employee_job_function_groups.values,
-      type: "numeric"
+      type: "numeric",
+      link_info: LinkInfo.new(
+        controller: 'reports',
+        action: 'roles',
+        link_params: [
+          LinkParams.new(name: 'job_function_group', value_col: 'Job Function Group'),
+          params[:squad_id].present? ? LinkParams.new(name: 'squad_id', value: params[:squad_id]) : nil
+        ].compact
+      )
     )
 
     percentages = build_percentages(employee_job_function_groups)
