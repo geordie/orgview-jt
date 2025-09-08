@@ -71,4 +71,34 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to employees_url
   end
+
+  test "index should only return employees from current data version" do
+    get employees_url
+
+    assert_response :success
+
+    # Get all employees that should be visible (current data version)
+    active_data_version = data_versions(:test_version)
+    expected_employees = Employee.where(data_version_id: active_data_version.id)
+
+    # Get all employees that should not be visible (inactive data version)
+    inactive_data_version = data_versions(:inactive_version)
+    inactive_employees = Employee.where(data_version_id: inactive_data_version.id)
+
+    # Verify we have test data for both versions
+    assert inactive_employees.any?, "Test should have employees in inactive data version"
+    assert expected_employees.any?, "Test should have employees in active data version"
+
+    # Check that the page contains expected employees
+    expected_employees.each do |employee|
+      assert_select "tr", text: /#{employee.name}/, count: 1,
+        message: "Employee #{employee.name} from active data version should be visible"
+    end
+
+    # Check that the page does not contain inactive employees
+    inactive_employees.each do |employee|
+      assert_select "tr", text: /#{employee.name}/, count: 0,
+        message: "Employee #{employee.name} from inactive data version should not be visible"
+    end
+  end
 end
