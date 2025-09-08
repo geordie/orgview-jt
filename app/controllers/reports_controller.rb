@@ -604,36 +604,8 @@ class ReportsController < ApplicationController
     @report_title = "Employee Countries Report"
     @report_subtitle = "Distribution of employees by country"
 
-    # Create table data using the modernized model
-    @table = TableColumns.new
-
-    @table.add_column(
-      label: "Country",
-      values: employee_countries.keys,
-      type: "string"
-    )
-
-    @table.add_column(
-      label: "Count",
-      values: employee_countries.values,
-      type: "numeric"
-    )
-
-    percentages = build_percentages(employee_countries)
-    @table.add_column(
-      label: "Percentage",
-      values: percentages,
-      type: "percentage"
-    )
-
-    # Create chart data
-    @chart_data = ChartData.new(
-      labels: employee_countries.keys,
-      data: employee_countries.values,
-      percentages: percentages,
-      chart_id: "employeeCountryChart",
-      label_x_axis: "# of Employees"
-    )
+    # Build table and chart using helper
+    build_simple_count_report(employee_countries, "Country", "employeeCountryChart", "# of Employees")
 
     # Render the generic view
     render 'report'
@@ -647,36 +619,8 @@ class ReportsController < ApplicationController
     @report_title = "Employee Worker Types Report"
     @report_subtitle = "Distribution of employees by worker type"
 
-    # Create table data using the modernized model
-    @table = TableColumns.new
-
-    @table.add_column(
-      label: "Worker Type",
-      values: employee_worker_types.keys,
-      type: "string"
-    )
-
-    @table.add_column(
-      label: "Count",
-      values: employee_worker_types.values,
-      type: "numeric"
-    )
-
-    percentages = build_percentages(employee_worker_types)
-    @table.add_column(
-      label: "Percentage",
-      values: percentages,
-      type: "percentage"
-    )
-
-    # Create chart data
-    @chart_data = ChartData.new(
-      labels: employee_worker_types.keys,
-      data: employee_worker_types.values,
-      percentages: percentages,
-      chart_id: "employeeWorkerTypeChart",
-      label_x_axis: "# of Employees"
-    )
+    # Build table and chart using helper
+    build_simple_count_report(employee_worker_types, "Worker Type", "employeeWorkerTypeChart", "# of Employees")
 
     # Render the generic view
     render 'report'
@@ -856,6 +800,40 @@ class ReportsController < ApplicationController
   end
 
   private
+
+  # Helper method to build standard table and chart for simple count-based reports
+  def build_simple_count_report(data_hash, label_column_name, chart_id, x_axis_label = "# of Items")
+    # Create table data
+    @table = TableColumns.new
+
+    @table.add_column(
+      label: label_column_name,
+      values: data_hash.keys,
+      type: "string"
+    )
+
+    @table.add_column(
+      label: "Count",
+      values: data_hash.values,
+      type: "numeric"
+    )
+
+    percentages = build_percentages(data_hash)
+    @table.add_column(
+      label: "Percentage",
+      values: percentages,
+      type: "percentage"
+    )
+
+    # Create chart data
+    @chart_data = ChartData.new(
+      labels: data_hash.keys,
+      data: data_hash.values,
+      percentages: percentages,
+      chart_id: chart_id,
+      label_x_axis: x_axis_label
+    )
+  end
 
   def build_percentages(data)
     sum = 0
