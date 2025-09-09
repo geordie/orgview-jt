@@ -89,9 +89,9 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert inactive_employees.any?, "Test should have employees in inactive data version"
     assert expected_employees.any?, "Test should have employees in active data version"
 
-    # Check that the page contains expected employees
+    # Check that the page contains expected employees (names may appear multiple times due to manager column)
     expected_employees.each do |employee|
-      assert_select "tr", text: /#{employee.name}/, count: 1,
+      assert_select "tr", text: /#{employee.name}/, minimum: 1,
         message: "Employee #{employee.name} from active data version should be visible"
     end
 
