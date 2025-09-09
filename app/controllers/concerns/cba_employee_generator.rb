@@ -21,7 +21,7 @@ module CbaEmployeeGenerator
       batch_size = 5000
       added_person_ids = {}
 
-      emp_with_roles = Emp.joins("LEFT JOIN roles ON roles.role = #{Emp.table_name}.workday_job_profile \
+      emp_with_roles = Emp.import_filter.joins("LEFT JOIN roles ON roles.role = #{Emp.table_name}.workday_job_profile \
         AND roles.seniority = #{Emp.table_name}.seniority \
         AND roles.is_manager = case when #{Emp.table_name}.is_manager = 'Yes' then 1 else 0 end")
         .select("#{Emp.table_name}.*, roles.role AS role_name, roles.job_function, roles.job_function_group, roles.seniority AS role_seniority, roles.is_manager AS role_is_manager")
