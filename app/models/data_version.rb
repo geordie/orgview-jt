@@ -40,6 +40,10 @@ class DataVersion < ApplicationRecord
     squads.count
   end
 
+  def roles_count
+    roles.count
+  end
+
   private
 
   def ensure_single_active_version
