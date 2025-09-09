@@ -14,8 +14,6 @@ module CbaSquadGenerator
     batch_size = 1000
     # Build a hash map of person_id => employee.id for fast lookup (only for current version)
     employee_id_map = Employee.where(data_version_id: current_version.id).pluck(:person_id, :id).to_h
-    # Build a hash map for squads: [name, full_path, parent_id, depth] => squad
-    squad_map = {}
 
     # Only delete data for the current active version
     SquadsEmployee.where(data_version_id: current_version.id).delete_all
@@ -55,25 +53,26 @@ module CbaSquadGenerator
     demand_employees_to_insert = []
     supply_employees_to_insert = []
 
-    Emp.all.each do |emp|
-      if emp['demand_team_type'].nil? || emp['demand_team_type'].empty?
-        supply_employees_to_insert <<
-          build_supply_employee_squad(emp, squad_ids, employee_id_map, supply_employees_to_insert, current_version)
-      else
-        demand_employees_to_insert <<
-          build_demand_employee_squad(emp, squad_ids, employee_id_map, demand_employees_to_insert, current_version)
-      end
+    Emp.import_filter
+      .each do |emp|
+        if emp['demand_team_type'].nil? || emp['demand_team_type'].empty?
+          supply_employees_to_insert <<
+            build_supply_employee_squad(emp, squad_ids, employee_id_map, supply_employees_to_insert, current_version)
+        else
+          demand_employees_to_insert <<
+            build_demand_employee_squad(emp, squad_ids, employee_id_map, demand_employees_to_insert, current_version)
+        end
 
-      if supply_employees_to_insert.size >= batch_size
-        SquadsEmployee.insert_all!(supply_employees_to_insert)
-        supply_employees_to_insert.clear
-      end
+        if supply_employees_to_insert.size >= batch_size
+          SquadsEmployee.insert_all!(supply_employees_to_insert)
+          supply_employees_to_insert.clear
+        end
 
-      if demand_employees_to_insert.size >= batch_size
-        SquadsEmployee.insert_all!(demand_employees_to_insert)
-        demand_employees_to_insert.clear
+        if demand_employees_to_insert.size >= batch_size
+          SquadsEmployee.insert_all!(demand_employees_to_insert)
+          demand_employees_to_insert.clear
+        end
       end
-    end
 
     # Insert any remaining records
     SquadsEmployee.insert_all!(supply_employees_to_insert) if supply_employees_to_insert.any?
@@ -137,10 +136,10 @@ module CbaSquadGenerator
   def create_demand_teams(current_version)
     batchsize = 500
     team_list = {}
+    leaf_teams = Set.new
 
-    # Fetch distinct team hierarchy from the database
-    # Emp.distinct.pluck(:master_domain_name, :domain_name, :sub_domain_name, :team_name)
-    demand_teams = Emp.where.not(demand_team_type: nil).distinct.pluck(
+    # Fetch distinct team hierarchy from the database that have actual employees
+    demand_teams = Emp.import_filter.where("demand_team_type IS NOT NULL").distinct.pluck(
       :demand_team_name,
       :demand_team_business_unit,
       :demand_team_domain_l1,
@@ -148,6 +147,7 @@ module CbaSquadGenerator
       :demand_team_domain_l3,
     )
 
+    # First pass: collect all leaf team paths that have employees
     demand_teams.each do |demand_team_name, demand_team_business_unit,
       demand_team_domain_l1, demand_team_domain_l2, demand_team_domain_l3|
 
@@ -160,9 +160,18 @@ module CbaSquadGenerator
         demand_team_domain_l3&.strip,
         demand_team_name&.strip].compact
 
-      # Add each level of the hierarchy to the team_list
+      # Only add the full leaf path since this represents a team with actual employees
+      leaf_key = hierarchy.reject(&:blank?).join(" > ")
+      leaf_teams.add(leaf_key)
+    end
+
+    # Second pass: build necessary parent hierarchy for leaf teams
+    leaf_teams.each do |leaf_key|
+      hierarchy = leaf_key.split(" > ")
+
+      # Add each level of the hierarchy to support the leaf team
       hierarchy.each_with_index do |_, index|
-        key = hierarchy[0..index].reject(&:blank?).join(" > ")
+        key = hierarchy[0..index].join(" > ")
         next if team_list.key?(key) # Skip if already added
 
         depth = index + 1
@@ -181,8 +190,10 @@ module CbaSquadGenerator
   def create_supply_teams(current_version)
     batchsize = 500
     team_list = {}
-    # Fetch distinct team hierarchy from the database
-    supply_teams = Emp
+    leaf_teams = Set.new
+
+    # Fetch distinct team hierarchy from the database that have actual employees
+    supply_teams = Emp.import_filter
       .where(demand_team_type: [nil, ''])
       .distinct.pluck(
         :pace_supervisory_org_business_unit,
@@ -195,6 +206,7 @@ module CbaSquadGenerator
         :supply_team_name
       )
 
+    # First pass: collect all leaf team paths that have employees
     supply_teams.each do |pace_supervisory_org_business_unit,
       pace_supervisory_org_2, pace_supervisory_org_3, pace_supervisory_org_4,
       pace_supervisory_org_5, pace_supervisory_org_6, pace_supervisory_org_7,
@@ -213,9 +225,18 @@ module CbaSquadGenerator
         supply_team_name&.strip
       ].compact
 
-      # Add each level of the hierarchy to the team_list
+      # Only add the full leaf path since this represents a team with actual employees
+      leaf_key = hierarchy.reject(&:blank?).join(" > ")
+      leaf_teams.add(leaf_key)
+    end
+
+    # Second pass: build necessary parent hierarchy for leaf teams
+    leaf_teams.each do |leaf_key|
+      hierarchy = leaf_key.split(" > ")
+
+      # Add each level of the hierarchy to support the leaf team
       hierarchy.each_with_index do |_, index|
-        key = hierarchy[0..index].reject(&:blank?).join(" > ")
+        key = hierarchy[0..index].join(" > ")
         next if team_list.key?(key) # Skip if already added
 
         depth = index + 1
@@ -262,7 +283,6 @@ module CbaSquadGenerator
       Squad.where(id: ids, data_version_id: current_version.id).update_all("parent_id = CASE id #{case_sql} END")
     end
   end
-
 
 
   def build_squads_stats(current_version)
