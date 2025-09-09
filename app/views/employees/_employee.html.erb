@@ -1,6 +1,6 @@
 <div id="<%= dom_id employee %>">
 	<div class="row px-4">
-		<div class="col-md-3">
+		<div class="col-md-6">
 			<h3>Employee Details:</h3>
 
 			<table class="table">
@@ -10,12 +10,12 @@
 						<td><%= @employee.id %></td>
 					</tr>
 					<tr>
-						<td class="bg-light"><strong>Name</strong></td>
-						<td><%= @employee.name %></td>
-					</tr>
-					<tr>
 						<td class="bg-light"><strong>Person ID</strong></td>
 						<td><%= @employee.person_id %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Name</strong></td>
+						<td><%= @employee.name %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Title</strong></td>
@@ -26,16 +26,28 @@
 						<td><%= @employee.job_function %></td>
 					</tr>
 					<tr>
+						<td class="bg-light"><strong>Job Function Group</strong></td>
+						<td><%= @employee.job_function_group %></td>
+					</tr>
+					<tr>
 						<td class="bg-light"><strong>Seniority</strong></td>
-						<td><%= @employee.seniority %></td>
+						<td><%= @employee.seniority %> years</td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Start Date</strong></td>
 						<td><%= @employee.start_date %></td>
 					</tr>
 					<tr>
-						<td class="bg-light"><strong>Manager ID</strong></td>
-						<td><%= @employee.manager_id %></td>
+						<td class="bg-light"><strong>Worker Type</strong></td>
+						<td><%= @employee.worker_type %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Country</strong></td>
+						<td><%= @employee.country %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Manager</strong></td>
+						<td><%= @employee.manager ? link_to(@employee.manager.name, @employee.manager) : "None" %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Is Manager</strong></td>
@@ -43,6 +55,48 @@
 					</tr>
 				</tbody>
 			</table>
+		</div>
+
+		<div class="col-md-6">
+			<h3>Direct Reports:</h3>
+			<% if @employee.direct_reports.any? %>
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Title</th>
+							<th>Job Function</th>
+						</tr>
+					</thead>
+					<tbody>
+						<% @employee.direct_reports.each do |report| %>
+							<tr>
+								<td><%= link_to report.name, report %></td>
+								<td><%= report.title %></td>
+								<td><%= report.job_function %></td>
+							</tr>
+						<% end %>
+					</tbody>
+				</table>
+				<p class="text-muted">Total: <%= @employee.direct_reports.count %> direct reports</p>
+			<% else %>
+				<p class="text-muted">No direct reports</p>
+			<% end %>
+
+			<% if @employee.squads.any? %>
+				<h3>Squad Memberships:</h3>
+				<ul class="list-group">
+					<% @employee.squads.each do |squad| %>
+						<li class="list-group-item">
+							<strong><%= link_to squad.full_path, squad %></strong>
+							<% squad_employee = @employee.squads_employees.find_by(squad: squad) %>
+							<% if squad_employee&.allocation %>
+								<span class="badge bg-secondary ms-2"><%= (squad_employee.allocation * 100).to_i %>% allocation</span>
+							<% end %>
+						</li>
+					<% end %>
+				</ul>
+			<% end %>
 		</div>
 	</div>
 </div>
