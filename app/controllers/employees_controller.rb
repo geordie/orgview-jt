@@ -4,7 +4,7 @@ class EmployeesController < ApplicationController
 
   # GET /employees or /employees.json
   def index
-    @employees = Employee.current.all
+    @employees = Employee.current.includes(:manager, :direct_reports)
 
     # Apply filtering based on parameters
     if params[:title].present?

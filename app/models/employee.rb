@@ -5,8 +5,8 @@ class Employee < ApplicationRecord
   validates :seniority, presence: true, numericality: { only_integer: true }
   validates :start_date, presence: true
 
-  belongs_to :manager, class_name: 'Employee', optional: true
-  has_many :direct_reports, class_name: 'Employee', foreign_key: 'manager_id'
+  belongs_to :manager, class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id', optional: true
+  has_many :direct_reports, class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id'
   belongs_to :data_version, optional: true
 
   # Associations
