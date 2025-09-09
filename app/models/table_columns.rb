@@ -66,7 +66,7 @@ class TableColumns
       return nil
     end
 
-    result = { controller: info.controller, action: info.action, params: params }
+    result = { controller: info.controller, action: info.action }.merge(params)
     return result
   end
 
