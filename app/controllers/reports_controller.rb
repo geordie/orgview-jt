@@ -376,6 +376,20 @@ class ReportsController < ApplicationController
     @table.add_column(label: "Org Size", type: "numeric", values: org_sizes)
     @table.add_column(label: "% of Org Size", type: "percentage", values: proportions)
 
+    action_button_labels = teams.map { |team| "View Squad" }
+    action_link_params = [LinkParams.new(name: 'id', value_col: 'Team', lookup: squad_id_lookup)]
+
+    @table.add_column(
+      label: "Actions",
+      type: "action",
+      values: action_button_labels,
+      link_info: LinkInfo.new(
+        controller: 'squads',
+        action: 'show',
+        link_params: action_link_params
+      )
+    )
+
     # Build chart
     @chart_data = ChartData.new(
       labels: teams,
