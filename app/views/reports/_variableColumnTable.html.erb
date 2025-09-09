@@ -15,7 +15,14 @@
 						<% @table.visible_columns.each do |column| %>
 							<td class="<%= 'text-center' if column.type != 'string' %> border">
 								<% cellVal = column.display(row_index) %>
-								<% if column.link_info %>
+								<% if column.type == "action" && column.link_info %>
+									<% link_data = @table.get_cell_links(column.label, row_index) %>
+									<% if link_data %>
+										<%= link_to cellVal, url_for(link_data), class: "btn btn-primary btn-sm" %>
+									<% else %>
+										<span class="text-muted">N/A</span>
+									<% end %>
+								<% elsif column.link_info %>
 									<% link_data = @table.get_cell_links(column.label, row_index) %>
 									<% if link_data %>
 										<%= link_to cellVal, url_for(link_data) %>
