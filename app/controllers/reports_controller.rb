@@ -372,6 +372,7 @@ class ReportsController < ApplicationController
       )
     )
     @table.add_column(label: "# of Employees", type: "numeric", values: counts)
+    @table.add_column(label: "% of Total", type: "percentage", values: percentages)
     @table.add_column(label: "Org Size", type: "numeric", values: org_sizes)
     @table.add_column(label: "% of Org Size", type: "percentage", values: proportions)
 
