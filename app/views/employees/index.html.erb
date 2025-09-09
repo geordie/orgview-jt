@@ -22,7 +22,7 @@
         <td><%= employee.title %></td>
         <td><%= employee.job_function %></td>
         <td><%= employee.seniority %></td>
-        <td><%= employee.manager.try(:name) %></td>
+        <td><%= employee.manager ? link_to(employee.manager.name, employee.manager) : "" %></td>
         <td><%= employee.direct_reports.count %></td>
       </tr>
     <% end %>
