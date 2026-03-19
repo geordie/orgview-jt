@@ -1,5 +1,7 @@
 class RenameEmpOldColumns < ActiveRecord::Migration[7.1]
   def up
+    return unless table_exists?(:emp_old)
+
     # Rename columns in emp_old table to match emp table column names
     rename_column :emp_old, "`Person ID`", :person_id
     rename_column :emp_old, "`First Name`", :first_name
@@ -78,6 +80,8 @@ class RenameEmpOldColumns < ActiveRecord::Migration[7.1]
   end
 
   def down
+    return unless table_exists?(:emp_old)
+
     # Reverse the column renames
     rename_column :emp_old, :person_id, "`Person ID`"
     rename_column :emp_old, :first_name, "`First Name`"
