@@ -1,24 +1,15 @@
 class Employee < ApplicationRecord
-  validates :name, presence: true
-  validates :title, presence: true
-  validates :job_function, presence: true
+  validates :title,     presence: true
+  validates :job_code,  presence: true
   validates :seniority, presence: true, numericality: { only_integer: true }
-  validates :start_date, presence: true
 
-  belongs_to :manager, class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id', optional: true
-  has_many :direct_reports, class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id'
+  belongs_to :manager,        class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id', optional: true
+  has_many   :direct_reports, class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id'
   belongs_to :data_version, optional: true
 
-  # Associations
-  has_many :squads_employees
-  has_many :squads, through: :squads_employees
+  has_many :teams_employees
+  has_many :teams, through: :teams_employees
 
-  # Scopes for version management
   scope :for_version, ->(version) { where(data_version_id: version.id) }
-  scope :current, -> { joins(:data_version).where(data_versions: { is_active: true }) }
-
-  # Other model logic and methods can be added here
-  def get_direct_reports
-    self.direct_reports
-  end
+  scope :current,     -> { joins(:data_version).where(data_versions: { is_active: true }) }
 end
