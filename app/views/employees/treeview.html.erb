@@ -1,38 +1,73 @@
 
+<script type="module">
+import * as primitives from 'primitives';
 
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script type="text/javascript">
-	google.charts.load('current', {packages:["orgchart"]});
-	google.charts.setOnLoadCallback(drawChart);
+var control;
+var items = [];
 
-	var orgChart = null;
-	var orgData = <%= @google_chart_data.to_json.html_safe %>
+document.addEventListener('DOMContentLoaded', function () {
 
-	function drawChart() {
-		var data = new google.visualization.DataTable();
-		data.addColumn('string', 'Name');
-		data.addColumn('string', 'Manager');
-		data.addColumn('string', 'ToolTip');
+	var options = new primitives.OrgConfig();
 
-		// For each orgchart box, provide the name, manager, and tooltip to show.
-		data.addRows(orgData);
+	<% @employees.each do |employee| %>
+		var itemTitleColor = primitives.Colors.RoyalBlue;
+		<% if employee.direct_reports.count > 0 %>
+			itemTitleColor = primitives.Colors.Green;
+		<% end %>
+		items.push(new primitives.OrgItemConfig({
+			id: <%= employee.id %>,
+			parent: null,
+			title: "<%= employee.person_id %>",
+			description: "<%= employee.title %>",
+			groupTitle: "<%= employee.job_code %>",
+			itemTitleColor: itemTitleColor
+		}));
+		<% if employee.direct_reports.count > 0 %>
+			getDirectReports(<%= employee.id %>);
+		<% end %>
+	<% end %>
 
-		// Create the chart.
-		orgChart = new google.visualization.OrgChart(document.getElementById('chart_div'));
-
-		google.visualization.events.addListener(orgChart, 'select', selectHandler);
-
-		// Draw the chart, setting the allowHtml option to true for the tooltips.
-		orgChart.draw(data, {'allowHtml':true, 'allowCollapse':true});
-	}
-
-	function selectHandler(e) {
-		if (orgChart.getSelection().length == 0) {
-			return;
+	options.items = items;
+	options.cursorItem = 0;
+	options.hasSelectorCheckbox = primitives.Enabled.False;
+	options.onCursorChanging = function (e, data) {
+		if (data.context !== null) {
+			getDirectReports(data.context.id);
 		}
-		console.log(orgChart.getSelection()[0]['row']);
-	}
+	};
+
+	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
+});
+
+function getDirectReports(managerId) {
+	return fetch(`/employees/${managerId}/direct_reports.json`, {
+		method: 'GET'
+	})
+	.then(response => response.json())
+	.then(data => {
+		data.forEach(report => {
+			if (!items.some(item => item.id === report.employee.id)) {
+				items.push(new primitives.OrgItemConfig({
+					id: report.employee.id,
+					parent: managerId,
+					title: report.employee.person_id,
+					description: report.employee.title,
+					groupTitle: report.employee.job_code,
+				}));
+			}
+		});
+		control.setOptions = {items: items};
+		control.update(primitives.UpdateMode.Refresh);
+	})
+	.catch(error => {
+		console.error('Error:', error);
+	});
+}
+
 </script>
 
-<div id="chart_div"></div>
-
+<div class="container-md">
+    <div class="d-flex justify-content-center">
+        <div class="content-md" id="basicdiagram" style="width: 1200px; height: 800px; border-style: dotted; border-width: 1px;"></div>
+    </div>
+</div>

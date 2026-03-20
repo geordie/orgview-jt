@@ -1,0 +1,5 @@
+<h1>Team Members Managers Report</h1>
+
+<%= render partial: 'countTable', locals: { labelheader: 'Team Members Managers', labels: @managers, counts: @counts, percentages: @percentages } %>
+
+<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @managers, data: @counts, percentages: @percentages, xlabel: '# of Teams' } %>

@@ -1,0 +1,99 @@
+<h1>Team Overview: <%= @team.name %></h1>
+
+
+<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+  <h2>Team Summary</h2>
+  <div class="row">
+    <div class="col-2"><strong>Parent</strong></div>
+    <div class="col-10">
+      <% if @team.parent %>
+        <%= link_to @team.parent.full_path, team_path(@team.parent) %>
+      <% else %>
+        <span>None</span>
+      <% end %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-2"><strong>Team Members</strong></div>
+    <div class="col-2"><%= @team.teams_employees.count %></div>
+  </div>
+  <div class="row">
+    <div class="col-2"><strong>Managers</strong></div>
+    <div class="col-2"><%= @team.manager_count %></div>
+  </div>
+  <div class="row">
+    <div class="col-2"><strong>Sub-Teams</strong></div>
+    <div class="col-2"><%= @sub_teams.count %></div>
+  </div>
+  <div class="row">
+    <div class="col-2"><strong>Org Size</strong></div>
+    <div class="col-2"><%= @team.org_member_count %></div>
+  </div>
+  <div class="row">
+    <div class="col-2"><strong>Depth</strong></div>
+    <div class="col-2"><%= @team.depth %></div>
+  </div>
+</div>
+
+<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+  <h2>Team Reports</h2>
+  <div class="row">
+    <div class="col-12">
+      <%= link_to "Roles Report for #{@team.name}", reports_roles_path(team_id: @team.id), class: 'btn btn-primary me-2' %>
+      <%= link_to "Title Density Report for #{@team.name}", reports_title_density_path(team_id: @team.id, max_depth: @team.depth + 1), class: 'btn btn-secondary me-2' %>
+      <%= link_to "Job Code Density Report for #{@team.name}", reports_job_code_density_path(team_id: @team.id, max_depth: @team.depth + 1), class: 'btn btn-info' %>
+    </div>
+  </div>
+</div>
+
+<% if !@sub_teams.nil? && @sub_teams.count > 0 %>
+<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+  <h2>Sub-Teams</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Team Size</th>
+        <th>Org Size</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @sub_teams.each do |sub_team| %>
+        <tr>
+          <td><%= link_to sub_team.name, team_path(sub_team) %></td>
+          <td><%= sub_team.member_count %></td>
+          <td><%= sub_team.org_member_count %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<% end %>
+
+<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+  <h2>Team Members</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th><%= link_to "Person ID", team_path(@team, sort: "employees.person_id", direction: params[:direction] == "asc" ? "desc" : "asc") %></th>
+        <th><%= link_to "Job Code", team_path(@team, sort: "employees.job_code", direction: params[:direction] == "asc" ? "desc" : "asc") %></th>
+        <th><%= link_to "Title", team_path(@team, sort: "employees.title", direction: params[:direction] == "asc" ? "desc" : "asc") %></th>
+        <th><%= link_to "Seniority", team_path(@team, sort: "employees.seniority", direction: params[:direction] == "asc" ? "desc" : "asc") %></th>
+        <th><%= link_to "Manager ID", team_path(@team, sort: "employees.manager_id", direction: params[:direction] == "asc" ? "desc" : "asc") %></th>
+        <th><%= link_to "Country", team_path(@team, sort: "employees.country", direction: params[:direction] == "asc" ? "desc" : "asc") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @team_members.each do |member| %>
+        <tr>
+          <td><%= link_to member.employee.person_id, member.employee %></td>
+          <td><%= member.employee.job_code %></td>
+          <td><%= member.employee.title %></td>
+          <td><%= member.employee.seniority %></td>
+          <td><%= member.employee.manager_id %></td>
+          <td><%= member.employee.country %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

@@ -6,28 +6,40 @@
 			<table class="table">
 				<tbody>
 					<tr>
-						<td class="bg-light"><strong>Name</strong></td>
-						<td><%= form.text_field :name, class: 'form-control' %></td>
+						<td class="bg-light"><strong>Person ID</strong></td>
+						<td><%= form.text_field :person_id, class: 'form-control' %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Title</strong></td>
 						<td><%= form.text_field :title, class: 'form-control' %></td>
 					</tr>
 					<tr>
-						<td class="bg-light"><strong>Job Function</strong></td>
-						<td><%= form.text_field :job_function, class: 'form-control' %></td>
+						<td class="bg-light"><strong>Job Code</strong></td>
+						<td><%= form.text_field :job_code, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Job Level</strong></td>
+						<td><%= form.text_field :job_level, class: 'form-control' %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Seniority</strong></td>
 						<td><%= form.number_field :seniority, class: 'form-control' %></td>
 					</tr>
 					<tr>
-						<td class="bg-light"><strong>Start Date</strong></td>
-						<td><%= form.date_field :start_date, class: 'form-control' %></td>
+						<td class="bg-light"><strong>Country</strong></td>
+						<td><%= form.text_field :country, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Personnel Area</strong></td>
+						<td><%= form.text_field :personnel_area, class: 'form-control' %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Company</strong></td>
+						<td><%= form.text_field :company, class: 'form-control' %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Manager ID</strong></td>
-						<td><%= form.collection_select :manager_id, Employee.all, :id, :name, include_blank: true, class: 'form-control' %></td>
+						<td><%= form.text_field :manager_id, class: 'form-control', placeholder: 'Person ID of manager' %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Is Manager</strong></td>
@@ -42,7 +54,7 @@
 						<td>
 							<%= link_to 'Save', '#', class: 'btn btn-primary', id: 'submit-form' %>
 							<% if !@employee.id.nil? %>
-								<%= link_to 'Delete', employee_path(@employee), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+								<%= link_to 'Delete', employee_path(@employee), data: { turbo_method: :delete, confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
 							<% end %>
 							<%= link_to "Back to employees", employees_path, class: 'btn btn-secondary' %>
 						</td>

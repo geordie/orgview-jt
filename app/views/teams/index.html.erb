@@ -1,0 +1,60 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Teams</h1>
+
+<%= will_paginate_with_bootstrap @teams %>
+
+<div class="row mb-3">
+  <div class="col-md-6">
+    <%= form_with url: teams_path, method: :get, local: true do %>
+      <div class="input-group">
+        <%= text_field_tag :search, params[:search], class: "form-control", placeholder: "Search by team name" %>
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <% common_params = { direction: params[:direction] == "asc" ? "desc" : "asc", depth: params[:depth], parent_id: params[:parent_id] } %>
+        <th><%= link_to "Name", teams_path(common_params.merge(sort: "name")) %></th>
+        <th style="text-align: center;"><%= link_to "Size", teams_path(common_params.merge(sort: "member_count")) %></th>
+        <th style="text-align: center;"><%= link_to "Managers", teams_path(common_params.merge(sort: "manager_count")) %></th>
+        <th style="text-align: center;"><%= link_to "Sub-Teams", teams_path(common_params.merge(sort: "children")) %></th>
+        <th style="text-align: center;"><%= link_to "Descendents", teams_path(common_params.merge(sort: "descendents")) %></th>
+        <th style="text-align: center;"><%= link_to "Org Size", teams_path(common_params.merge(sort: "org_member_count")) %></th>
+        <th style="text-align: center;"><%= link_to "Org Health", teams_path(common_params.merge(sort: "team_health")) %></th>
+      <th style="text-align: center;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @teams.each do |team| %>
+      <tr>
+        <td data-bs-toggle="tooltip" title="<%= team.full_path %>">
+          <%= link_to team.name, teams_path(parent_id: team.id) %></td>
+        <td style="text-align: center;"><%= team.member_count %></td>
+        <td style="text-align: center;"><%= team.manager_count %></td>
+        <td style="text-align: center;"><%= team.children %></td>
+        <td style="text-align: center;"><%= team.descendents %></td>
+        <td style="text-align: center;"><%= team.org_member_count %></td>
+        <td data-bs-toggle="tooltip" title="<%= team.team_health_details %>" style="text-align: center;">
+          <% if team.team_health == "amber" %>
+        <span style="color: orange;">&#x25cf;</span>
+          <% elsif team.team_health == "red" %>
+        <span style="color: red;">&#x25cf;</span>
+          <% else %>
+        <span style="color: green;">&#x25cf;</span>
+          <% end %>
+        </td>
+
+        <td style="text-align: center;">
+            <div class="btn-group" role="group" style="gap: 8px;">
+              <%= link_to 'Detail', team, class: 'btn btn-primary btn-sm' %>
+            </div>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

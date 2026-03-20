@@ -25,18 +25,17 @@
             Employees
           </a>
           <ul class="dropdown-menu" aria-labelledby="employeesDropdown">
-            <li><%= link_to "Roles", roles_path, class: "dropdown-item" %></li>
             <li><%= link_to "List", employees_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Structure", employees_structure_path, class: "dropdown-item" %></li>
+            <li><%= link_to "Structure", employees_treeview_path, class: "dropdown-item" %></li>
           </ul>
           </li>
           <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="employeesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Squads
+          <a class="nav-link dropdown-toggle" href="#" id="teamsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Teams
           </a>
-          <ul class="dropdown-menu" aria-labelledby="employeesDropdown">
-            <li><%= link_to "List", squads_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Structure", squads_treeview_path, class: "dropdown-item" %></li>
+          <ul class="dropdown-menu" aria-labelledby="teamsDropdown">
+            <li><%= link_to "List", teams_path, class: "dropdown-item" %></li>
+            <li><%= link_to "Structure", teams_treeview_path, class: "dropdown-item" %></li>
           </ul>
           </li>
           <li class="nav-item dropdown">
@@ -44,23 +43,22 @@
               Reports
             </a>
             <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
-              <li><%= link_to "Employee Countries", reports_employee_country_path, class: "dropdown-item" %></li>
-              <li><%= link_to "Employee Worker Types", reports_employee_worker_type_path, class: "dropdown-item" %></li>
-              <li><%= link_to "Employee Worker Types by Country", reports_employee_country_worker_type_path, class: "dropdown-item" %></li>
               <li><%= link_to "Employee Roles", reports_roles_path, class: "dropdown-item" %></li>
               <li><%= link_to "Employee Role Density", reports_title_density_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Employee Job Function", reports_job_function_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Employee Job Function Groups", reports_job_function_group_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Employee Seniority", reports_seniority_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Employee Management Ratios", reports_management_ratios_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Employee Squad Allocations", reports_employee_allocations_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Team Geographies", reports_team_geos_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Squad Size", reports_squad_size_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Squad Depth", reports_squad_depth_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Squad Health", reports_squad_health_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Squad Health Details", reports_squad_health_details_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Squad Children", reports_squad_children_path, class: "dropdown-item" %></li>
-            <li><%= link_to "Squad Members Managers", reports_squad_members_managers_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Employee Job Code", reports_job_code_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Employee Job Code Density", reports_job_code_density_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Employee Seniority", reports_seniority_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Employee Countries", reports_employee_country_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Employee Personnel Areas", reports_personnel_area_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Employee Companies", reports_company_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Employee Management Ratios", reports_management_ratios_path, class: "dropdown-item" %></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><%= link_to "Team Size", reports_team_size_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Team Depth", reports_team_depth_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Team Health", reports_team_health_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Team Health Details", reports_team_health_details_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Team Children", reports_team_children_path, class: "dropdown-item" %></li>
+              <li><%= link_to "Team Members Managers", reports_team_members_managers_path, class: "dropdown-item" %></li>
           </ul>
         </li>
       </ul>

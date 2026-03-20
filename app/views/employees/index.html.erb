@@ -7,9 +7,9 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>Name</th>
+      <th>Person ID</th>
       <th>Title</th>
-      <th>Job Function</th>
+      <th>Job Code</th>
       <th>Seniority</th>
       <th>Manager</th>
       <th>Direct Reports</th>
@@ -18,11 +18,11 @@
   <tbody>
     <% @employees.each do |employee| %>
       <tr>
-        <td><%= link_to employee.name, employee %></td>
+        <td><%= link_to employee.person_id, employee %></td>
         <td><%= employee.title %></td>
-        <td><%= employee.job_function %></td>
+        <td><%= employee.job_code %></td>
         <td><%= employee.seniority %></td>
-        <td><%= employee.manager ? link_to(employee.manager.name, employee.manager) : "" %></td>
+        <td><%= employee.manager ? link_to(employee.manager.person_id, employee.manager) : "" %></td>
         <td><%= employee.direct_reports.count %></td>
       </tr>
     <% end %>

@@ -1,6 +1,0 @@
-<h1>Squad Size Report</h1>
-
-<%= render partial: 'countTable', locals: { labelheader: 'Squad Size', labels: @sizes, counts: @counts, percentages: @percentages } %>
-
-<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @sizes, data: @counts, percentages: @percentages, xlabel: '# of Squads' } %>
-

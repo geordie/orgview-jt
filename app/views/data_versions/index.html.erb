@@ -35,9 +35,7 @@
               <th>Status</th>
               <th>Snapshot Date</th>
               <th>Employees</th>
-              <th>Roles</th>
-              <th>Squads</th>
-              <th>Squad Employees</th>
+              <th>Teams</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -62,9 +60,7 @@
                 </td>
                 <td><%= version.snapshot_date.strftime("%m/%d/%Y %I:%M %p") %></td>
                 <td><%= number_with_delimiter(version.employee_count) %></td>
-                <td><%= number_with_delimiter(version.roles.count) %></td>
-                <td><%= number_with_delimiter(version.squad_count) %></td>
-                <td><%= number_with_delimiter(version.squads_employees.count) %></td>
+                <td><%= number_with_delimiter(version.team_count) %></td>
                 <td>
                   <div class="btn-group" role="group">
                     <%= link_to "View", data_version_path(version), class: "btn btn-sm btn-outline-primary" %>

@@ -1,0 +1,5 @@
+<h1>Team Children Report</h1>
+
+<%= render partial: 'countTable', locals: { labelheader: 'Team Children', labels: @children, counts: @counts, percentages: @percentages } %>
+
+<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @children, data: @counts, percentages: @percentages, xlabel: '# of Teams' } %>

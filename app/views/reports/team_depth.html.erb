@@ -1,0 +1,5 @@
+<h1>Team Depth Report</h1>
+
+<%= render partial: 'countTable', locals: { labelheader: 'Team Depth', labels: @depths, counts: @counts, percentages: @percentages } %>
+
+<%= render partial: 'horizontalBarChart', locals: { id: 'rolesChart', labels: @depths, data: @counts, percentages: @percentages, xlabel: '# of Teams' } %>

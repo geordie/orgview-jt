@@ -9,42 +9,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	var options = new primitives.OrgConfig();
 
-	<% @squads.each do |squad| %>
+	<% @teams.each do |team| %>
 		var itemTitleColor = primitives.Colors.Green;
-		<% if squad.squad_health == "red" %>
+		<% if team.team_health == "red" %>
 			itemTitleColor = primitives.Colors.Red;
-		<% elsif squad.squad_health == "amber" %>
+		<% elsif team.team_health == "amber" %>
 			itemTitleColor = primitives.Colors.Orange;
 		<% end %>
 		items.push(new primitives.OrgItemConfig({
-			id: <%= squad.id %>,
-			parent: <%= squad.parent_id || "null" %>,
-			title: "<%= squad.name %>",
-			full_path: "<%= squad.full_path %>",
-			org_members: <%= squad.org_members %>,
-			squad_members: <%= squad.squad_members %>,
-			squad_members_managers: <%= squad.squad_members_managers %>,
-			squad_health: "<%= squad.squad_health %>",
-			squad_health_details: "<%= squad.squad_health_details %>",
-			children: <%= squad.children %>,
-			descendents: <%= squad.descendents %>,
+			id: <%= team.id %>,
+			parent: <%= team.parent_id || "null" %>,
+			title: "<%= team.name %>",
+			full_path: "<%= team.full_path %>",
+			org_member_count: <%= team.org_member_count %>,
+			member_count: <%= team.member_count %>,
+			manager_count: <%= team.manager_count %>,
+			team_health: "<%= team.team_health %>",
+			team_health_details: "<%= team.team_health_details %>",
+			children: <%= team.children %>,
+			descendents: <%= team.descendents %>,
 			itemTitleColor: itemTitleColor
 		}));
-		<% if squad.sub_teams.count > 0 %>
-			getSubTeams(<%= squad.id %>);
+		<% if team.sub_teams.count > 0 %>
+			getSubTeams(<%= team.id %>);
 		<% end %>
 	<% end %>
 
 	options.items = items;
 	options.cursorItem = 0;
-	options.templates = [getSquadTemplate()];
-	options.defaultTemplateName = "squadTemplate";
+	options.templates = [getTeamTemplate()];
+	options.defaultTemplateName = "teamTemplate";
 	options.onItemRender = onTemplateRender;
 	options.normalItemsInterval = 10;
 	options.normalLevelShift = 44;
 	options.padding = { left: 10, top: 20, right: 10, bottom: 10};
 	options.hasSelectorCheckbox = primitives.Enabled.False;
-	// options.onCursorChanging = function (e, data) {};
 	options.onCursorChanged = onNodeHighlighted;
 
 	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
@@ -53,14 +52,14 @@ document.addEventListener('DOMContentLoaded', function () {
 function onNodeHighlighted(event, data) {
 	document.getElementById("sidecontainer").innerHTML = data.context.title
 		+ "<br/>" + data.context.full_path;
-	var squadMembers = getSquadMembers(data.context.id)
+	getTeamMembers(data.context.id)
 		.then( response => {
 			tableCreate(response);
 		}
 	);
 }
 
-function tableCreate(squadMembers) {
+function tableCreate(teamMembers) {
 	const sideContainer = document.getElementById("sidecontainer");
 	var tbl = document.createElement('table');
 	tbl.style.width = '498px';
@@ -70,25 +69,21 @@ function tableCreate(squadMembers) {
 	var td0 = tr.insertCell();
 	var td1 = tr.insertCell();
 	var td2 = tr.insertCell();
-	var td3 = tr.insertCell();
-	td0.appendChild(document.createTextNode("ID"));
-	td1.appendChild(document.createTextNode("Name"));
-	td2.appendChild(document.createTextNode("Title"));
-	td3.appendChild(document.createTextNode("Manager ID"));
+	td0.appendChild(document.createTextNode("Person ID"));
+	td1.appendChild(document.createTextNode("Title"));
+	td2.appendChild(document.createTextNode("Manager ID"));
 	Array.from(tr.cells).forEach(cell => {
 			cell.style.border = '1px solid black';
 			cell.style.padding = '3px';});
 
-	squadMembers.forEach(squadMember => {
+	teamMembers.forEach(teamMember => {
 		tr = tbl.insertRow();
 		td0 = tr.insertCell();
 		td1 = tr.insertCell();
 		td2 = tr.insertCell();
-		td3 = tr.insertCell();
-		td0.appendChild(document.createTextNode(squadMember.employee.id));
-		td1.appendChild(document.createTextNode(squadMember.employee.name));
-		td2.appendChild(document.createTextNode(squadMember.employee.title));
-		td3.appendChild(document.createTextNode(squadMember.employee.manager_id));
+		td0.appendChild(document.createTextNode(teamMember.employee.person_id));
+		td1.appendChild(document.createTextNode(teamMember.employee.title));
+		td2.appendChild(document.createTextNode(teamMember.employee.manager_id));
 
 		Array.from(tr.cells).forEach(cell => {
 			cell.style.border = '1px solid black';
@@ -101,35 +96,32 @@ function tableCreate(squadMembers) {
 function onTemplateRender(event, data) {
 	switch (data.renderingMode) {
 		case primitives.RenderingMode.Create:
-			/* Initialize template content here */
 			break;
 		case primitives.RenderingMode.Update:
-			/* Update template content here */
 			break;
 	}
 
 	var itemConfig = data.context;
 
-	if (data.templateName == "squadTemplate") {
+	if (data.templateName == "teamTemplate") {
 		var element = data.element;
 
 		element.firstChild.style.backgroundColor = itemConfig.itemTitleColor || primitives.Colors.RoyalBlue;
 		element.firstChild.firstChild.textContent = itemConfig.title;
 
 		element.childNodes[1].innerHTML = '<strong>ID:</strong> ' + itemConfig.id;
-		element.childNodes[2].innerHTML = '<strong>Org Size:</strong> ' + itemConfig.org_members;
-		element.childNodes[3].innerHTML = '<strong>Team Size:</strong> ' + itemConfig.squad_members;
-		element.childNodes[4].innerHTML = '<strong>Managers:</strong> ' + itemConfig.squad_members_managers;
+		element.childNodes[2].innerHTML = '<strong>Org Size:</strong> ' + itemConfig.org_member_count;
+		element.childNodes[3].innerHTML = '<strong>Team Size:</strong> ' + itemConfig.member_count;
+		element.childNodes[4].innerHTML = '<strong>Managers:</strong> ' + itemConfig.manager_count;
 		element.childNodes[5].innerHTML = '<strong>Sub-Teams:</strong> ' + itemConfig.children;
 		element.childNodes[6].innerHTML = '<strong>Descendents:</strong> ' + itemConfig.descendents;
-		element.childNodes[7].innerHTML = '<strong>Squad Health:</strong> ';
-		element.childNodes[8].innerHTML = itemConfig.squad_health_details;
+		element.childNodes[7].innerHTML = '<strong>Team Health:</strong> ';
+		element.childNodes[8].innerHTML = itemConfig.team_health_details;
 	}
 }
 
-function getSquadMembers(squadId) {
-	// Make a GET request to fetch data for the selected squad
-	return fetch(`/squads/${squadId}/squad_members.json`, {
+function getTeamMembers(teamId) {
+	return fetch(`/teams/${teamId}/team_members.json`, {
 		method: 'GET'
 	})
 	.then(response => response.json())
@@ -141,24 +133,20 @@ function getSquadMembers(squadId) {
 	});
 }
 
-
 function getSubTeams(parentId) {
-	// Make a GET request to fetch data for the selected squad
-	fetch(`/squads/${parentId}/sub_teams.json`, {
+	fetch(`/teams/${parentId}/sub_teams.json`, {
 		method: 'GET'
 	})
 	.then(response => response.json())
 	.then(data => {
-		var newItems = [];
-		// Add child nodes to the clicked node based on data
 		data.forEach(sub_team => {
 			if (!items.some(item => item.id === sub_team.sub_team.id)) {
 
 				var itemTitleColor = primitives.Colors.Green;
 
-				if ( sub_team.sub_team.squad_health == "red" )
+				if ( sub_team.sub_team.team_health == "red" )
 					itemTitleColor = primitives.Colors.Red;
-				else if ( sub_team.sub_team.squad_health == "amber" )
+				else if ( sub_team.sub_team.team_health == "amber" )
 					itemTitleColor = primitives.Colors.Orange;
 
 				items.push(new primitives.OrgItemConfig({
@@ -166,14 +154,13 @@ function getSubTeams(parentId) {
 					parent: parentId,
 					title: sub_team.sub_team.name,
 					full_path: sub_team.sub_team.full_path,
-					org_members: sub_team.sub_team.org_members,
-					squad_members: sub_team.sub_team.squad_members,
-					squad_members_managers: sub_team.sub_team.squad_members_managers,
-					squad_health: sub_team.sub_team.squad_health,
-					squad_health_details: sub_team.sub_team.squad_health_details,
+					org_member_count: sub_team.sub_team.org_member_count,
+					member_count: sub_team.sub_team.member_count,
+					manager_count: sub_team.sub_team.manager_count,
+					team_health: sub_team.sub_team.team_health,
+					team_health_details: sub_team.sub_team.team_health_details,
 					children: sub_team.sub_team.children,
 					descendents: sub_team.sub_team.descendents,
-					image: "/images/photos/a.png",
 					itemTitleColor: itemTitleColor
 				}));
 				if(sub_team.sub_team_count > 0) {
@@ -190,9 +177,9 @@ function getSubTeams(parentId) {
 	});
 }
 
-function getSquadTemplate() {
+function getTeamTemplate() {
 	var result = new primitives.TemplateConfig();
-	result.name = "squadTemplate";
+	result.name = "teamTemplate";
 
 	result.itemSize = new primitives.Size(240, 150);
 	result.minimizedItemSize = new primitives.Size(12, 12);
@@ -234,7 +221,7 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "squad_id",
+				name: "team_id",
 				style: {
 					top: "30px",
 					left: "10px",
@@ -248,7 +235,7 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "org_members",
+				name: "org_member_count",
 				style: {
 					top: "30px",
 					left: "110px",
@@ -262,7 +249,7 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "team_members",
+				name: "member_count",
 				style: {
 					top: "50px",
 					left: "10px",
@@ -276,7 +263,7 @@ function getSquadTemplate() {
 		],
 		["div",
 			{
-				name: "managers",
+				name: "manager_count",
 				style: {
 					top: "70px",
 					left: "10px",

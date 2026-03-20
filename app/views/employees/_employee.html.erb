@@ -6,48 +6,40 @@
 			<table class="table">
 				<tbody>
 					<tr>
-						<td class="bg-light"><strong>ID</strong></td>
-						<td><%= @employee.id %></td>
-					</tr>
-					<tr>
 						<td class="bg-light"><strong>Person ID</strong></td>
 						<td><%= @employee.person_id %></td>
-					</tr>
-					<tr>
-						<td class="bg-light"><strong>Name</strong></td>
-						<td><%= @employee.name %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Title</strong></td>
 						<td><%= @employee.title %></td>
 					</tr>
 					<tr>
-						<td class="bg-light"><strong>Job Function</strong></td>
-						<td><%= @employee.job_function %></td>
+						<td class="bg-light"><strong>Job Code</strong></td>
+						<td><%= @employee.job_code %></td>
 					</tr>
 					<tr>
-						<td class="bg-light"><strong>Job Function Group</strong></td>
-						<td><%= @employee.job_function_group %></td>
+						<td class="bg-light"><strong>Job Level</strong></td>
+						<td><%= @employee.job_level %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Seniority</strong></td>
-						<td><%= @employee.seniority %> years</td>
-					</tr>
-					<tr>
-						<td class="bg-light"><strong>Start Date</strong></td>
-						<td><%= @employee.start_date %></td>
-					</tr>
-					<tr>
-						<td class="bg-light"><strong>Worker Type</strong></td>
-						<td><%= @employee.worker_type %></td>
+						<td><%= @employee.seniority %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Country</strong></td>
 						<td><%= @employee.country %></td>
 					</tr>
 					<tr>
+						<td class="bg-light"><strong>Personnel Area</strong></td>
+						<td><%= @employee.personnel_area %></td>
+					</tr>
+					<tr>
+						<td class="bg-light"><strong>Company</strong></td>
+						<td><%= @employee.company %></td>
+					</tr>
+					<tr>
 						<td class="bg-light"><strong>Manager</strong></td>
-						<td><%= @employee.manager ? link_to(@employee.manager.name, @employee.manager) : "None" %></td>
+						<td><%= @employee.manager ? link_to(@employee.manager.person_id, @employee.manager) : "None" %></td>
 					</tr>
 					<tr>
 						<td class="bg-light"><strong>Is Manager</strong></td>
@@ -63,17 +55,17 @@
 				<table class="table">
 					<thead>
 						<tr>
-							<th>Name</th>
+							<th>Person ID</th>
 							<th>Title</th>
-							<th>Job Function</th>
+							<th>Job Code</th>
 						</tr>
 					</thead>
 					<tbody>
 						<% @employee.direct_reports.each do |report| %>
 							<tr>
-								<td><%= link_to report.name, report %></td>
+								<td><%= link_to report.person_id, report %></td>
 								<td><%= report.title %></td>
-								<td><%= report.job_function %></td>
+								<td><%= report.job_code %></td>
 							</tr>
 						<% end %>
 					</tbody>
@@ -83,16 +75,12 @@
 				<p class="text-muted">No direct reports</p>
 			<% end %>
 
-			<% if @employee.squads.any? %>
-				<h3>Squad Memberships:</h3>
+			<% if @employee.teams.any? %>
+				<h3>Team Memberships:</h3>
 				<ul class="list-group">
-					<% @employee.squads.each do |squad| %>
+					<% @employee.teams.each do |team| %>
 						<li class="list-group-item">
-							<strong><%= link_to squad.full_path, squad %></strong>
-							<% squad_employee = @employee.squads_employees.find_by(squad: squad) %>
-							<% if squad_employee&.allocation %>
-								<span class="badge bg-secondary ms-2"><%= (squad_employee.allocation * 100).to_i %>% allocation</span>
-							<% end %>
+							<strong><%= link_to team.full_path, team %></strong>
 						</li>
 					<% end %>
 				</ul>

@@ -10,6 +10,7 @@
   <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
     <div class="col-4">
       <h5>Step 1: Import employee data</h5>
+      <small class="text-muted">CSV columns: Person ID, Business Title, Job Code, Job Level, Country, Personnel Area, Company/Subsidiary, Org Unit, Leader ID</small>
     </div>
     <div class="col-8">
       <%= form_with url: import_csv_employees_path, local: true, html: { multipart: true, id: "import-form" } do |form| %>
@@ -25,10 +26,10 @@
 
   <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
     <div class="col-4">
-      <h5>Step 2: Generate Roles</h5>
+      <h5>Step 2: Generate Teams</h5>
     </div>
     <div class="col-3">
-      <%= form_with url: build_cba_roles_path, method: :post, style: "display: inline-block; margin: 0;" do %>
+      <%= form_with url: build_teams_list_path, method: :post, style: "display: inline-block; margin: 0;" do %>
         <%= submit_tag 'Go', class: 'btn btn-success' %>
       <% end %>
     </div>
@@ -36,32 +37,10 @@
 
   <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
     <div class="col-4">
-      <h5>Step 3: Generate Employees</h5>
+      <h5>Step 3: Generate Team Stats</h5>
     </div>
     <div class="col-3">
-      <%= form_with url: build_cba_list_employees_path, method: :post, style: "display: inline-block; margin: 0;" do %>
-        <%= submit_tag 'Go', class: 'btn btn-success' %>
-      <% end %>
-    </div>
-  </div>
-
-  <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
-    <div class="col-4">
-      <h5>Step 4: Generate Squads</h5>
-    </div>
-    <div class="col-3">
-      <%= form_with url: '/squads/build_cba_squads_list', method: :post, style: "display: inline-block; margin: 0;" do %>
-        <%= submit_tag 'Go', class: 'btn btn-success' %>
-      <% end %>
-    </div>
-  </div>
-
-  <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
-    <div class="col-4">
-      <h5>Step 5: Generate Squad Stats</h5>
-    </div>
-    <div class="col-3">
-      <%= form_with url: squads_build_all_squads_stats_path, method: :post, style: "display: inline-block; margin: 0;" do %>
+      <%= form_with url: build_all_teams_stats_path, method: :post, style: "display: inline-block; margin: 0;" do %>
         <%= submit_tag 'Go', class: 'btn btn-success' %>
       <% end %>
     </div>
@@ -94,9 +73,8 @@
           </small>
           <br>
           <div class="mt-2">
-            <span class="badge bg-secondary">Roles: <%= @current_version.roles_count %></span>
             <span class="badge bg-secondary">Employees: <%= @current_version.employee_count %></span>
-            <span class="badge bg-secondary">Squads: <%= @current_version.squad_count %></span>
+            <span class="badge bg-secondary">Teams: <%= @current_version.team_count %></span>
           </div>
         </div>
       <% else %>
@@ -118,9 +96,8 @@
                 <th>Name</th>
                 <th>Status</th>
                 <th>Snapshot Date</th>
-                <th>Roles</th>
                 <th>Employees</th>
-                <th>Squads</th>
+                <th>Teams</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -139,15 +116,13 @@
                     </span>
                   </td>
                   <td><%= version.snapshot_date.strftime("%m/%d/%Y") %></td>
-                  <td><%= version.roles_count %></td>
                   <td><%= version.employee_count %></td>
-                  <td><%= version.squad_count %></td>
+                  <td><%= version.team_count %></td>
                   <td>
                     <% unless version.is_active? %>
                       <%= link_to "Activate", activate_data_version_path(version),
-                          method: :patch,
-                          class: "btn btn-sm btn-success",
-                          data: { confirm: "Make this the active version?" } %>
+                          data: { turbo_method: :patch, confirm: "Make this the active version?" },
+                          class: "btn btn-sm btn-success" %>
                     <% end %>
                   </td>
                 </tr>
