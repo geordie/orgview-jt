@@ -1,0 +1,57 @@
+engineering:
+  id: 1
+  name: "Engineering"
+  full_path: "Engineering"
+  depth: 1
+  member_count: 3
+  org_member_count: 5
+  manager_count: 1
+  children: 2
+  descendents: 2
+  team_health: "green"
+  team_health_details: ""
+  data_version_id: 1
+
+frontend:
+  id: 2
+  name: "Frontend"
+  full_path: "Engineering > Frontend"
+  depth: 2
+  member_count: 2
+  org_member_count: 2
+  manager_count: 0
+  children: 0
+  descendents: 0
+  team_health: "amber"
+  team_health_details: "No manager"
+  parent_id: 1
+  data_version_id: 1
+
+backend:
+  id: 3
+  name: "Backend"
+  full_path: "Engineering > Backend"
+  depth: 2
+  member_count: 1
+  org_member_count: 1
+  manager_count: 0
+  children: 0
+  descendents: 0
+  team_health: "red"
+  team_health_details: "No manager, team too small"
+  parent_id: 1
+  data_version_id: 1
+
+leadership:
+  id: 4
+  name: "Leadership"
+  full_path: "Leadership"
+  depth: 1
+  member_count: 2
+  org_member_count: 2
+  manager_count: 2
+  children: 0
+  descendents: 0
+  team_health: "green"
+  team_health_details: ""
+  data_version_id: 1

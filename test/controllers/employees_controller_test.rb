@@ -19,16 +19,15 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_difference("Employee.count") do
       post employees_url, params: { employee: {
         person_id: "EMP999",
-        name: @employee.name,
         title: @employee.title,
-        job_function: @employee.job_function,
-        job_function_group: @employee.job_function_group,
+        job_code: @employee.job_code,
+        job_level: @employee.job_level,
         seniority: @employee.seniority,
         manager_id: @employee.manager_id,
         is_manager: @employee.is_manager,
-        start_date: @employee.start_date,
-        worker_type: @employee.worker_type,
         country: @employee.country,
+        personnel_area: @employee.personnel_area,
+        company: @employee.company,
         data_version_id: @employee.data_version_id
       } }
     end
@@ -49,16 +48,15 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
   test "should update employee" do
     patch employee_url(@employee), params: { employee: {
       person_id: @employee.person_id,
-      name: @employee.name,
       title: @employee.title,
-      job_function: @employee.job_function,
-      job_function_group: @employee.job_function_group,
+      job_code: @employee.job_code,
+      job_level: @employee.job_level,
       seniority: @employee.seniority,
       manager_id: @employee.manager_id,
       is_manager: @employee.is_manager,
-      start_date: @employee.start_date,
-      worker_type: @employee.worker_type,
       country: @employee.country,
+      personnel_area: @employee.personnel_area,
+      company: @employee.company,
       data_version_id: @employee.data_version_id
     } }
     assert_redirected_to employee_url(@employee)
@@ -77,28 +75,23 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
 
-    # Get all employees that should be visible (current data version)
     active_data_version = data_versions(:test_version)
     expected_employees = Employee.where(data_version_id: active_data_version.id)
 
-    # Get all employees that should not be visible (inactive data version)
     inactive_data_version = data_versions(:inactive_version)
     inactive_employees = Employee.where(data_version_id: inactive_data_version.id)
 
-    # Verify we have test data for both versions
     assert inactive_employees.any?, "Test should have employees in inactive data version"
     assert expected_employees.any?, "Test should have employees in active data version"
 
-    # Check that the page contains expected employees (names may appear multiple times due to manager column)
     expected_employees.each do |employee|
-      assert_select "tr", text: /#{employee.name}/, minimum: 1,
-        message: "Employee #{employee.name} from active data version should be visible"
+      assert_select "tr", text: /#{employee.person_id}/, minimum: 1,
+        message: "Employee #{employee.person_id} from active data version should be visible"
     end
 
-    # Check that the page does not contain inactive employees
     inactive_employees.each do |employee|
-      assert_select "tr", text: /#{employee.name}/, count: 0,
-        message: "Employee #{employee.name} from inactive data version should not be visible"
+      assert_select "tr", text: /#{employee.person_id}/, count: 0,
+        message: "Employee #{employee.person_id} from inactive data version should not be visible"
     end
   end
 end

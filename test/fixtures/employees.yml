@@ -2,240 +2,223 @@
 ceo:
   id: 1
   person_id: "EMP001"
-  name: "John Doe"
   title: "CEO"
-  job_function: "Senior Leadership"
-  job_function_group: "Leadership"
-  seniority: 15
+  job_code: "EXEC01"
+  job_level: "(M30) Exec"
+  seniority: 30
   manager_id:
   is_manager: true
-  start_date: <%= 10.years.ago.to_date %>
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 cto:
   id: 2
   person_id: "EMP002"
-  name: "Jane Smith"
   title: "CTO"
-  job_function: "Engineering"
-  job_function_group: "Technology"
-  seniority: 12
+  job_code: "EXEC02"
+  job_level: "(M28) Exec"
+  seniority: 28
   manager_id: "EMP001"
   is_manager: true
-  start_date: <%= 8.years.ago.to_date %>
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 engineer:
   id: 3
   person_id: "EMP003"
-  name: "Bob Johnson"
   title: "Senior Software Engineer"
-  job_function: "Engineering"
-  job_function_group: "Technology"
-  seniority: 5
+  job_code: "ENGR03"
+  job_level: "(P22) Sr"
+  seniority: 22
   manager_id: "EMP002"
   is_manager: false
-  start_date: <%= 5.years.ago.to_date %>
-  worker_type: "Employee"
   country: "Canada"
+  personnel_area: "Toronto"
+  company: "Grainger"
   data_version_id: 1
 
 manager:
   id: 4
   person_id: "EMP004"
-  name: "Alice Brown"
   title: "Engineering Manager"
-  job_function: "Engineering"
-  job_function_group: "Technology"
-  seniority: 8
+  job_code: "MGMT01"
+  job_level: "(M24) Mgr"
+  seniority: 24
   manager_id: "EMP002"
   is_manager: true
-  start_date: <%= 6.years.ago.to_date %>
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 designer:
   id: 5
   person_id: "EMP005"
-  name: "Carol White"
   title: "UX Designer"
-  job_function: "Design"
-  job_function_group: "Product"
-  seniority: 3
+  job_code: "DSGN01"
+  job_level: "(P18) Mid"
+  seniority: 18
   manager_id: "EMP001"
   is_manager: false
-  start_date: <%= 3.years.ago.to_date %>
-  worker_type: "Contractor"
   country: "UK"
+  personnel_area: "London"
+  company: "Grainger UK"
   data_version_id: 1
 
 employee_2182:
   id: 2182
   person_id: "EMP2182"
-  name: "Amb. Tommie Robel"
   title: "CTO"
-  job_function: "Software Development Management"
-  job_function_group: "Technology"
-  seniority: 11
+  job_code: "EXEC02"
+  job_level: "(M28) Exec"
+  seniority: 28
   manager_id: "EMP001"
   is_manager: true
-  start_date: "2012-12-26"
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 employee_2183:
   id: 2183
   person_id: "EMP2183"
-  name: "Malinda Kunde"
   title: "VP, Product Management"
-  job_function: "Product Management"
-  job_function_group: "Product"
-  seniority: 9
+  job_code: "PROD01"
+  job_level: "(M26) VP"
+  seniority: 26
   manager_id: "EMP2182"
   is_manager: true
-  start_date: "2023-06-08"
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 employee_2184:
   id: 2184
   person_id: "EMP2184"
-  name: "Cheyenne Ritchie"
   title: "Principal Software Engineer"
-  job_function: "Software Development"
-  job_function_group: "Technology"
-  seniority: 6
+  job_code: "ENGR05"
+  job_level: "(P25) Principal"
+  seniority: 25
   manager_id: "EMP2183"
   is_manager: false
-  start_date: "2023-11-22"
-  worker_type: "Employee"
   country: "Canada"
+  personnel_area: "Toronto"
+  company: "Grainger"
   data_version_id: 1
 
 employee_2185:
   id: 2185
   person_id: "EMP2185"
-  name: "Hans Smith"
   title: "Director, Software Development"
-  job_function: "Software Development Management"
-  job_function_group: "Technology"
-  seniority: 8
+  job_code: "MGMT03"
+  job_level: "(M25) Dir"
+  seniority: 25
   manager_id: "EMP2184"
   is_manager: true
-  start_date: "2022-09-20"
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 employee_2186:
   id: 2186
   person_id: "EMP2186"
-  name: "Bryan Macejkovic"
   title: "Staff Software Developer"
-  job_function: "Software Development"
-  job_function_group: "Technology"
-  seniority: 7
+  job_code: "ENGR04"
+  job_level: "(P23) Staff"
+  seniority: 23
   manager_id: "EMP2185"
   is_manager: false
-  start_date: "2022-06-29"
-  worker_type: "Employee"
   country: "Canada"
+  personnel_area: "Toronto"
+  company: "Grainger"
   data_version_id: 1
 
 employee_2187:
   id: 2187
   person_id: "EMP2187"
-  name: "Seymour Dietrich V"
   title: "Software Developer"
-  job_function: "Software Development"
-  job_function_group: "Technology"
-  seniority: 5
+  job_code: "ENGR02"
+  job_level: "(P20) Mid"
+  seniority: 20
   manager_id: "EMP2185"
   is_manager: false
-  start_date: "2023-04-16"
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 employee_2188:
   id: 2188
   person_id: "EMP2188"
-  name: "Benedict Hartmann"
   title: "Principal Software Developer"
-  job_function: "Software Development"
-  job_function_group: "Technology"
-  seniority: 8
+  job_code: "ENGR05"
+  job_level: "(P25) Principal"
+  seniority: 25
   manager_id: "EMP2185"
   is_manager: false
-  start_date: "2023-08-30"
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
-# Test data for data version filtering tests
 test_employee_v1_usa:
   id: 1001
   person_id: "TEST001"
-  name: "Test Employee USA"
   title: "Test Engineer"
-  job_function: "Engineering"
-  job_function_group: "Technology"
-  seniority: 5
+  job_code: "TEST01"
+  job_level: "(P20) Mid"
+  seniority: 20
   manager_id: "EMP001"
   is_manager: false
-  start_date: <%= 2.years.ago.to_date %>
-  worker_type: "Employee"
   country: "USA"
+  personnel_area: "Chicago"
+  company: "Grainger"
   data_version_id: 1
 
 test_employee_v1_canada:
   id: 1002
   person_id: "TEST002"
-  name: "Test Employee Canada"
   title: "Test Designer"
-  job_function: "Design"
-  job_function_group: "Product"
-  seniority: 3
+  job_code: "TEST02"
+  job_level: "(P18) Mid"
+  seniority: 18
   manager_id: "EMP001"
   is_manager: false
-  start_date: <%= 3.years.ago.to_date %>
-  worker_type: "Employee"
   country: "Canada"
+  personnel_area: "Toronto"
+  company: "Grainger"
   data_version_id: 1
 
 test_employee_v2_uk:
   id: 1003
   person_id: "TEST003"
-  name: "Test Employee UK"
   title: "Test Analyst"
-  job_function: "Analytics"
-  job_function_group: "Data"
-  seniority: 4
+  job_code: "TEST03"
+  job_level: "(P19) Mid"
+  seniority: 19
   manager_id: "EMP001"
   is_manager: false
-  start_date: <%= 1.year.ago.to_date %>
-  worker_type: "Employee"
   country: "UK"
+  personnel_area: "London"
+  company: "Grainger UK"
   data_version_id: 2
 
 test_employee_v2_germany:
   id: 1004
   person_id: "TEST004"
-  name: "Test Employee Germany"
   title: "Test Manager"
-  job_function: "Management"
-  job_function_group: "Leadership"
-  seniority: 6
+  job_code: "TEST04"
+  job_level: "(M24) Mgr"
+  seniority: 24
   manager_id: "EMP001"
   is_manager: true
-  start_date: <%= 4.years.ago.to_date %>
-  worker_type: "Freelancer"
   country: "Germany"
+  personnel_area: "Frankfurt"
+  company: "Grainger DE"
   data_version_id: 2
