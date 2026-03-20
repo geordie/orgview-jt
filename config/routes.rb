@@ -15,6 +15,8 @@ Rails.application.routes.draw do
   get  'teams/treeview',             to: 'teams#treeview',              as: 'teams_treeview'
   get  'teams/:id/sub_teams',        to: 'teams#sub_teams',             as: 'sub_teams'
   get  'teams/:id/team_members',     to: 'teams#team_members',          as: 'team_members'
+  get  'teams/:id/move_candidates',  to: 'teams#move_candidates',       as: 'move_candidates'
+  patch 'teams/:id/move',            to: 'teams#move',                  as: 'move_team'
 
   # Reports
   get 'reports/roles',              to: 'reports#roles'

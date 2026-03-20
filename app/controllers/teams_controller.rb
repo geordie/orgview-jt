@@ -1,6 +1,6 @@
 class TeamsController < ApplicationController
   include TeamGenerator
-  before_action :set_team, only: [:show, :edit, :update, :destroy]
+  before_action :set_team, only: [:show, :edit, :update, :destroy, :move, :move_candidates]
 
   def index
     current_version = DataVersion.active.first
@@ -113,6 +113,52 @@ class TeamsController < ApplicationController
     end
   end
 
+  def move_candidates
+    current_version = DataVersion.active.first
+    excluded = [@team.id] + descendant_ids(@team)
+    candidates = Team.where(data_version_id: current_version.id)
+      .where.not(id: excluded)
+      .order(:full_path)
+    render json: candidates.map { |t| { id: t.id, name: t.name, full_path: t.full_path, depth: t.depth } }
+  end
+
+  def move
+    current_version = DataVersion.active.first
+    new_parent_id   = params[:parent_id].presence
+
+    if new_parent_id
+      new_parent = Team.where(data_version_id: current_version.id).find(new_parent_id)
+      if descendant_ids(@team).include?(new_parent.id) || new_parent.id == @team.id
+        render json: { error: 'Cannot move a team to itself or its own descendant' }, status: :unprocessable_entity
+        return
+      end
+      new_depth     = new_parent.depth + 1
+      new_full_path = "#{new_parent.full_path} > #{@team.name}"
+    else
+      new_depth     = 1
+      new_full_path = @team.name
+    end
+
+    old_full_path = @team.full_path
+    depth_delta   = new_depth - @team.depth
+
+    Team.where(data_version_id: current_version.id)
+        .where("full_path LIKE ?", "#{Team.sanitize_sql_like(old_full_path)} > %")
+        .update_all([
+          "full_path = REPLACE(full_path, ?, ?), depth = depth + ?",
+          "#{old_full_path} >", "#{new_full_path} >", depth_delta
+        ])
+
+    @team.assign_attributes(parent_id: new_parent_id, full_path: new_full_path, depth: new_depth)
+
+    if @team.save
+      build_teams_stats(current_version)
+      render json: { redirect_url: team_url(@team) }
+    else
+      render json: { error: @team.errors.full_messages.join(', ') }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def set_team
@@ -120,6 +166,16 @@ class TeamsController < ApplicationController
     return redirect_to root_path, alert: 'No active data version found.' unless current_version
 
     @team = Team.where(data_version_id: current_version.id).find(params[:id])
+  end
+
+  def descendant_ids(team)
+    ids, queue = [], [team.id]
+    until queue.empty?
+      batch = Team.where(parent_id: queue, data_version_id: team.data_version_id).pluck(:id)
+      ids.concat(batch)
+      queue = batch
+    end
+    ids
   end
 
   def build_team_hierarchy(team)

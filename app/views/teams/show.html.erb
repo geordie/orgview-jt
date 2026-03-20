@@ -11,6 +11,11 @@
       <% else %>
         <span>None</span>
       <% end %>
+      <button class="btn btn-outline-secondary btn-sm ms-2"
+              data-bs-toggle="modal" data-bs-target="#moveTeamModal"
+              data-team-id="<%= @team.id %>" data-team-name="<%= @team.name %>">
+        Move Team
+      </button>
     </div>
   </div>
   <div class="row">
@@ -34,6 +39,8 @@
     <div class="col-2"><%= @team.depth %></div>
   </div>
 </div>
+
+<%= render 'move_modal' %>
 
 <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
   <h2>Team Reports</h2>

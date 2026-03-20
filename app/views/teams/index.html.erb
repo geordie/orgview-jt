@@ -52,9 +52,16 @@
         <td style="text-align: center;">
             <div class="btn-group" role="group" style="gap: 8px;">
               <%= link_to 'Detail', team, class: 'btn btn-primary btn-sm' %>
+              <button class="btn btn-outline-secondary btn-sm"
+                      data-bs-toggle="modal" data-bs-target="#moveTeamModal"
+                      data-team-id="<%= team.id %>" data-team-name="<%= team.name %>">
+                Move
+              </button>
             </div>
         </td>
       </tr>
     <% end %>
   </tbody>
 </table>
+
+<%= render 'move_modal' %>
