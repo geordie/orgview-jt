@@ -63,7 +63,7 @@ class TeamsController < ApplicationController
     respond_to do |format|
       if @team.update(team_params)
         format.html { redirect_to team_url(@team), notice: 'Team was successfully updated.' }
-        format.json { render :show, status: :ok, location: @team }
+        format.json { render json: @team, status: :ok }
       else
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @team.errors, status: :unprocessable_entity }
@@ -187,7 +187,7 @@ class TeamsController < ApplicationController
   end
 
   def team_params
-    params.require(:team).permit(:name, :full_path, :parent_id, :depth)
+    params.require(:team).permit(:name, :full_path, :parent_id, :depth, :pretty_name)
   end
 
   def sortable_columns
