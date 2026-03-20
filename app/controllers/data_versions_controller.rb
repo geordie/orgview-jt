@@ -2,15 +2,13 @@ class DataVersionsController < ApplicationController
   before_action :set_data_version, only: [:show, :edit, :update, :activate, :archive, :destroy]
 
   def index
-    @data_versions = DataVersion.recent.includes(:employees, :squads)
+    @data_versions  = DataVersion.recent.includes(:employees, :teams)
     @current_version = DataVersion.active.first
   end
 
   def show
     @employee_count = @data_version.employee_count
-    @squad_count = @data_version.squad_count
-    @role_count = @data_version.roles.count
-    @squads_employees_count = @data_version.squads_employees.count
+    @team_count     = @data_version.team_count
   end
 
   def new

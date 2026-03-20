@@ -2,219 +2,153 @@ module EmployeeCsvImporter
   extend ActiveSupport::Concern
 
   require 'csv'
-  require Rails.root.join('app/lib/cba_utils')
 
-  include CbaUtils
-
-  EXPECTED_CSV_HEADERS = [
-    "Person ID",
-    "First Name",
-    "Surname",
-    "Worker Type",
-    "Worker Sub-Type",
-    "City",
-    "State",
-    "Country",
-    "FTE",
-    "Management Level",
-    "PACE Role",
-    "Workday Position ID",
-    "Position Title",
-    "Workday Job Family Group",
-    "Workday Job Family",
-    "Workday Job Profile",
-    "Workday Job Profile ID",
-    "Is Manager",
-    "Company",
-    "Manager ID",
-    "Manager Name",
-    "Manager Position ID",
-    "Supply Team - name",
-    "Supply Team - type",
-    "Supply Team - Layer in the org",
-    "Chapter Area",
-    "Chapter",
-    "PACE Supervisory Org Business Unit",
-    "PACE Supervisory Org 2",
-    "PACE Supervisory Org 3",
-    "PACE Supervisory Org 4",
-    "PACE Supervisory Org 5",
-    "PACE Supervisory Org 6",
-    "PACE Supervisory Org 7",
-    "Demand team - type",
-    "Demand team - name",
-    "Demand team - pattern",
-    "Demand team - layer in the org",
-    "Demand team - Business Unit",
-    "Demand team - Domain L1",
-    "Demand team - Domain L2",
-    "Demand team - Domain L3",
-    "Demand team - Crew/COE",
-    "Demand team - Squad/COE Team",
-    "Allocated FTE",
-    "Cost Center ID",
-    "Cost Center Business Unit",
-    "Extended Leave",
-    "Workday Supervisory Org Business Unit",
-    "Workday Supervisory Org 2",
-    "Workday Supervisory Org 3",
-    "Workday Supervisory Org 4",
-    "Workday Supervisory Org 5",
-    "Workday Supervisory Org 6",
-    "Workday Supervisory Org 7",
-    "Workday Supervisory Org 8",
-    "Is allocated to a Supply Structure?",
-    "Is allocated to a Demand structure?",
-    "ETP Role Type",
-    "ETP Initiative",
-    "Date person was added to TeamForm",
-    "Demand allocation start date",
-    "Demand allocation last updated",
-    "demand team - id",
-    "supply team - id"
+  EXPECTED_CSV_HEADERS = %w[
+    Person\ ID
+    Business\ Title
+    Job\ Code
+    Job\ Level
+    Country
+    Personnel\ Area
+    Company/Subsidiary
+    Org\ Unit
+    Leader\ ID
   ].freeze
+
+  # Parses "(P22) Sr" or "(M25) Dir" → [is_manager, seniority_int]
+  # M prefix = manager, P prefix = individual contributor.
+  # Returns [nil, 0] when the format is unrecognised.
+  def parse_job_level(job_level)
+    return [nil, 0] if job_level.blank?
+
+    match = job_level.match(/\(([MP])(\d+)\)/i)
+    return [nil, 0] unless match
+
+    is_manager = match[1].upcase == 'M'
+    seniority  = match[2].to_i
+    [is_manager, seniority]
+  end
 
   def import_csv_file(uploaded_file)
     unless uploaded_file.content_type == 'text/csv'
-      flash[:alert] = "Please upload a valid CSV file."
-      redirect_to root_path and return
-    end
-    if uploaded_file.size == 0
-      flash[:alert] = "The uploaded file is empty."
-      redirect_to root_path and return
-    end
-    if uploaded_file.size > 58.megabytes
-      flash[:alert] = "The uploaded file is too large. Please upload a file smaller than 58MB."
+      flash[:alert] = 'Please upload a valid CSV file.'
       redirect_to root_path and return
     end
 
-    temp_file = File.join(Rails.root, 'tmp', uploaded_file.original_filename)
-    File.open(temp_file, "wb") { |file| file.write(uploaded_file.read) }
+    if uploaded_file.size == 0
+      flash[:alert] = 'The uploaded file is empty.'
+      redirect_to root_path and return
+    end
+
+    if uploaded_file.size > 58.megabytes
+      flash[:alert] = 'The uploaded file is too large. Please upload a file smaller than 58MB.'
+      redirect_to root_path and return
+    end
+
+    temp_file = Rails.root.join('tmp', uploaded_file.original_filename)
+    File.open(temp_file, 'wb') { |f| f.write(uploaded_file.read) }
 
     process_csv(temp_file)
     File.delete(temp_file) if File.exist?(temp_file)
-    #redirect_to root_path, notice: 'CSV import complete.'
   end
+
+  private
 
   def process_csv(temp_file)
-    uploaded_csv = nil
-    begin
-      uploaded_csv = CSV.read(temp_file, encoding: 'bom|utf-8', headers: true)
+    csv = begin
+      CSV.read(temp_file, encoding: 'bom|utf-8', headers: true)
     rescue CSV::MalformedCSVError
-      flash[:alert] = "The uploaded file is not a valid CSV file. Please check the file and try again."
+      flash[:alert] = 'The uploaded file is not a valid CSV file.'
       redirect_to root_path and return
     end
 
-    uploaded_headers = uploaded_csv.headers
-    p '*******'
-    p uploaded_headers
-    p '*******'
-
-    missing_headers = EXPECTED_CSV_HEADERS.reject { |header| uploaded_headers.include?(header) }
-    if missing_headers.any?
-      flash[:alert] = "The uploaded file is missing the following headers: #{missing_headers.join(', ')}. Please check the file and try again."
+    missing = EXPECTED_CSV_HEADERS.reject { |h| csv.headers.include?(h) }
+    if missing.any?
+      flash[:alert] = "CSV is missing required headers: #{missing.join(', ')}"
       redirect_to root_path and return
     end
 
-    employees_cache = Emp.all.pluck(:person_id)
-    batch = []
-    batch_size = 5000
+    current_version = DataVersion.active.first
+    unless current_version
+      flash[:alert] = 'No active data version. Please create and activate a version first.'
+      redirect_to root_path and return
+    end
 
-    uploaded_csv.each do |row|
-      raw_person_id = row["Person ID"] # Assuming "Person ID" is the first column
-      next if employees_cache.include?(raw_person_id)
-      if batch.size % 1000 == 5
-        p "Processing record #{batch.size + 1} with Person ID: #{raw_person_id}"
-      end
-      seniority = get_seniority_from_management_level(row["Management Level"])
-      batch << {
-        person_id: raw_person_id,
-        first_name: row["First Name"],
-        surname: row["Surname"],
-        worker_type: row["Worker Type"],
-        worker_sub_type: row["Worker Sub-Type"],
-        city: row["City"],
-        state: row["State"],
-        country: row["Country"],
-        fte: row["FTE"],
-        management_level: row["Management Level"],
-        pace_role: row["PACE Role"],
-        workday_position_id: row["Workday Position ID"],
-        position_title: row["Position Title"],
-        workday_job_family_group: row["Workday Job Family Group"],
-        workday_job_family: row["Workday Job Family"],
-        workday_job_profile: row["Workday Job Profile"],
-        workday_job_profile_id: row["Workday Job Profile ID"],
-        is_manager: row["Is Manager"],
-        company: row["Company"],
-        manager_id: row["Manager ID"],
-        manager_name: row["Manager Name"],
-        manager_position_id: row["Manager Position ID"],
-        supply_team_name: row["Supply Team - name"],
-        supply_team_type: row["Supply Team - type"],
-        supply_team_layer_in_the_org: row["Supply Team - Layer in the org"],
-        chapter_area: row["Chapter Area"],
-        chapter: row["Chapter"],
-        pace_supervisory_org_business_unit: row["PACE Supervisory Org Business Unit"],
-        pace_supervisory_org_2: row["PACE Supervisory Org 2"],
-        pace_supervisory_org_3: row["PACE Supervisory Org 3"],
-        pace_supervisory_org_4: row["PACE Supervisory Org 4"],
-        pace_supervisory_org_5: row["PACE Supervisory Org 5"],
-        pace_supervisory_org_6: row["PACE Supervisory Org 6"],
-        pace_supervisory_org_7: row["PACE Supervisory Org 7"],
-        demand_team_type: row["Demand team - type"],
-        demand_team_name: row["Demand team - name"],
-        demand_team_pattern: row["Demand team - pattern"],
-        demand_team_layer_in_the_org: row["Demand team - layer in the org"],
-        demand_team_business_unit: row["Demand team - Business Unit"],
-        demand_team_domain_l1: row["Demand team - Domain L1"],
-        demand_team_domain_l2: row["Demand team - Domain L2"],
-        demand_team_domain_l3: row["Demand team - Domain L3"],
-        demand_team_crew_coe: row["Demand team - Crew/COE"],
-        demand_team_squad_coe_team: row["Demand team - Squad/COE Team"],
-        allocated_fte: row["Allocated FTE"],
-        cost_center_id: row["Cost Center ID"],
-        cost_center_business_unit: row["Cost Center Business Unit"],
-        extended_leave: row["Extended Leave"],
-        workday_supervisory_org_business_unit: row["Workday Supervisory Org Business Unit"],
-        workday_supervisory_org_2: row["Workday Supervisory Org 2"],
-        workday_supervisory_org_3: row["Workday Supervisory Org 3"],
-        workday_supervisory_org_4: row["Workday Supervisory Org 4"],
-        workday_supervisory_org_5: row["Workday Supervisory Org 5"],
-        workday_supervisory_org_6: row["Workday Supervisory Org 6"],
-        workday_supervisory_org_7: row["Workday Supervisory Org 7"],
-        workday_supervisory_org_8: row["Workday Supervisory Org 8"],
-        is_allocated_to_a_supply_structure: row["Is allocated to a Supply Structure?"],
-        is_allocated_to_a_demand_structure: row["Is allocated to a Demand structure?"],
-        etp_role_type: row["ETP Role Type"],
-        etp_initiative: row["ETP Initiative"],
-        date_person_was_added_to_teamform: row["Date person was added to TeamForm"],
-        demand_allocation_start_date: row["Demand allocation start date"],
-        demand_allocation_last_updated: row["Demand allocation last updated"],
-        demand_team_id: row["demand team - id"],
-        supply_team_id: row["supply team - id"],
-        seniority: seniority
+    # Clear existing data for this version
+    TeamsEmployee.where(data_version_id: current_version.id).delete_all
+    Team.where(data_version_id:          current_version.id).delete_all
+    Employee.where(data_version_id:      current_version.id).delete_all
+    Emp.delete_all
+
+    # --- Stage 1: load raw rows into emp ---
+    emp_batch     = []
+    emp_batch_size = 5000
+    seen_ids      = {}
+
+    csv.each do |row|
+      person_id = row['Person ID'].to_s.strip
+      next if person_id.blank? || seen_ids[person_id]
+
+      seen_ids[person_id] = true
+      emp_batch << {
+        person_id:      person_id,
+        business_title: row['Business Title'],
+        job_code:       row['Job Code'],
+        job_level:      row['Job Level'],
+        country:        row['Country'],
+        personnel_area: row['Personnel Area'],
+        company:        row['Company/Subsidiary'],
+        org_unit:       row['Org Unit'],
+        leader_id:      row['Leader ID'],
+        created_at:     Time.current,
+        updated_at:     Time.current
       }
-      if batch.size >= batch_size
-        begin
-          Emp.insert_all!(batch)
-        rescue ActiveRecord::RecordInvalid => e
-          flash[:alert] = "Error creating records in batch: #{e.message}"
-          redirect_to root_path and return
-        end
-        batch.clear
-      end
-    end
-    # Insert any remaining records
-    if batch.any?
-      begin
-        Emp.insert_all!(batch)
-      rescue ActiveRecord::RecordInvalid => e
-        flash[:alert] = "Error creating records in batch: #{e.message}"
-        redirect_to root_path and return
-      end
-    end
-    flash[:notice] = "CSV file processed successfully. Employees created."
-  end
 
+      if emp_batch.size >= emp_batch_size
+        Emp.insert_all!(emp_batch)
+        emp_batch.clear
+      end
+    end
+    Emp.insert_all!(emp_batch) if emp_batch.any?
+
+    # --- Stage 2: build employees from emp ---
+    # First pass: collect all person_ids so we can derive is_manager from leader_id
+    all_person_ids = Emp.pluck(:person_id).to_set
+    leader_ids     = Emp.where.not(leader_id: [nil, '']).pluck(:leader_id).to_set
+
+    employee_batch     = []
+    employee_batch_size = 5000
+
+    Emp.import_filter.each do |emp|
+      is_manager, seniority = parse_job_level(emp.job_level)
+
+      # Fall back to leader_id scan when job_level prefix is absent
+      is_manager = leader_ids.include?(emp.person_id) if is_manager.nil?
+
+      employee_batch << {
+        person_id:      emp.person_id,
+        title:          emp.business_title,
+        job_code:       emp.job_code,
+        job_level:      emp.job_level,
+        seniority:      seniority,
+        manager_id:     emp.leader_id.presence,
+        is_manager:     is_manager || false,
+        country:        emp.country,
+        personnel_area: emp.personnel_area,
+        company:        emp.company,
+        data_version_id: current_version.id,
+        created_at:     Time.current,
+        updated_at:     Time.current
+      }
+
+      if employee_batch.size >= employee_batch_size
+        Employee.insert_all!(employee_batch)
+        employee_batch.clear
+      end
+    end
+    Employee.insert_all!(employee_batch) if employee_batch.any?
+
+    flash[:notice] = "Imported #{Employee.where(data_version_id: current_version.id).count} employees successfully."
+    redirect_to root_path
+  end
 end

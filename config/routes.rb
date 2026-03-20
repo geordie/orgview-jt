@@ -1,9 +1,39 @@
 Rails.application.routes.draw do
-  get 'reports/roles'
-  get 'reports/seniority'
-  resources :roles
+  get "up" => "rails/health#show", as: :rails_health_check
 
-  # Data Version Management
+  # Employees
+  resources :employees, constraints: { id: /\d+/ }
+  get  'employees/treeview',  to: 'employees#treeview'
+  delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
+  get  'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
+  post 'employees/import_csv', to: 'employees#import_csv', as: 'import_csv_employees'
+
+  # Teams
+  resources :teams, constraints: { id: /\d+/ }
+  post 'teams/build_teams_list',    to: 'teams#build_teams_list',    as: 'build_teams_list'
+  post 'teams/build_all_teams_stats', to: 'teams#build_all_teams_stats', as: 'build_all_teams_stats'
+  get  'teams/treeview',             to: 'teams#treeview',              as: 'teams_treeview'
+  get  'teams/:id/sub_teams',        to: 'teams#sub_teams',             as: 'sub_teams'
+  get  'teams/:id/team_members',     to: 'teams#team_members',          as: 'team_members'
+
+  # Reports
+  get 'reports/roles',              to: 'reports#roles'
+  get 'reports/title_density',      to: 'reports#title_density'
+  get 'reports/job_code_density',   to: 'reports#job_code_density'
+  get 'reports/seniority',          to: 'reports#seniority'
+  get 'reports/job_code',           to: 'reports#job_code'
+  get 'reports/employee_country',   to: 'reports#employee_country'
+  get 'reports/personnel_area',     to: 'reports#personnel_area'
+  get 'reports/company',            to: 'reports#company'
+  get 'reports/management_ratios',  to: 'reports#management_ratios'
+  get 'reports/team_depth',         to: 'reports#team_depth'
+  get 'reports/team_size',          to: 'reports#team_size'
+  get 'reports/team_health',        to: 'reports#team_health'
+  get 'reports/team_health_details', to: 'reports#team_health_details'
+  get 'reports/team_children',      to: 'reports#team_children'
+  get 'reports/team_members_managers', to: 'reports#team_members_managers'
+
+  # Data Versions
   resources :data_versions do
     member do
       patch :activate
@@ -11,55 +41,5 @@ Rails.application.routes.draw do
     end
   end
 
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
-
-  # Employees
-  resources :employees, constraints: { id: /\d+/ }
-  get 'employees/structure', to: 'employees#structure'
-  get 'employees/treeview', to: 'employees#treeview'
-  get 'employees/treeview2', to: 'employees#treeview2'
-  post 'employees/create_samples', to: 'employees#create_samples'
-  post 'employees/build_cba_list', to: 'employees#build_cba_list', as: 'build_cba_list_employees'
-  delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
-  get 'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
-  post 'employees/import_csv', to: 'employees#import_csv', as: 'import_csv_employees'
-
-  # Roles
-  resources :roles, constraints: { id: /\d+/ }
-  post 'roles/build_cba_roles', to: 'roles#build_cba_roles', as: 'build_cba_roles'
-
-  # Reports
-  get 'reports/roles', to: 'reports#roles'
-  get 'reports/title_density', to: 'reports#title_density'
-  get 'reports/job_function_density', to: 'reports#job_function_density'
-  get 'reports/seniority', to: 'reports#seniority'
-  get 'reports/job_function', to: 'reports#job_function'
-  get 'reports/job_function_group', to: 'reports#job_function_group'
-  get 'reports/employee_allocations', to: 'reports#employee_allocations'
-  get 'reports/employee_country', to: 'reports#employee_country'
-  get 'reports/employee_worker_type', to: 'reports#employee_worker_type'
-  get 'reports/employee_country_worker_type', to: 'reports#employee_country_worker_type'
-  get 'reports/management_ratios', to: 'reports#management_ratios'
-  get 'reports/team_geos', to: 'reports#team_geos'
-  get 'reports/squad_children', to: 'reports#squad_children'
-  get 'reports/squad_depth', to: 'reports#squad_depth'
-  get 'reports/squad_members_managers', to: 'reports#squad_members_managers'
-  get 'reports/squad_size', to: 'reports#squad_size'
-  get 'reports/squad_health', to: 'reports#squad_health'
-  get 'reports/squad_health_details', to: 'reports#squad_health_details'
-
-  # Squads - custom routes first, then resources
-  post 'squads/build_cba_squads_list', to: 'squads#build_cba_squads_list'
-  post 'squads/build_all_squads_stats', to: 'squads#build_all_squads_stats'
-  get 'squads/treeview', to: 'squads#treeview'
-  get 'squads/:id/sub_teams', to: 'squads#sub_teams', as: 'sub_teams'
-  get 'squads/:id/squad_members', to: 'squads#squad_members', as: 'squad_members'
-  resources :squads, constraints: { id: /\d+/ }
-
-  # Defines the root path route ("/")
   root "home#index"
 end

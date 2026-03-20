@@ -2,899 +2,415 @@ class ReportsController < ApplicationController
   before_action :set_current_data_version
 
   def roles
-    # Get the data with optional squad filtering
-    base_employee_query = Employee.current.all
+    base_query = employee_base_query
 
-    # If squad_id is provided, filter to employees in that squad and its descendants
-    if params[:squad_id].present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find_by(id: params[:squad_id])
+    employee_titles = filtered_by_job_code(base_query)
+      .distinct(:person_id).group(:title).count
+      .sort_by { |_, v| v }.reverse.to_h
 
-      # If squad not found, continue without filtering (gracefully handle non-existent squad)
-      if parent_squad
-        # Find all squads that are children of the specified squad (using full_path hierarchy)
-      descendant_squads = Squad.where(
-        "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
-        path: parent_squad.full_path,
-        like_path: "#{parent_squad.full_path} > %",
-        data_version_id: @current_data_version.id
-      )
-
-      # Filter employees to only those in the descendant squads
-      base_employee_query = base_employee_query
-        .joins(:squads_employees)
-        .where(squads_employees: { squad_id: descendant_squads.pluck(:id) })
-      end
-    end
-
-    if params[:job_function_group].present?
-      employee_titles = base_employee_query
-        .where(job_function_group: params[:job_function_group])
-        .distinct(:person_id)
-        .group(:title)
-        .count
-        .sort_by { |k, v| v }.reverse.to_h
-    elsif params[:job_function].present?
-      employee_titles = base_employee_query
-        .where(job_function: params[:job_function])
-        .distinct(:person_id)
-        .group(:title)
-        .count
-        .sort_by { |k, v| v }.reverse.to_h
-    else
-      employee_titles = base_employee_query
-        .distinct(:person_id)
-        .group(:title)
-        .count
-        .sort_by { |k, v| v }.reverse.to_h
-    end
-
-    # Setup report metadata
-    squad_subtitle = ""
-    if params[:squad_id].present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find_by(id: params[:squad_id])
-      squad_subtitle = " - #{parent_squad.full_path}" if parent_squad
-    end
-
-    @report_title = "Roles Report"
+    squad_subtitle = team_subtitle
+    @report_title  = 'Roles Report'
     @report_subtitle = [
-      (params[:job_function_group].present? ? "Filtered by Job Function Group: #{params[:job_function_group]}" : nil),
-      (params[:job_function].present? && !params[:job_function_group].present? ? "Filtered by Job Function: #{params[:job_function]}" : nil),
-      squad_subtitle.present? ? squad_subtitle : nil
-    ].compact.join("")
+      (params[:job_code].present? ? "Filtered by Job Code: #{params[:job_code]}" : nil),
+      squad_subtitle.presence
+    ].compact.join('')
 
-    # Create table data using the new model
     @table = TableColumns.new
 
-    # Add columns with linking to title_density report
     link_params = [LinkParams.new(name: 'title', value_col: 'Role')]
-
-    # If a squad_id parameter is present, pass it along to the title_density report
-    if params[:squad_id].present?
-      link_params << LinkParams.new(name: 'squad_id', value: params[:squad_id])
-    end
+    link_params << LinkParams.new(name: 'team_id', value: params[:team_id]) if params[:team_id].present?
 
     @table.add_column(
-      label: "Role",
-      values: employee_titles.keys,
-      type: "string",
-      link_info: LinkInfo.new(
-        controller: 'reports',
-        action: 'title_density',
-        link_params: link_params
-      )
+      label: 'Role', values: employee_titles.keys, type: 'string',
+      link_info: LinkInfo.new(controller: 'reports', action: 'title_density', link_params: link_params)
     )
-
     @table.add_column(
-      label: "Count",
-      values: employee_titles.values,
-      type: "numeric",
+      label: 'Count', values: employee_titles.values, type: 'numeric',
       link_info: LinkInfo.new(
-        controller: 'employees',
-        action: 'index',
+        controller: 'employees', action: 'index',
         link_params: [
           LinkParams.new(name: 'title', value_col: 'Role'),
-          params[:squad_id].present? ? LinkParams.new(name: 'squad_id', value: params[:squad_id]) : nil,
-          params[:job_function_group].present? ? LinkParams.new(name: 'job_function_group', value: params[:job_function_group]) : nil,
-          params[:job_function].present? && !params[:job_function_group].present? ? LinkParams.new(name: 'job_function', value: params[:job_function]) : nil
+          (params[:team_id].present?   ? LinkParams.new(name: 'team_id',  value: params[:team_id])  : nil),
+          (params[:job_code].present?  ? LinkParams.new(name: 'job_code', value: params[:job_code]) : nil)
         ].compact
       )
     )
 
     percentages = build_percentages(employee_titles)
-    @table.add_column(
-      label: "Percentage",
-      values: percentages,
-      type: "percentage"
-    )
+    @table.add_column(label: 'Percentage', values: percentages, type: 'percentage')
 
-    # Create chart data
     @chart_data = ChartData.new(
-      labels: employee_titles.keys,
-      data: employee_titles.values,
-      percentages: percentages,
-      chart_id: "rolesChart",
-      label_x_axis: "# of Employees"
+      labels: employee_titles.keys, data: employee_titles.values, percentages: percentages,
+      chart_id: 'rolesChart', label_x_axis: '# of Employees'
     )
 
-    # Render the generic view
     render 'report'
   end
 
   def title_density
-    title = params[:title]
+    title     = params[:title]
     max_depth = params[:max_depth] || 1
-    squad_id = params[:squad_id]
+    team_id   = params[:team_id]
 
-    @report_title = "Title Density Report"
+    @report_title    = 'Title Density Report'
     @report_subtitle = title ? "#{title} (Depth: #{max_depth})" : "All Titles (Depth: #{max_depth})"
-    @back_link = nil
+    @back_link       = nil
 
-    # Build data with optional squad filtering
-    base_squad_query = Squad.where(data_version_id: @current_data_version.id)
+    base_team_query = Team.where(data_version_id: @current_data_version.id)
 
-    # If squad_id is provided, filter to that squad and its descendants
-    if squad_id.present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(squad_id)
-      squad_title = title ? "#{title} - #{parent_squad.full_path}" : "All Titles - #{parent_squad.full_path}"
+    if team_id.present?
+      parent_team = base_team_query.find(team_id)
+      squad_title = title ? "#{title} - #{parent_team.full_path}" : "All Titles - #{parent_team.full_path}"
       @report_subtitle = "#{squad_title} (Depth: #{max_depth})"
-
-      # Add back link to the parent squad or general report
-      if parent_squad.parent
-        # When going back to parent, use the current max_depth (same level)
-        back_params = { controller: 'reports', action: 'title_density', squad_id: parent_squad.parent.id, max_depth: max_depth }
-        back_params[:title] = title if title.present?
-
-        @back_link = {
-          text: "← Back to #{parent_squad.parent.full_path}",
-          url: url_for(back_params)
-        }
-      else
-        # When going back to all teams, use max_depth - 1 or default to 1
-        back_max_depth = [max_depth.to_i - 1, 1].max
-        back_params = { controller: 'reports', action: 'title_density', max_depth: back_max_depth }
-        back_params[:title] = title if title.present?
-
-        @back_link = {
-          text: "← Back to All Teams",
-          url: url_for(back_params)
-        }
-      end
-
-      # Find all squads that are children of the specified squad (using full_path hierarchy)
-      base_squad_query = base_squad_query.where(
-        "full_path = ? OR full_path LIKE ?",
-        parent_squad.full_path,
-        "#{parent_squad.full_path} > %"
-      )
+      @back_link = build_back_link(parent_team, :title_density, max_depth, title: title)
+      base_team_query = base_team_query.where('full_path = ? OR full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
     end
 
-    # Get all squads with the specified max depth
-    squads = base_squad_query
-      .where(!max_depth.nil? ? { depth: max_depth } : {})
-      .order('squads.org_members DESC')
+    teams       = base_team_query.where(depth: max_depth).order('teams.org_member_count DESC')
+    teams_hash  = teams.map { |t| [t.full_path, [0, t.org_member_count || 0]] }.to_h
+    team_id_map = teams.map { |t| [t.full_path, t.id] }.to_h
 
-    # Initialize squads hash with zero counts
-    squads_hash = squads.map { |squad| [squad.full_path, [0, squad.org_members || 0]] }.to_h
-
-    # Get all squads with the specified title, applying the same squad filter
-    squad_employee_query = Squad.joins(squads_employees: :employee)
-      .where(squads: { data_version_id: @current_data_version.id })
+    team_emp_query = Team.joins(teams_employees: :employee)
+      .where(teams: { data_version_id: @current_data_version.id })
       .where(employees: { data_version_id: @current_data_version.id })
-      .where(!title.nil? ? {employees: { title: title }} : {} )
+      .then { |q| title.present? ? q.where(employees: { title: title }) : q }
 
-    # Apply the same squad filtering to the employee query
-    if squad_id.present?
-      squad_employee_query = squad_employee_query.where(
-        "squads.full_path = ? OR squads.full_path LIKE ?",
-        parent_squad.full_path,
-        "#{parent_squad.full_path} > %"
-      )
+    if team_id.present?
+      team_emp_query = team_emp_query.where('teams.full_path = ? OR teams.full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
     end
 
-    squad_employee_roles = squad_employee_query
-      .group(:full_path)
-      .select('squads.full_path, COUNT(DISTINCT employees.id) AS employee_count')
-      .order('squads.full_path')
-
-    squad_employee_roles.each do |squad|
-      squads_hash.each_key do |key|
-        squads_hash[key][0] += squad.employee_count if squad.full_path.starts_with?(key)
+    team_emp_query.group(:full_path)
+      .select('teams.full_path, COUNT(DISTINCT employees.id) AS employee_count')
+      .each do |row|
+        teams_hash.each_key { |key| teams_hash[key][0] += row.employee_count if row.full_path.starts_with?(key) }
       end
-    end
 
-    teams = squads_hash.keys
-    counts = squads_hash.values.map{ |v| v[0] }
-    org_sizes = squads.map { |squad| squad.org_members || 0 }
-    proportions = squads_hash.values.map { |v| v[1] > 0 ? (v[0].to_f / v[1]) * 100 : 0 }
-    percentages = build_percentages(squads_hash.map{|k, v| [k, v[0]] }.to_h)
+    counts      = teams_hash.values.map { |v| v[0] }
+    org_sizes   = teams.map { |t| t.org_member_count || 0 }
+    proportions = teams_hash.values.map { |v| v[1] > 0 ? (v[0].to_f / v[1]) * 100 : 0 }
+    percentages = build_percentages(teams_hash.map { |k, v| [k, v[0]] }.to_h)
 
-    # Create a mapping of team names to squad IDs for linking
-    squad_id_lookup = squads.map { |squad| [squad.full_path, squad.id] }.to_h
+    link_params = [LinkParams.new(name: 'team_id', value_col: 'Team', lookup: team_id_map)]
+    link_params << LinkParams.new(name: 'title', value: title) if title.present?
+    link_params << LinkParams.new(name: 'max_depth', value: max_depth.to_i + 1)
 
-    # Build table
     @table = TableColumns.new
-
-    # Build link parameters for drilling down into specific squads
-    link_params = [LinkParams.new(name: 'squad_id', value_col: 'Team', lookup: squad_id_lookup)]
-
-    # If we have a title parameter, pass it along
-    if title.present?
-      link_params << LinkParams.new(name: 'title', value: title)
-    end
-
-    # Add incremented max_depth for drill down
-    next_max_depth = max_depth.to_i + 1
-    link_params << LinkParams.new(name: 'max_depth', value: next_max_depth)
-
     @table.add_column(
-      label: "Team",
-      type: "string",
-      values: teams,
-      link_info: LinkInfo.new(
-        controller: 'reports',
-        action: 'title_density',
-        link_params: link_params
-      )
+      label: 'Team', type: 'string', values: teams_hash.keys,
+      link_info: LinkInfo.new(controller: 'reports', action: 'title_density', link_params: link_params)
     )
-    @table.add_column(label: "# of Employees", type: "numeric", values: counts)
-    @table.add_column(label: "Org Size", type: "numeric", values: org_sizes)
-    @table.add_column(label: "% of Org Size", type: "percentage", values: proportions)
+    @table.add_column(label: '# of Employees', type: 'numeric',     values: counts)
+    @table.add_column(label: 'Org Size',        type: 'numeric',     values: org_sizes)
+    @table.add_column(label: '% of Org Size',   type: 'percentage',  values: proportions)
 
-    # Build chart
-    @chart_data = ChartData.new(
-      labels: teams,
-      data: counts,
-      percentages: percentages,
-      chart_id: 'titleDensityChart',
-      label_x_axis: '# of Employees'
-    )
+    @chart_data = ChartData.new(labels: teams_hash.keys, data: counts, percentages: percentages, chart_id: 'titleDensityChart', label_x_axis: '# of Employees')
 
-    # Render the report
-    respond_to do |format|
-      format.html { render 'report' }
-    end
+    respond_to { |f| f.html { render 'report' } }
   end
 
-  def job_function_density
-    job_function = params[:job_function]
+  def job_code_density
+    job_code  = params[:job_code]
     max_depth = params[:max_depth] || 1
-    squad_id = params[:squad_id]
+    team_id   = params[:team_id]
 
-    @report_title = "Job Function Density Report"
-    @report_subtitle = job_function ? "#{job_function} (Depth: #{max_depth})" : "All Job Functions (Depth: #{max_depth})"
-    @back_link = nil
+    @report_title    = 'Job Code Density Report'
+    @report_subtitle = job_code ? "#{job_code} (Depth: #{max_depth})" : "All Job Codes (Depth: #{max_depth})"
+    @back_link       = nil
 
-    # Build data with optional squad filtering - filter by current data version
-    base_squad_query = Squad.where(data_version_id: @current_data_version.id)
+    base_team_query = Team.where(data_version_id: @current_data_version.id)
 
-    # If squad_id is provided, filter to that squad and its descendants
-    if squad_id.present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(squad_id)
-      squad_title = job_function ? "#{job_function} - #{parent_squad.full_path}" : "All Job Functions - #{parent_squad.full_path}"
+    if team_id.present?
+      parent_team = base_team_query.find(team_id)
+      squad_title = job_code ? "#{job_code} - #{parent_team.full_path}" : "All Job Codes - #{parent_team.full_path}"
       @report_subtitle = "#{squad_title} (Depth: #{max_depth})"
-
-      # Add back link to the parent squad or general report
-      if parent_squad.parent
-        # When going back to parent, use the current max_depth (same level)
-        back_params = { controller: 'reports', action: 'job_function_density', squad_id: parent_squad.parent.id, max_depth: max_depth }
-        back_params[:job_function] = job_function if job_function.present?
-
-        @back_link = {
-          text: "← Back to #{parent_squad.parent.full_path}",
-          url: url_for(back_params)
-        }
-      else
-        # When going back to all teams, use max_depth - 1 or default to 1
-        back_max_depth = [max_depth.to_i - 1, 1].max
-        back_params = { controller: 'reports', action: 'job_function_density', max_depth: back_max_depth }
-        back_params[:job_function] = job_function if job_function.present?
-
-        @back_link = {
-          text: "← Back to All Teams",
-          url: url_for(back_params)
-        }
-      end
-
-      # Find all squads that are children of the specified squad (using full_path hierarchy)
-      base_squad_query = base_squad_query.where(
-        "full_path = ? OR full_path LIKE ?",
-        parent_squad.full_path,
-        "#{parent_squad.full_path} > %"
-      )
+      @back_link = build_back_link(parent_team, :job_code_density, max_depth, job_code: job_code)
+      base_team_query = base_team_query.where('full_path = ? OR full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
     end
 
-    # Get all squads with the specified max depth
-    squads = base_squad_query
-      .where(!max_depth.nil? ? { depth: max_depth } : {})
-      .order('squads.org_members DESC')
+    teams       = base_team_query.where(depth: max_depth).order('teams.org_member_count DESC')
+    teams_hash  = teams.map { |t| [t.full_path, [0, t.org_member_count || 0]] }.to_h
+    team_id_map = teams.map { |t| [t.full_path, t.id] }.to_h
 
-    # Initialize squads hash with zero counts
-    squads_hash = squads.map { |squad| [squad.full_path, [0, squad.org_members || 0]] }.to_h
-
-    # Get all squads with the specified job_function, applying the same squad filter - filter by current data version
-    squad_employee_query = Squad.joins(squads_employees: :employee)
-      .where(squads: { data_version_id: @current_data_version.id })
+    team_emp_query = Team.joins(teams_employees: :employee)
+      .where(teams: { data_version_id: @current_data_version.id })
       .where(employees: { data_version_id: @current_data_version.id })
-      .where(!job_function.nil? ? {employees: { job_function: job_function }} : {} )
+      .then { |q| job_code.present? ? q.where(employees: { job_code: job_code }) : q }
 
-    # Apply the same squad filtering to the employee query
-    if squad_id.present?
-      squad_employee_query = squad_employee_query.where(
-        "squads.full_path = ? OR squads.full_path LIKE ?",
-        parent_squad.full_path,
-        "#{parent_squad.full_path} > %"
-      )
+    if team_id.present?
+      team_emp_query = team_emp_query.where('teams.full_path = ? OR teams.full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
     end
 
-    squad_employee_roles = squad_employee_query
-      .group(:full_path)
-      .select('squads.full_path, COUNT(DISTINCT employees.id) AS employee_count')
-      .order('squads.full_path')
-
-    squad_employee_roles.each do |squad|
-      squads_hash.each_key do |key|
-        squads_hash[key][0] += squad.employee_count if squad.full_path.starts_with?(key)
+    team_emp_query.group(:full_path)
+      .select('teams.full_path, COUNT(DISTINCT employees.id) AS employee_count')
+      .each do |row|
+        teams_hash.each_key { |key| teams_hash[key][0] += row.employee_count if row.full_path.starts_with?(key) }
       end
-    end
 
-    teams = squads_hash.keys
-    counts = squads_hash.values.map{ |v| v[0] }
-    org_sizes = squads.map { |squad| squad.org_members || 0 }
-    proportions = squads_hash.values.map { |v| v[1] > 0 ? (v[0].to_f / v[1]) * 100 : 0 }
-    percentages = build_percentages(squads_hash.map{|k, v| [k, v[0]] }.to_h)
+    counts      = teams_hash.values.map { |v| v[0] }
+    org_sizes   = teams.map { |t| t.org_member_count || 0 }
+    proportions = teams_hash.values.map { |v| v[1] > 0 ? (v[0].to_f / v[1]) * 100 : 0 }
+    percentages = build_percentages(teams_hash.map { |k, v| [k, v[0]] }.to_h)
 
-    # Create a mapping of team names to squad IDs for linking
-    squad_id_lookup = squads.map { |squad| [squad.full_path, squad.id] }.to_h
+    link_params = [LinkParams.new(name: 'team_id', value_col: 'Team', lookup: team_id_map)]
+    link_params << LinkParams.new(name: 'job_code', value: job_code) if job_code.present?
+    link_params << LinkParams.new(name: 'max_depth', value: max_depth.to_i + 1)
 
-    # Build table
+    action_link_params = [LinkParams.new(name: 'id', value_col: 'Team', lookup: team_id_map)]
+
     @table = TableColumns.new
-
-    # Build link parameters for drilling down into specific squads
-    link_params = [LinkParams.new(name: 'squad_id', value_col: 'Team', lookup: squad_id_lookup)]
-
-    # If we have a job_function parameter, pass it along
-    if job_function.present?
-      link_params << LinkParams.new(name: 'job_function', value: job_function)
-    end
-
-    # Add incremented max_depth for drill down
-    next_max_depth = max_depth.to_i + 1
-    link_params << LinkParams.new(name: 'max_depth', value: next_max_depth)
-
     @table.add_column(
-      label: "Team",
-      type: "string",
-      values: teams,
-      link_info: LinkInfo.new(
-        controller: 'reports',
-        action: 'job_function_density',
-        link_params: link_params
-      )
+      label: 'Team', type: 'string', values: teams_hash.keys,
+      link_info: LinkInfo.new(controller: 'reports', action: 'job_code_density', link_params: link_params)
     )
-    @table.add_column(label: "# of Employees", type: "numeric", values: counts)
-    @table.add_column(label: "% of Total", type: "percentage", values: percentages)
-    @table.add_column(label: "Org Size", type: "numeric", values: org_sizes)
-    @table.add_column(label: "% of Org Size", type: "percentage", values: proportions)
-
-    action_button_labels = teams.map { |team| "View Squad" }
-    action_link_params = [LinkParams.new(name: 'id', value_col: 'Team', lookup: squad_id_lookup)]
-
+    @table.add_column(label: '# of Employees', type: 'numeric',    values: counts)
+    @table.add_column(label: '% of Total',      type: 'percentage', values: percentages)
+    @table.add_column(label: 'Org Size',         type: 'numeric',   values: org_sizes)
+    @table.add_column(label: '% of Org Size',    type: 'percentage', values: proportions)
     @table.add_column(
-      label: "Actions",
-      type: "action",
-      values: action_button_labels,
-      link_info: LinkInfo.new(
-        controller: 'squads',
-        action: 'show',
-        link_params: action_link_params
-      )
+      label: 'Actions', type: 'action', values: teams.map { 'View Team' },
+      link_info: LinkInfo.new(controller: 'teams', action: 'show', link_params: action_link_params)
     )
 
-    # Build chart
-    @chart_data = ChartData.new(
-      labels: teams,
-      data: counts,
-      percentages: percentages,
-      chart_id: 'jobFunctionDensityChart',
-      label_x_axis: '# of Employees'
-    )
+    @chart_data = ChartData.new(labels: teams_hash.keys, data: counts, percentages: percentages, chart_id: 'jobCodeDensityChart', label_x_axis: '# of Employees')
 
-    # Render the report
-    respond_to do |format|
-      format.html { render 'report' }
-    end
+    respond_to { |f| f.html { render 'report' } }
   end
 
   def seniority
-    employee_seniority = Employee.all
-      .where(params[:country].present? ? "country = ?" : "1=1", params[:country])
-      .where(params[:worker_type].present? ? "worker_type = ?" : "1=1", params[:worker_type])
-      .group(:seniority).count.sort_by { |k, v| k }.reverse.to_h
-    @seniorities = employee_seniority.keys
-    @counts = employee_seniority.values
-    @percentages = build_percentages(employee_seniority)
+    @report_title    = 'Seniority Report'
+    @report_subtitle = 'Distribution of employees by job level'
+
+    data = Employee.current
+      .then { |q| params[:country].present?        ? q.where(country: params[:country])               : q }
+      .then { |q| params[:personnel_area].present? ? q.where(personnel_area: params[:personnel_area]) : q }
+      .group(:seniority).count.sort_by { |k, _| k }.reverse.to_h
+
+    @seniorities = data.keys
+    @counts      = data.values
+    @percentages = build_percentages(data)
   end
 
-  def team_geos
-    squad_percentages = Squad.joins(:employees)
-      .select('squads.full_path AS full_path, COUNT(CASE WHEN employees.country = \'Australia\' THEN 1 END) * 100.0 / COUNT(employees.id) AS percentage_australian_employees')
-      .where(params[:descendents].present? ? "descendents = ?" : "1=1", params[:descendents])
-      .group('squads.full_path')
-      .order('percentage_australian_employees DESC')
+  def job_code
+    base_query = employee_base_query
 
-    team_makeup_counts = Hash.new(0)
+    employee_job_codes = base_query.distinct(:person_id).group(:job_code).count
+      .sort_by { |_, v| v }.reverse.to_h
 
-    squad_percentages.each do |squad|
-      percentage = squad.percentage_australian_employees.to_f
-      team_makeup = case
-        when percentage >= 90
-          'Aus team (>= 90%)'
-        when percentage >= 75
-          'Mostly Aus team (>= 75%)'
-        when percentage <= 10
-          'India team (>= 90%)'
-        when percentage <= 25
-          'Mostly India team (>= 75%)'
-        else
-          'Distributed team'
-        end
-      team_makeup_counts[team_makeup] += 1
-    end
-    @team_geos = team_makeup_counts.keys
-    @counts = team_makeup_counts.values
-    @percentages = build_percentages(team_makeup_counts)
-  end
+    @report_title    = 'Job Code Report'
+    @report_subtitle = team_subtitle
 
-  def job_function
-    # Get the data with optional squad filtering
-    base_employee_query = Employee.current.all
-
-    # If squad_id is provided, filter to employees in that squad and its descendants
-    if params[:squad_id].present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(params[:squad_id])
-
-      # Find all squads that are children of the specified squad (using full_path hierarchy)
-      descendant_squads = Squad.where(
-        "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
-        path: parent_squad.full_path,
-        like_path: "#{parent_squad.full_path} > %",
-        data_version_id: @current_data_version.id
-      )
-
-      # Filter employees to only those in the descendant squads
-      base_employee_query = base_employee_query
-        .joins(:squads_employees)
-        .where(squads_employees: { squad_id: descendant_squads.pluck(:id) })
-    end
-
-    if params[:job_function_group].present?
-      employee_job_functions = base_employee_query
-        .where(job_function_group: params[:job_function_group])
-        .distinct(:person_id)
-        .group(:job_function)
-        .count
-        .sort_by { |k, v| v }.reverse.to_h
-    else
-      employee_job_functions = base_employee_query
-        .distinct(:person_id)
-        .group(:job_function)
-        .count
-        .sort_by { |k, v| v }.reverse.to_h
-    end
-
-    # Setup report metadata
-    squad_subtitle = ""
-    if params[:squad_id].present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(params[:squad_id])
-      squad_subtitle = " - #{parent_squad.full_path}"
-    end
-
-    @report_title = "Job Functions Report"
-    @report_subtitle = [
-      (params[:job_function_group].present? ? "Filtered by Job Function Group: #{params[:job_function_group]}" : nil),
-      squad_subtitle.present? ? squad_subtitle : nil
-    ].compact.join("")
-
-    # Create table data using the new model
     @table = TableColumns.new
 
-    # Add columns with linking to job_function_density report
-    link_params = [LinkParams.new(name: 'job_function', value_col: 'Job Function')]
-
-    # If a squad_id parameter is present, pass it along to the job_function_density report
-    if params[:squad_id].present?
-      link_params << LinkParams.new(name: 'squad_id', value: params[:squad_id])
-    end
+    link_params = [LinkParams.new(name: 'job_code', value_col: 'Job Code')]
+    link_params << LinkParams.new(name: 'team_id', value: params[:team_id]) if params[:team_id].present?
 
     @table.add_column(
-      label: "Job Function",
-      values: employee_job_functions.keys,
-      type: "string",
-      link_info: LinkInfo.new(
-        controller: 'reports',
-        action: 'job_function_density',
-        link_params: link_params
-      )
+      label: 'Job Code', values: employee_job_codes.keys, type: 'string',
+      link_info: LinkInfo.new(controller: 'reports', action: 'job_code_density', link_params: link_params)
     )
-
     @table.add_column(
-      label: "Count",
-      values: employee_job_functions.values,
-      type: "numeric",
+      label: 'Count', values: employee_job_codes.values, type: 'numeric',
       link_info: LinkInfo.new(
-        controller: 'reports',
-        action: 'roles',
+        controller: 'reports', action: 'roles',
         link_params: [
-          LinkParams.new(name: 'job_function', value_col: 'Job Function'),
-          params[:squad_id].present? ? LinkParams.new(name: 'squad_id', value: params[:squad_id]) : nil
+          LinkParams.new(name: 'job_code', value_col: 'Job Code'),
+          params[:team_id].present? ? LinkParams.new(name: 'team_id', value: params[:team_id]) : nil
         ].compact
       )
     )
 
-    percentages = build_percentages(employee_job_functions)
-    @table.add_column(
-      label: "Percentage",
-      values: percentages,
-      type: "percentage"
-    )
+    percentages = build_percentages(employee_job_codes)
+    @table.add_column(label: 'Percentage', values: percentages, type: 'percentage')
 
-    # Create chart data
     @chart_data = ChartData.new(
-      labels: employee_job_functions.keys,
-      data: employee_job_functions.values,
-      percentages: percentages,
-      chart_id: "jobFunctionsChart",
-      label_x_axis: "# of Employees"
+      labels: employee_job_codes.keys, data: employee_job_codes.values, percentages: percentages,
+      chart_id: 'jobCodeChart', label_x_axis: '# of Employees'
     )
 
-    # Render the generic view
-    render 'report'
-  end
-
-  def job_function_group
-    # Get the data with optional squad filtering
-    base_employee_query = Employee.current.all
-
-    # If squad_id is provided, filter to employees in that squad and its descendants
-    if params[:squad_id].present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(params[:squad_id])
-
-      # Find all squads that are children of the specified squad (using full_path hierarchy)
-      descendant_squads = Squad.where(
-        "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
-        path: parent_squad.full_path,
-        like_path: "#{parent_squad.full_path} > %",
-        data_version_id: @current_data_version.id
-      )
-
-      # Filter employees to only those in the descendant squads
-      base_employee_query = base_employee_query
-        .joins(:squads_employees)
-        .where(squads_employees: { squad_id: descendant_squads.pluck(:id), data_version_id: @current_data_version.id })
-    end
-
-    employee_job_function_groups = base_employee_query
-      .distinct(:person_id)
-      .group(:job_function_group)
-      .count
-      .sort_by { |k, v| v }.reverse.to_h
-
-    # Setup report metadata
-    squad_subtitle = ""
-    if params[:squad_id].present?
-      parent_squad = Squad.where(data_version_id: @current_data_version.id).find(params[:squad_id])
-      squad_subtitle = " - #{parent_squad.full_path}"
-    end
-
-    @report_title = "Job Function Group Report"
-    @report_subtitle = squad_subtitle
-
-    # Create table data using the new model
-    @table = TableColumns.new
-
-    # Add columns with linking to job_function report
-    link_params = [LinkParams.new(name: 'job_function_group', value_col: 'Job Function Group')]
-
-    # If a squad_id parameter is present, pass it along to the job_function report
-    if params[:squad_id].present?
-      link_params << LinkParams.new(name: 'squad_id', value: params[:squad_id])
-    end
-
-    @table.add_column(
-      label: "Job Function Group",
-      values: employee_job_function_groups.keys,
-      type: "string",
-      link_info: LinkInfo.new(
-        controller: 'reports',
-        action: 'job_function',
-        link_params: link_params
-      )
-    )
-
-    @table.add_column(
-      label: "Count",
-      values: employee_job_function_groups.values,
-      type: "numeric",
-      link_info: LinkInfo.new(
-        controller: 'reports',
-        action: 'roles',
-        link_params: [
-          LinkParams.new(name: 'job_function_group', value_col: 'Job Function Group'),
-          params[:squad_id].present? ? LinkParams.new(name: 'squad_id', value: params[:squad_id]) : nil
-        ].compact
-      )
-    )
-
-    percentages = build_percentages(employee_job_function_groups)
-    @table.add_column(
-      label: "Percentage",
-      values: percentages,
-      type: "percentage"
-    )
-
-    # Create chart data
-    @chart_data = ChartData.new(
-      labels: employee_job_function_groups.keys,
-      data: employee_job_function_groups.values,
-      percentages: percentages,
-      chart_id: "jobFunctionGroupChart",
-      label_x_axis: "# of Employees"
-    )
-
-    # Render the generic view
     render 'report'
   end
 
   def employee_country
-    # Get employee country data filtered by current data version
-    employee_countries = Employee.current.group(:country).count.sort_by { |k, v| v }.reverse.to_h
+    data = Employee.current.group(:country).count.sort_by { |_, v| v }.reverse.to_h
 
-    # Setup report metadata
-    @report_title = "Employee Countries Report"
-    @report_subtitle = "Distribution of employees by country"
-
-    # Build table and chart using helper
-    build_simple_count_report(employee_countries, "Country", "employeeCountryChart", "# of Employees")
-
-    # Render the generic view
+    @report_title    = 'Employee Countries Report'
+    @report_subtitle = 'Distribution of employees by country'
+    build_simple_count_report(data, 'Country', 'employeeCountryChart', '# of Employees')
     render 'report'
   end
 
-  def employee_worker_type
-    # Get employee worker type data filtered by current data version
-    employee_worker_types = Employee.current.group(:worker_type).count.sort_by { |k, v| v }.reverse.to_h
+  def personnel_area
+    data = Employee.current.group(:personnel_area).count.sort_by { |_, v| v }.reverse.to_h
 
-    # Setup report metadata
-    @report_title = "Employee Worker Types Report"
-    @report_subtitle = "Distribution of employees by worker type"
-
-    # Build table and chart using helper
-    build_simple_count_report(employee_worker_types, "Worker Type", "employeeWorkerTypeChart", "# of Employees")
-
-    # Render the generic view
+    @report_title    = 'Personnel Area Report'
+    @report_subtitle = 'Distribution of employees by personnel area'
+    build_simple_count_report(data, 'Personnel Area', 'personnelAreaChart', '# of Employees')
     render 'report'
   end
 
-  def employee_country_worker_type
-    employee_country_worker_types = Employee.all.group(:country, :worker_type).count.sort_by { |k, v| k[0] }.reverse.to_h
-    employee_country_worker_types = employee_country_worker_types.map { |k,v| [k[0] + ", " + k[1],v] }.reverse.to_h
-    @country_worker_types = employee_country_worker_types.keys
-    @counts = employee_country_worker_types.values
-    @percentages = build_percentages(employee_country_worker_types)
-  end
+  def company
+    data = Employee.current.group(:company).count.sort_by { |_, v| v }.reverse.to_h
 
-  def squad_size
-    squad_sizes = Squad.all.group(:squad_members).count.sort_by { |k, v| k }.reverse.to_h
-    @sizes = squad_sizes.keys
-    @counts = squad_sizes.values
-    @percentages = build_percentages(squad_sizes)
+    @report_title    = 'Company / Subsidiary Report'
+    @report_subtitle = 'Distribution of employees by company'
+    build_simple_count_report(data, 'Company', 'companyChart', '# of Employees')
+    render 'report'
   end
 
   def management_ratios
-    # Get team sizes for current version employees only
-    base_employee_query = Employee.where(data_version_id: @current_data_version.id)
+    base_query = Employee.where(data_version_id: @current_data_version.id)
 
-    # If squad_id is provided, filter to employees in that squad and its descendants
-    if params[:squad_id].present?
-      parent_squad = Squad.find(params[:squad_id])
-
-      # Find all squads that are children of the specified squad (using full_path hierarchy)
-      descendant_squads = Squad.where(
+    if params[:team_id].present?
+      parent_team      = Team.find(params[:team_id])
+      descendant_teams = Team.where(
         "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
-        path: parent_squad.full_path,
-        like_path: "#{parent_squad.full_path} > %",
+        path: parent_team.full_path, like_path: "#{parent_team.full_path} > %",
         data_version_id: @current_data_version.id
       )
-
-      # Filter employees to only those in the descendant squads
-      base_employee_query = base_employee_query
-        .joins(:squads_employees)
-        .where(squads_employees: { squad_id: descendant_squads.pluck(:id), data_version_id: @current_data_version.id })
+      base_query = base_query.joins(:teams_employees)
+        .where(teams_employees: { team_id: descendant_teams.pluck(:id), data_version_id: @current_data_version.id })
     end
 
-    subquery = base_employee_query.group(:manager_id).select('COUNT(*) AS team_size')
+    subquery       = base_query.group(:manager_id).select('COUNT(*) AS team_size')
     all_team_sizes = Employee.from(subquery, :A).group(:team_size).order(team_size: :desc).count
-    agg_team_sizes = {"> 15" => 0, "11-15" => 0, "5-10" => 0, "3-4" => 0, "1-2" => 0}
-    all_team_sizes.keys.each do |key|
-      if key > 15
-        agg_team_sizes["> 15"] += all_team_sizes[key]
-      elsif key > 10
-        agg_team_sizes["11-15"] += all_team_sizes[key]
-      elsif key > 4
-        agg_team_sizes["5-10"] += all_team_sizes[key]
-      elsif key > 2
-        agg_team_sizes["3-4"] += all_team_sizes[key]
-      else
-        agg_team_sizes["1-2"] += all_team_sizes[key]
-      end
+
+    agg = { '> 15' => 0, '11-15' => 0, '5-10' => 0, '3-4' => 0, '1-2' => 0 }
+    all_team_sizes.each do |size, count|
+      bucket = size > 15 ? '> 15' : size > 10 ? '11-15' : size > 4 ? '5-10' : size > 2 ? '3-4' : '1-2'
+      agg[bucket] += count
     end
 
-    # Setup report metadata
-    squad_subtitle = ""
-    if params[:squad_id].present?
-      parent_squad = Squad.find(params[:squad_id])
-      squad_subtitle = " - #{parent_squad.full_path}"
-    end
+    @report_title    = 'Management Ratios Report'
+    @report_subtitle = params[:team_id].present? ? " - #{Team.find(params[:team_id]).full_path}" : ''
 
-    @report_title = "Management Ratios Report"
-    @report_subtitle = squad_subtitle
-
-    # Create table data using the new model
+    percentages = build_percentages(agg)
     @table = TableColumns.new
+    @table.add_column(label: 'Manager Team Size', values: agg.keys,   type: 'string')
+    @table.add_column(label: 'Count',             values: agg.values, type: 'numeric')
+    @table.add_column(label: 'Percentage',        values: percentages, type: 'percentage')
 
-    @table.add_column(
-      label: "Manager Team Size",
-      values: agg_team_sizes.keys,
-      type: "string"
-    )
+    @chart_data = ChartData.new(labels: agg.keys, data: agg.values, percentages: percentages, chart_id: 'managementRatiosChart', label_x_axis: '# of Managers')
 
-    @table.add_column(
-      label: "Count",
-      values: agg_team_sizes.values,
-      type: "numeric"
-    )
-
-    percentages = build_percentages(agg_team_sizes)
-    @table.add_column(
-      label: "Percentage",
-      values: percentages,
-      type: "percentage"
-    )
-
-    # Create chart data
-    @chart_data = ChartData.new(
-      labels: agg_team_sizes.keys,
-      data: agg_team_sizes.values,
-      percentages: percentages,
-      chart_id: "managementRatiosChart",
-      label_x_axis: "# of Managers"
-    )
-
-    # Render the generic view
     render 'report'
   end
 
-  def squad_depth
-    # Get squad depth data with data version filtering
-    squad_depths = Squad.where(data_version_id: @current_data_version.id)
-      .group(:depth)
-      .count
-      .sort_by { |k, v| k }
-      .reverse
-      .to_h
+  def team_depth
+    data = Team.where(data_version_id: @current_data_version.id)
+      .group(:depth).count.sort_by { |k, _| k }.reverse.to_h
 
-    @report_title = "Squad Depth Report"
-    @report_subtitle = ""
+    @report_title    = 'Team Depth Report'
+    @report_subtitle = ''
+    percentages      = build_percentages(data)
 
-    # Prepare data for table and chart
-    depths = squad_depths.keys
-    counts = squad_depths.values
-    percentages = build_percentages(squad_depths)
-
-    # Build table
     @table = TableColumns.new
-    @table.add_column(label: "Squad Depth", type: "string", values: depths)
-    @table.add_column(label: "# of Squads", type: "numeric", values: counts)
-    @table.add_column(label: "% of Total", type: "percentage", values: percentages)
+    @table.add_column(label: 'Team Depth',    type: 'string',     values: data.keys)
+    @table.add_column(label: '# of Teams',    type: 'numeric',    values: data.values)
+    @table.add_column(label: '% of Total',    type: 'percentage', values: percentages)
 
-    # Build chart
-    @chart_data = ChartData.new(
-      labels: depths,
-      data: counts,
-      percentages: percentages,
-      chart_id: 'squadDepthChart',
-      label_x_axis: '# of Squads'
-    )
+    @chart_data = ChartData.new(labels: data.keys, data: data.values, percentages: percentages, chart_id: 'teamDepthChart', label_x_axis: '# of Teams')
 
-    # Render the generic report template
-    respond_to do |format|
-      format.html { render 'report' }
-    end
+    respond_to { |f| f.html { render 'report' } }
   end
 
-  def squad_children
-    squad_children = Squad.all.group(:children).count.sort_by { |k, v| k }.reverse.to_h
-    @children = squad_children.keys
-    @counts = squad_children.values
-    @percentages = build_percentages(squad_children)
+  def team_size
+    data = Team.where(data_version_id: @current_data_version.id)
+      .group(:member_count).count.sort_by { |k, _| k }.reverse.to_h
+
+    @report_title    = 'Team Size Report'
+    @report_subtitle = 'Distribution of teams by member count'
+    build_simple_count_report(data, 'Team Size', 'teamSizeChart', '# of Teams')
+    render 'report'
   end
 
-  def squad_members_managers
-    squad_members_managers = Squad.all.group(:squad_members_managers).count.sort_by { |k, v| k }.reverse.to_h
-    @managers = squad_members_managers.keys
-    @counts = squad_members_managers.values
-    @percentages = build_percentages(squad_members_managers)
+  def team_health
+    data = Team.where(data_version_id: @current_data_version.id)
+      .group(:team_health).count.sort_by { |_, v| v }.reverse.to_h
+
+    @healths     = data.keys
+    @counts      = data.values
+    @percentages = build_percentages(data)
   end
 
-  def squad_health
-    squad_healths = Squad.all.group(:squad_health).count.sort_by { |k, v| v }.reverse.to_h
-    @healths = squad_healths.keys
-    @counts = squad_healths.values
-    @percentages = build_percentages(squad_healths)
+  def team_health_details
+    data = Team.where(data_version_id: @current_data_version.id)
+      .group(:team_health_details).count.sort_by { |_, v| v }.reverse.to_h
+
+    @details     = data.keys
+    @counts      = data.values
+    @percentages = build_percentages(data)
   end
 
-  def squad_health_details
-    squad_health_details = Squad.all.group(:squad_health_details).count.sort_by { |k, v| v }.reverse.to_h
-    @details = squad_health_details.keys
-    @counts = squad_health_details.values
-    @percentages = build_percentages(squad_health_details)
+  def team_children
+    data = Team.where(data_version_id: @current_data_version.id)
+      .group(:children).count.sort_by { |k, _| k }.reverse.to_h
+
+    @children    = data.keys
+    @counts      = data.values
+    @percentages = build_percentages(data)
   end
 
-  def employee_allocations
-    employee_allocations = SquadsEmployee.all.group(:allocation).count.sort_by { |k, v| k }.reverse.to_h
-    employee_allocations = employee_allocations.map { |k, v| [(1/k).round(0), v/(1/k).round(0)] }.to_h
-    @allocations = employee_allocations.keys
-    @counts = employee_allocations.values
-    @percentages = build_percentages(employee_allocations)
+  def team_members_managers
+    data = Team.where(data_version_id: @current_data_version.id)
+      .group(:manager_count).count.sort_by { |k, _| k }.reverse.to_h
+
+    @managers    = data.keys
+    @counts      = data.values
+    @percentages = build_percentages(data)
   end
 
   private
 
-  # Helper method to build standard table and chart for simple count-based reports
-  def build_simple_count_report(data_hash, label_column_name, chart_id, x_axis_label = "# of Items")
-    # Create table data
+  def employee_base_query
+    query = Employee.current
+
+    if params[:team_id].present?
+      parent_team      = Team.where(data_version_id: @current_data_version.id).find_by(id: params[:team_id])
+      if parent_team
+        descendant_teams = Team.where(
+          "(full_path = :path OR full_path LIKE :like_path) AND data_version_id = :data_version_id",
+          path: parent_team.full_path, like_path: "#{parent_team.full_path} > %",
+          data_version_id: @current_data_version.id
+        )
+        query = query.joins(:teams_employees).where(teams_employees: { team_id: descendant_teams.pluck(:id) })
+      end
+    end
+
+    query
+  end
+
+  def filtered_by_job_code(query)
+    params[:job_code].present? ? query.where(job_code: params[:job_code]) : query
+  end
+
+  def team_subtitle
+    return '' unless params[:team_id].present?
+
+    team = Team.where(data_version_id: @current_data_version.id).find_by(id: params[:team_id])
+    team ? " - #{team.full_path}" : ''
+  end
+
+  def build_back_link(parent_team, action, max_depth, extra_params = {})
+    if parent_team.parent
+      back_params = { controller: 'reports', action: action, team_id: parent_team.parent.id, max_depth: max_depth }.merge(extra_params)
+      { text: "← Back to #{parent_team.parent.full_path}", url: url_for(back_params) }
+    else
+      back_max_depth = [max_depth.to_i - 1, 1].max
+      back_params    = { controller: 'reports', action: action, max_depth: back_max_depth }.merge(extra_params)
+      { text: '← Back to All Teams', url: url_for(back_params) }
+    end
+  end
+
+  def build_simple_count_report(data_hash, label_col, chart_id, x_axis_label = '# of Items')
     @table = TableColumns.new
-
-    @table.add_column(
-      label: label_column_name,
-      values: data_hash.keys,
-      type: "string"
-    )
-
-    @table.add_column(
-      label: "Count",
-      values: data_hash.values,
-      type: "numeric"
-    )
-
+    @table.add_column(label: label_col,   values: data_hash.keys,   type: 'string')
+    @table.add_column(label: 'Count',     values: data_hash.values, type: 'numeric')
     percentages = build_percentages(data_hash)
-    @table.add_column(
-      label: "Percentage",
-      values: percentages,
-      type: "percentage"
-    )
-
-    # Create chart data
-    @chart_data = ChartData.new(
-      labels: data_hash.keys,
-      data: data_hash.values,
-      percentages: percentages,
-      chart_id: chart_id,
-      label_x_axis: x_axis_label
-    )
+    @table.add_column(label: 'Percentage', values: percentages,     type: 'percentage')
+    @chart_data = ChartData.new(labels: data_hash.keys, data: data_hash.values, percentages: percentages, chart_id: chart_id, label_x_axis: x_axis_label)
   end
 
   def build_percentages(data)
-    sum = 0
-    data.each do |key, value|
-      sum += value
-    end
-
-    percentages = []
-    data.each do |key, value|
-      percentages << (value.to_f / sum * 100).round(2)
-    end
-
-    percentages
+    sum = data.values.sum
+    data.values.map { |v| sum > 0 ? (v.to_f / sum * 100).round(2) : 0 }
   end
 end
