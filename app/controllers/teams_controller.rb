@@ -119,7 +119,7 @@ class TeamsController < ApplicationController
     candidates = Team.where(data_version_id: current_version.id)
       .where.not(id: excluded)
       .order(:full_path)
-    render json: candidates.map { |t| { id: t.id, name: t.name, full_path: t.full_path, depth: t.depth } }
+    render json: candidates.map { |t| { id: t.id, name: t.pretty_name.presence || t.name, full_path: t.full_path, depth: t.depth } }
   end
 
   def move

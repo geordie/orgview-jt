@@ -13,7 +13,7 @@
       <% end %>
       <button class="btn btn-outline-secondary btn-sm ms-2"
               data-bs-toggle="modal" data-bs-target="#moveTeamModal"
-              data-team-id="<%= @team.id %>" data-team-name="<%= @team.name %>">
+              data-team-id="<%= @team.id %>" data-team-name="<%= @team.pretty_name.presence || @team.name %>">
         Move Team
       </button>
     </div>
