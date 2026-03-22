@@ -110,6 +110,11 @@
           span.innerHTML = '<span class="text-muted small">—</span>';
         }
         input.replaceWith(span);
+        const moveBtn = span.closest('tr')?.querySelector('button[data-bs-target="#moveTeamModal"]');
+        if (moveBtn) {
+          const teamName = span.closest('tr')?.querySelector('td a')?.textContent?.trim() || '';
+          moveBtn.dataset.teamName = value || teamName;
+        }
       })
       .catch(() => {
         alert('Failed to save. Please try again.');
