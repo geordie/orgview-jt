@@ -71,7 +71,7 @@
       li.style.cursor = 'pointer';
       li.style.paddingLeft = `${(c.depth * 16) + 12}px`;
       li.dataset.parentId = c.id;
-      li.textContent = c.full_path;
+      li.textContent = c.name;
       list.appendChild(li);
     });
 
@@ -87,7 +87,7 @@
 
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.toLowerCase();
-    const filtered = allCandidates.filter(c => c.full_path.toLowerCase().includes(q));
+    const filtered = allCandidates.filter(c => c.name.toLowerCase().includes(q));
     renderList(filtered);
   });
 
