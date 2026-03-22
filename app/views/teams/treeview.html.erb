@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			id: <%= team.id %>,
 			parent: <%= team.parent_id || "null" %>,
 			title: "<%= team.name %>",
+			pretty_name: "<%= team.pretty_name.presence || team.name %>",
 			full_path: "<%= team.full_path %>",
 			org_member_count: <%= team.org_member_count %>,
 			member_count: <%= team.member_count %>,
@@ -107,9 +108,9 @@ function onTemplateRender(event, data) {
 		var element = data.element;
 
 		element.firstChild.style.backgroundColor = itemConfig.itemTitleColor || primitives.Colors.RoyalBlue;
-		element.firstChild.firstChild.textContent = itemConfig.title;
+		element.firstChild.firstChild.textContent = itemConfig.pretty_name || itemConfig.title;
 
-		element.childNodes[1].innerHTML = '<strong>ID:</strong> ' + itemConfig.id;
+		element.childNodes[1].innerHTML = '<strong>' + itemConfig.title + '</strong>';
 		element.childNodes[2].innerHTML = '<strong>Org Size:</strong> ' + itemConfig.org_member_count;
 		element.childNodes[3].innerHTML = '<strong>Team Size:</strong> ' + itemConfig.member_count;
 		element.childNodes[4].innerHTML = '<strong>Managers:</strong> ' + itemConfig.manager_count;
@@ -153,6 +154,7 @@ function getSubTeams(parentId) {
 					id: sub_team.sub_team.id,
 					parent: parentId,
 					title: sub_team.sub_team.name,
+					pretty_name: sub_team.sub_team.pretty_name || sub_team.sub_team.name,
 					full_path: sub_team.sub_team.full_path,
 					org_member_count: sub_team.sub_team.org_member_count,
 					member_count: sub_team.sub_team.member_count,
@@ -181,7 +183,7 @@ function getTeamTemplate() {
 	var result = new primitives.TemplateConfig();
 	result.name = "teamTemplate";
 
-	result.itemSize = new primitives.Size(240, 150);
+	result.itemSize = new primitives.Size(240, 175);
 	result.minimizedItemSize = new primitives.Size(12, 12);
 
 	result.itemTemplate = ["div",
@@ -223,10 +225,10 @@ function getTeamTemplate() {
 			{
 				name: "team_id",
 				style: {
-					top: "30px",
+					top: "27px",
 					left: "10px",
-					width: "162px",
-					height: "36px",
+					width: "220px",
+					height: "18px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
@@ -237,10 +239,10 @@ function getTeamTemplate() {
 			{
 				name: "org_member_count",
 				style: {
-					top: "30px",
-					left: "110px",
-					width: "162px",
-					height: "36px",
+					top: "50px",
+					left: "10px",
+					width: "110px",
+					height: "20px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
@@ -252,9 +254,9 @@ function getTeamTemplate() {
 				name: "member_count",
 				style: {
 					top: "50px",
-					left: "10px",
-					width: "162px",
-					height: "36px",
+					left: "120px",
+					width: "110px",
+					height: "20px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
@@ -267,8 +269,8 @@ function getTeamTemplate() {
 				style: {
 					top: "70px",
 					left: "10px",
-					width: "162px",
-					height: "36px",
+					width: "110px",
+					height: "20px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
@@ -279,10 +281,10 @@ function getTeamTemplate() {
 			{
 				name: "children",
 				style: {
-					top: "50px",
-					left: "110px",
-					width: "162px",
-					height: "36px",
+					top: "70px",
+					left: "120px",
+					width: "110px",
+					height: "20px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
@@ -293,10 +295,10 @@ function getTeamTemplate() {
 			{
 				name: "descendents",
 				style: {
-					top: "70px",
-					left: "110px",
-					width: "162px",
-					height: "36px",
+					top: "90px",
+					left: "10px",
+					width: "220px",
+					height: "20px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
@@ -307,10 +309,10 @@ function getTeamTemplate() {
 			{
 				name: "health-heading",
 				style: {
-					top: "90px",
+					top: "114px",
 					left: "10px",
-					width: "200px",
-					height: "24px",
+					width: "220px",
+					height: "18px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
@@ -321,10 +323,10 @@ function getTeamTemplate() {
 			{
 				name: "health-details",
 				style: {
-					top: "110px",
+					top: "132px",
 					left: "10px",
-					width: "200px",
-					height: "52px",
+					width: "220px",
+					height: "40px",
 					fontSize: "12px",
 					overflow: "hidden"
 				},
