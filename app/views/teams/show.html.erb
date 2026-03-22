@@ -1,8 +1,22 @@
-<h1>Team Overview: <%= @team.name %></h1>
+<h1>Team Overview: <%= @team.pretty_name.presence || @team.name %></h1>
 
 
 <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
   <h2>Team Summary</h2>
+  <div class="row">
+    <div class="col-2"><strong>Pretty Name</strong></div>
+    <div class="col-10">
+      <span class="pn-display"
+            data-team-id="<%= @team.id %>"
+            data-original="<%= @team.pretty_name.to_s %>">
+        <%= @team.pretty_name.presence || '<span class="text-muted small">—</span>'.html_safe %>
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-2"><strong>Name</strong></div>
+    <div class="col-10"><%= @team.name %></div>
+  </div>
   <div class="row">
     <div class="col-2"><strong>Parent</strong></div>
     <div class="col-10">
@@ -41,6 +55,69 @@
 </div>
 
 <%= render 'move_modal' %>
+
+<script>
+(function () {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  function startEdit(span) {
+    const original = span.dataset.original;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = original;
+    input.className = 'form-control form-control-sm';
+    input.style.width = '220px';
+    span.replaceWith(input);
+    input.focus();
+    input.select();
+
+    function save() {
+      const value = input.value.trim();
+      const teamId = span.dataset.teamId;
+      fetch(`/teams/${teamId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ team: { pretty_name: value } })
+      })
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(() => {
+        span.dataset.original = value;
+        if (value) {
+          span.textContent = value;
+        } else {
+          span.innerHTML = '<span class="text-muted small">—</span>';
+        }
+        input.replaceWith(span);
+        const moveBtn = document.querySelector('button[data-bs-target="#moveTeamModal"]');
+        if (moveBtn) moveBtn.dataset.teamName = value || span.closest('[data-team-name]')?.dataset?.teamName || '';
+      })
+      .catch(() => {
+        alert('Failed to save. Please try again.');
+        input.replaceWith(span);
+      });
+    }
+
+    function cancel() {
+      input.replaceWith(span);
+    }
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); save(); }
+      if (e.key === 'Escape') { cancel(); }
+    });
+    input.addEventListener('blur', save);
+  }
+
+  document.addEventListener('click', function (e) {
+    const span = e.target.closest('span.pn-display');
+    if (span) startEdit(span);
+  });
+})();
+</script>
 
 <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
   <h2>Team Reports</h2>
