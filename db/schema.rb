@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_20_225035) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_22_181146) do
   create_table "data_versions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.text "description"
@@ -55,6 +55,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_20_225035) do
     t.bigint "data_version_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "name"
     t.index ["data_version_id", "manager_id"], name: "index_employees_on_data_version_id_and_manager_id"
     t.index ["data_version_id", "person_id"], name: "index_employees_on_data_version_id_and_person_id"
     t.index ["data_version_id"], name: "index_employees_on_data_version_id"

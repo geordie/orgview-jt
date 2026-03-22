@@ -53,7 +53,7 @@ class EmployeesController < ApplicationController
     respond_to do |format|
       if @employee.update(employee_params)
         format.html { redirect_to employee_url(@employee), notice: 'Employee was successfully updated.' }
-        format.json { render :show, status: :ok, location: @employee }
+        format.json { render json: @employee, status: :ok }
       else
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @employee.errors, status: :unprocessable_entity }
@@ -120,7 +120,7 @@ class EmployeesController < ApplicationController
     params.require(:employee).permit(
       :person_id, :title, :job_code, :job_level, :seniority,
       :manager_id, :is_manager, :country, :personnel_area, :company,
-      :data_version_id, :page, :per_page
+      :data_version_id, :page, :per_page, :name
     )
   end
 end
