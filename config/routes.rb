@@ -27,6 +27,7 @@ Rails.application.routes.draw do
   get 'reports/employee_country',   to: 'reports#employee_country'
   get 'reports/personnel_area',     to: 'reports#personnel_area'
   get 'reports/company',            to: 'reports#company'
+  get 'reports/individual_contributors', to: 'reports#individual_contributors'
   get 'reports/management_ratios',  to: 'reports#management_ratios'
   get 'reports/team_depth',         to: 'reports#team_depth'
   get 'reports/team_size',          to: 'reports#team_size'

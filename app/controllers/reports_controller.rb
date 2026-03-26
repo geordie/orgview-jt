@@ -257,6 +257,24 @@ class ReportsController < ApplicationController
     render 'report'
   end
 
+  def individual_contributors
+    base_query = employee_base_query
+
+    managers = base_query.where(is_manager: true).count
+    ics      = base_query.where.not(is_manager: true).count
+
+    data = {
+      'Managers'                 => managers,
+      'Individual Contributors'  => ics
+    }
+
+    @report_title    = 'Managers vs Individual Contributors'
+    @report_subtitle = team_subtitle
+
+    build_simple_count_report(data, 'Type', 'icManagerChart', '# of Employees')
+    render 'report'
+  end
+
   def management_ratios
     base_query = Employee.where(data_version_id: @current_data_version.id)
 

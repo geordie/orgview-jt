@@ -69,6 +69,32 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # Management Reports
+  test "should get individual_contributors" do
+    get reports_individual_contributors_url
+    assert_response :success
+  end
+
+  test "individual_contributors report shows managers and ICs" do
+    get reports_individual_contributors_url
+    assert_response :success
+    assert_includes response.body, 'Managers'
+    assert_includes response.body, 'Individual Contributors'
+  end
+
+  test "individual_contributors report shows correct counts for active version" do
+    data_version_1 = data_versions(:test_version)
+    data_version_1.update!(is_active: true, status: 'active')
+
+    expected_managers = Employee.where(data_version_id: data_version_1.id, is_manager: true).count
+    expected_ics      = Employee.where(data_version_id: data_version_1.id).where.not(is_manager: true).count
+
+    get reports_individual_contributors_url
+    assert_response :success
+
+    assert_includes response.body, expected_managers.to_s
+    assert_includes response.body, expected_ics.to_s
+  end
+
   test "should get management_ratios" do
     get reports_management_ratios_url
     assert_response :success
@@ -134,6 +160,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
       reports_employee_country_url,
       reports_personnel_area_url,
       reports_company_url,
+      reports_individual_contributors_url,
       reports_management_ratios_url,
       reports_team_size_url,
       reports_team_depth_url,
