@@ -13,6 +13,7 @@
       <th>Job Code</th>
       <th>Seniority</th>
       <th>Manager</th>
+      <th>Team</th>
       <th>Direct Reports</th>
     </tr>
   </thead>
@@ -31,6 +32,7 @@
         <td><%= employee.job_code %></td>
         <td><%= employee.seniority %></td>
         <td><%= employee.manager ? link_to(employee.manager.person_id, employee.manager) : "" %></td>
+        <td><%= employee.teams.first&.pretty_name.presence %></td>
         <td><%= employee.direct_reports.count %></td>
       </tr>
     <% end %>

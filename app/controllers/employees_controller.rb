@@ -3,7 +3,7 @@ class EmployeesController < ApplicationController
   before_action :set_employee, only: [:show, :edit, :update, :destroy]
 
   def index
-    @employees = Employee.current.includes(:manager, :direct_reports)
+    @employees = Employee.current.includes(:manager, :direct_reports, :teams)
 
     @employees = @employees.where(title: params[:title])       if params[:title].present?
     @employees = @employees.where(job_code: params[:job_code]) if params[:job_code].present?
