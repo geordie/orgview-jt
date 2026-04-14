@@ -66,9 +66,10 @@ class ReportsController < ApplicationController
       base_team_query = base_team_query.where('full_path = ? OR full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
     end
 
-    teams       = base_team_query.where(depth: max_depth).order('teams.org_member_count DESC')
-    teams_hash  = teams.map { |t| [t.full_path, [0, t.org_member_count || 0]] }.to_h
-    team_id_map = teams.map { |t| [t.full_path, t.id] }.to_h
+    teams            = base_team_query.where(depth: max_depth).order('teams.org_member_count DESC')
+    teams_hash       = teams.map { |t| [t.full_path, [0, t.org_member_count || 0]] }.to_h
+    team_display_map = teams.map { |t| [t.full_path, t.pretty_name.presence || t.name] }.to_h
+    team_id_map      = teams.map { |t| [t.pretty_name.presence || t.name, t.id] }.to_h
 
     team_emp_query = Team.joins(teams_employees: :employee)
       .where(teams: { data_version_id: @current_data_version.id })
@@ -94,16 +95,18 @@ class ReportsController < ApplicationController
     link_params << LinkParams.new(name: 'title', value: title) if title.present?
     link_params << LinkParams.new(name: 'max_depth', value: max_depth.to_i + 1)
 
+    team_display_names = teams_hash.keys.map { |k| team_display_map[k] }
+
     @table = TableColumns.new
     @table.add_column(
-      label: 'Team', type: 'string', values: teams_hash.keys,
+      label: 'Team', type: 'string', values: team_display_names,
       link_info: LinkInfo.new(controller: 'reports', action: 'title_density', link_params: link_params)
     )
     @table.add_column(label: '# of Employees', type: 'numeric',     values: counts)
     @table.add_column(label: 'Org Size',        type: 'numeric',     values: org_sizes)
     @table.add_column(label: '% of Org Size',   type: 'percentage',  values: proportions)
 
-    @chart_data = ChartData.new(labels: teams_hash.keys, data: counts, percentages: percentages, chart_id: 'titleDensityChart', label_x_axis: '# of Employees')
+    @chart_data = ChartData.new(labels: team_display_names, data: counts, percentages: percentages, chart_id: 'titleDensityChart', label_x_axis: '# of Employees')
 
     respond_to { |f| f.html { render 'report' } }
   end
