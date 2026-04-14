@@ -11,7 +11,6 @@ Rails.application.routes.draw do
 
   # Teams
   resources :teams, constraints: { id: /\d+/ }
-  post 'teams/build_teams_list',    to: 'teams#build_teams_list',    as: 'build_teams_list'
   post 'teams/build_all_teams_stats', to: 'teams#build_all_teams_stats', as: 'build_all_teams_stats'
   get  'teams/treeview',             to: 'teams#treeview',              as: 'teams_treeview'
   get  'teams/:id/sub_teams',        to: 'teams#sub_teams',             as: 'sub_teams'
