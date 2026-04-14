@@ -15,7 +15,7 @@ class TeamsController < ApplicationController
       .then { |q| params[:parent_id].present? ? q.where(parent_id: params[:parent_id])   : q }
       .then { |q| params[:search].present?    ? q.where('name LIKE ?', "%#{params[:search]}%") : q }
       .order("#{sort_col} #{sort_dir}")
-      .paginate(page: params[:page], per_page: 20)
+      .paginate(page: params[:page], per_page: 50)
   end
 
   def show
