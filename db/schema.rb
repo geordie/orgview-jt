@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_22_204450) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_13_234512) do
   create_table "data_versions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.text "description"
@@ -57,10 +57,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_204450) do
     t.datetime "updated_at", null: false
     t.string "name"
     t.string "job_family"
+    t.string "employee_type"
     t.index ["data_version_id", "manager_id"], name: "index_employees_on_data_version_id_and_manager_id"
     t.index ["data_version_id", "person_id"], name: "index_employees_on_data_version_id_and_person_id"
     t.index ["data_version_id"], name: "index_employees_on_data_version_id"
     t.index ["manager_id"], name: "employees_manager_id_IDX"
+    t.check_constraint "`employee_type` in (_utf8mb3'FTE',_utf8mb3'FTC')", name: "chk_employees_employee_type"
   end
 
   create_table "teams", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

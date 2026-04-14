@@ -1,7 +1,8 @@
 class Employee < ApplicationRecord
-  validates :title,     presence: true
-  validates :job_code,  presence: true
-  validates :seniority, presence: true, numericality: { only_integer: true }
+  validates :title,         presence: true
+  validates :job_code,      presence: true
+  validates :seniority,     presence: true, numericality: { only_integer: true }
+  validates :employee_type, inclusion: { in: %w[FTE FTC] }, allow_nil: true
 
   belongs_to :manager,        class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id', optional: true
   has_many   :direct_reports, class_name: 'Employee', primary_key: 'person_id', foreign_key: 'manager_id'
