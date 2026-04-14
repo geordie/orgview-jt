@@ -26,6 +26,23 @@
 
   <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
     <div class="col-4">
+      <h5>Step 1b: Import contractor data</h5>
+      <small class="text-muted">CSV columns: Person, Team, Role, Leader Level 4, FTC Count, Vendor, Team_ID</small>
+    </div>
+    <div class="col-8">
+      <%= form_with url: import_csv_contractors_path, local: true, html: { multipart: true, id: "import-contractors-form" } do |form| %>
+        <div class="mb-3 d-flex align-items-center" style="width: 50%; margin-top: 40px;">
+          <%= text_field_tag :file_name_contractors, nil, class: "form-control me-2", id: "file-name-contractors", placeholder: "Select a CSV File", readonly: true %>
+          <%= form.label :csv_file, "...", class: "btn btn-primary btn-sm me-5", id: "file-label-contractors", style: "height: 2.5rem;" %>
+          <%= form.file_field :csv_file, style: "display: none;", id: "file-input-contractors", accept: '.csv' %>
+          <%= form.submit "Import", class: "btn btn-success", id: "import-button-contractors", disabled: true %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+    <div class="col-4">
       <h5>Step 2: Generate Teams</h5>
     </div>
     <div class="col-3">
@@ -172,6 +189,25 @@
         } else {
           fileName.value = "";
           importButton.disabled = true;
+        }
+      });
+    }
+
+    var fileInputC  = document.getElementById("file-input-contractors");
+    var fileNameC   = document.getElementById("file-name-contractors");
+    var importBtnC  = document.getElementById("import-button-contractors");
+    var fileLabelC  = document.getElementById("file-label-contractors");
+    if(fileLabelC && fileInputC) {
+      fileLabelC.addEventListener("click", function() {
+        fileInputC.click();
+      });
+      fileInputC.addEventListener("change", function() {
+        if (fileInputC.files.length > 0) {
+          fileNameC.value = fileInputC.files[0].name;
+          importBtnC.disabled = false;
+        } else {
+          fileNameC.value = "";
+          importBtnC.disabled = true;
         }
       });
     }

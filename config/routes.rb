@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   delete 'employees/destroy_all', to: 'employees#destroy_all', as: 'employees_destroy_all'
   get  'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
   post 'employees/import_csv', to: 'employees#import_csv', as: 'import_csv_employees'
+  post 'employees/import_csv_contractors', to: 'employees#import_csv_contractors', as: 'import_csv_contractors'
 
   # Teams
   resources :teams, constraints: { id: /\d+/ }

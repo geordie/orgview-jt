@@ -1,5 +1,6 @@
 class EmployeesController < ApplicationController
   include EmployeeCsvImporter
+  include ContractorCsvImporter
   before_action :set_employee, only: [:show, :edit, :update, :destroy]
 
   def index
@@ -99,6 +100,15 @@ class EmployeesController < ApplicationController
       redirect_to root_path and return
     end
     import_csv_file(uploaded_file)
+  end
+
+  def import_csv_contractors
+    uploaded_file = params[:csv_file]
+    if uploaded_file.nil?
+      flash[:alert] = 'No file selected.'
+      redirect_to root_path and return
+    end
+    import_contractor_csv_file(uploaded_file)
   end
 
   private
