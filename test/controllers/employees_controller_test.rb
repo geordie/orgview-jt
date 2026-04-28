@@ -115,6 +115,28 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'Infrastructure Administration', engineer.job_family
   end
 
+  test "populate_job_families sets job_family for software administrator titles" do
+    engineer = employees(:engineer)
+    engineer.update_column(:title, 'Software Administrator II')
+    assert_nil engineer.job_family
+
+    post populate_job_families_url
+    engineer.reload
+
+    assert_equal 'Software & System Administration', engineer.job_family
+  end
+
+  test "populate_job_families sets job_family for system administrator titles" do
+    engineer = employees(:engineer)
+    engineer.update_column(:title, 'System Administrator III')
+    assert_nil engineer.job_family
+
+    post populate_job_families_url
+    engineer.reload
+
+    assert_equal 'Software & System Administration', engineer.job_family
+  end
+
   test "populate_job_families sets job_family for network engineer titles" do
     engineer = employees(:engineer)
     engineer.update_column(:title, 'Network Engineer II')
