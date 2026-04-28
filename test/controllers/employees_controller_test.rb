@@ -137,7 +137,7 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'Software & System Administration', engineer.job_family
   end
 
-  test "populate_job_families sets job_family to Engineering Management when title contains dir and engineering" do
+  test "populate_job_families sets job_family to Directors when title contains dir" do
     engineer = employees(:engineer)
     engineer.update_column(:title, 'Dir, Software Engineering')
     assert_nil engineer.job_family
@@ -145,7 +145,7 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     post populate_job_families_url
     engineer.reload
 
-    assert_equal 'Engineering Management', engineer.job_family
+    assert_equal 'Directors', engineer.job_family
   end
 
   test "populate_job_families sets job_family to Engineering Management when title contains mgr and engineering" do
