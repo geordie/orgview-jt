@@ -47,6 +47,31 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "should get job_family" do
+    get reports_job_family_url
+    assert_response :success
+  end
+
+  test "job_family report shows job family counts grouped correctly" do
+    employees(:engineer).update_column(:job_family, 'Software Engineering')
+    employees(:manager).update_column(:job_family, 'Software Engineering')
+
+    get reports_job_family_url
+    assert_response :success
+
+    assert_includes response.body, 'Software Engineering'
+    assert_includes response.body, 'Unassigned'
+  end
+
+  test "job_family report only shows data for active version" do
+    employees(:engineer).update_column(:job_family, 'Software Engineering')
+
+    get reports_job_family_url
+    assert_response :success
+
+    assert_includes response.body, 'Software Engineering'
+  end
+
   test "should get seniority" do
     get reports_seniority_url
     assert_response :success

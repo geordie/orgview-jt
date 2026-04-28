@@ -260,6 +260,19 @@ class ReportsController < ApplicationController
     render 'report'
   end
 
+  def job_family
+    raw = Employee.current
+      .group(:job_family).count.sort_by { |_, v| v }.reverse.to_h
+
+    # Relabel nil/blank as "Unassigned"
+    data = raw.transform_keys { |k| k.presence || 'Unassigned' }
+
+    @report_title    = 'Employee Job Family Report'
+    @report_subtitle = 'Distribution of employees by job family'
+    build_simple_count_report(data, 'Job Family', 'jobFamilyChart', '# of Employees')
+    render 'report'
+  end
+
   def individual_contributors
     base_query = employee_base_query
 
