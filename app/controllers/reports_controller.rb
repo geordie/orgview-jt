@@ -4,9 +4,12 @@ class ReportsController < ApplicationController
   def roles
     base_query = employee_base_query
 
-    employee_titles = filtered_by_job_code(base_query)
-      .distinct(:person_id).group(:title).count
+    filtered_query  = filtered_by_job_code(base_query)
+    employee_titles = filtered_query.distinct(:person_id).group(:title).count
       .sort_by { |_, v| v }.reverse.to_h
+
+    title_job_families = filtered_query.group(:title)
+      .pluck('title, MAX(job_family)').to_h
 
     squad_subtitle = team_subtitle
     @report_title  = 'Roles Report'
@@ -23,6 +26,9 @@ class ReportsController < ApplicationController
     @table.add_column(
       label: 'Role', values: employee_titles.keys, type: 'string',
       link_info: LinkInfo.new(controller: 'reports', action: 'title_density', link_params: link_params)
+    )
+    @table.add_column(
+      label: 'Job Family', values: employee_titles.keys.map { |t| title_job_families[t] }, type: 'string'
     )
     @table.add_column(
       label: 'Count', values: employee_titles.values, type: 'numeric',

@@ -7,6 +7,16 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "roles report shows job family column" do
+    employees(:engineer).update_column(:job_family, 'Software Engineering')
+
+    get reports_roles_url
+    assert_response :success
+
+    assert_includes response.body, 'Job Family'
+    assert_includes response.body, 'Software Engineering'
+  end
+
   test "should get employee_country" do
     get reports_employee_country_url
     assert_response :success
