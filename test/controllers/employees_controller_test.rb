@@ -70,6 +70,51 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to employees_url
   end
 
+  # --- populate_job_families ---
+
+  test "populate_job_families sets job_family for software engineer titles" do
+    engineer = employees(:engineer)
+    engineer.update_column(:title, 'Software Engineer II')
+    assert_nil engineer.job_family
+
+    post populate_job_families_url
+    assert_redirected_to root_path
+
+    engineer.reload
+    assert_equal 'Software Engineering', engineer.job_family
+  end
+
+  test "populate_job_families does not affect non-software-engineer titles" do
+    ceo = employees(:ceo)
+    assert_nil ceo.job_family
+
+    post populate_job_families_url
+    ceo.reload
+
+    assert_nil ceo.job_family
+  end
+
+  test "populate_job_families matches titles case-insensitively" do
+    engineer = employees(:engineer)
+    engineer.update_column(:title, 'SOFTWARE ENGINEER II')
+
+    post populate_job_families_url
+    engineer.reload
+
+    assert_equal 'Software Engineering', engineer.job_family
+  end
+
+  test "populate_job_families sets job_family for infrastructure engineer titles" do
+    engineer = employees(:engineer)
+    engineer.update_column(:title, 'Infrastructure Engineer III')
+    assert_nil engineer.job_family
+
+    post populate_job_families_url
+    engineer.reload
+
+    assert_equal 'Infrastructure Engineering', engineer.job_family
+  end
+
   test "index should only return employees from current data version" do
     get employees_url
 

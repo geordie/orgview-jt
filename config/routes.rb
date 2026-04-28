@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   get  'employees/:id/direct_reports', to: 'employees#direct_reports', as: 'direct_reports'
   post 'employees/import_csv', to: 'employees#import_csv', as: 'import_csv_employees'
   post 'employees/import_csv_contractors', to: 'employees#import_csv_contractors', as: 'import_csv_contractors'
+  post 'employees/populate_job_families', to: 'employees#populate_job_families', as: 'populate_job_families'
 
   # Teams
   resources :teams, constraints: { id: /\d+/ }
@@ -27,6 +28,7 @@ Rails.application.routes.draw do
   get 'reports/employee_country',   to: 'reports#employee_country'
   get 'reports/personnel_area',     to: 'reports#personnel_area'
   get 'reports/company',            to: 'reports#company'
+  get 'reports/job_family',         to: 'reports#job_family'
   get 'reports/individual_contributors', to: 'reports#individual_contributors'
   get 'reports/management_ratios',  to: 'reports#management_ratios'
   get 'reports/team_depth',         to: 'reports#team_depth'

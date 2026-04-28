@@ -1,6 +1,7 @@
 class EmployeesController < ApplicationController
   include EmployeeCsvImporter
   include ContractorCsvImporter
+  include JobFamilyProcessor
   before_action :set_employee, only: [:show, :edit, :update, :destroy]
 
   def index
