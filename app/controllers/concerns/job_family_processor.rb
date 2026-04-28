@@ -14,6 +14,7 @@ module JobFamilyProcessor
     updated += scope.where("LOWER(title) LIKE 'network engineer%'").update_all(job_family: 'Network Engineering')
     updated += scope.where("LOWER(title) LIKE 'software administrator%' OR LOWER(title) LIKE 'system administrator%'").update_all(job_family: 'Software & System Administration')
     updated += scope.where("(LOWER(title) LIKE '%dir%' OR LOWER(title) LIKE '%mgr%') AND LOWER(title) LIKE '%engineering%'").update_all(job_family: 'Engineering Management')
+    updated += scope.where("LOWER(title) LIKE '%analyst%'").update_all(job_family: 'Business Analysis')
 
     redirect_to root_path, notice: "Job families populated: #{updated} employee(s) updated."
   end
