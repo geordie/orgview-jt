@@ -7,8 +7,9 @@ class EmployeesController < ApplicationController
   def index
     @employees = Employee.current.includes(:manager, :direct_reports, :teams)
 
-    @employees = @employees.where(title: params[:title])       if params[:title].present?
-    @employees = @employees.where(job_code: params[:job_code]) if params[:job_code].present?
+    @employees = @employees.where(title: params[:title])           if params[:title].present?
+    @employees = @employees.where(job_code: params[:job_code])     if params[:job_code].present?
+    @employees = @employees.where(job_family: params[:job_family]) if params[:job_family].present?
 
     if params[:team_id].present?
       team = Team.where(data_version_id: @current_data_version.id).find_by(id: params[:team_id])

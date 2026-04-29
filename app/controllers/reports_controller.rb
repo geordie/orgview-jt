@@ -4,7 +4,7 @@ class ReportsController < ApplicationController
   def roles
     base_query = employee_base_query
 
-    filtered_query  = filtered_by_job_code(base_query)
+    filtered_query  = filtered_by_job_family(filtered_by_job_code(base_query))
     employee_titles = filtered_query.distinct(:person_id).group(:title).count
       .sort_by { |_, v| v }.reverse.to_h
 
@@ -14,9 +14,10 @@ class ReportsController < ApplicationController
     squad_subtitle = team_subtitle
     @report_title  = 'Roles Report'
     @report_subtitle = [
-      (params[:job_code].present? ? "Filtered by Job Code: #{params[:job_code]}" : nil),
+      (params[:job_family].present? ? "Job Family: #{params[:job_family]}" : nil),
+      (params[:job_code].present?   ? "Filtered by Job Code: #{params[:job_code]}" : nil),
       squad_subtitle.presence
-    ].compact.join('')
+    ].compact.join(' ')
 
     @table = TableColumns.new
 
@@ -270,12 +271,34 @@ class ReportsController < ApplicationController
     raw = Employee.current
       .group(:job_family).count.sort_by { |_, v| v }.reverse.to_h
 
-    # Relabel nil/blank as "Unassigned"
     data = raw.transform_keys { |k| k.presence || 'Unassigned' }
 
     @report_title    = 'Employee Job Family Report'
     @report_subtitle = 'Distribution of employees by job family'
-    build_simple_count_report(data, 'Job Family', 'jobFamilyChart', '# of Employees')
+
+    @table = TableColumns.new
+    @table.add_column(
+      label: 'Job Family', values: data.keys, type: 'string',
+      link_info: LinkInfo.new(
+        controller: 'reports', action: 'roles',
+        link_params: [LinkParams.new(name: 'job_family', value_col: 'Job Family')]
+      )
+    )
+    @table.add_column(
+      label: 'Count', values: data.values, type: 'numeric',
+      link_info: LinkInfo.new(
+        controller: 'employees', action: 'index',
+        link_params: [LinkParams.new(name: 'job_family', value_col: 'Job Family')]
+      )
+    )
+    percentages = build_percentages(data)
+    @table.add_column(label: 'Percentage', values: percentages, type: 'percentage')
+
+    @chart_data = ChartData.new(
+      labels: data.keys, data: data.values, percentages: percentages,
+      chart_id: 'jobFamilyChart', label_x_axis: '# of Employees'
+    )
+
     render 'report'
   end
 
@@ -420,6 +443,10 @@ class ReportsController < ApplicationController
 
   def filtered_by_job_code(query)
     params[:job_code].present? ? query.where(job_code: params[:job_code]) : query
+  end
+
+  def filtered_by_job_family(query)
+    params[:job_family].present? ? query.where(job_family: params[:job_family]) : query
   end
 
   def team_subtitle
