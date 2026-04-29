@@ -17,6 +17,7 @@ module JobFamilyProcessor
     updated += scope.where("(LOWER(title) LIKE '%mgr%' OR LOWER(title) LIKE '%sup%' OR LOWER(title) LIKE '%manager%') AND (LOWER(title) LIKE '%it operations%' OR LOWER(title) LIKE '%it ops%')").update_all(job_family: 'IT Operations Management')
     updated += scope.where("LOWER(title) LIKE '%analyst%'").update_all(job_family: 'Business Analysis')
     updated += scope.where("LOWER(title) LIKE '%business systems engineer%'").update_all(job_family: 'Business Systems Engineering')
+    updated += scope.where("LOWER(title) LIKE '%technical product%'").update_all(job_family: 'Product Management')
     updated += scope.where("LOWER(title) LIKE '%technical architect%'").update_all(job_family: 'Architecture')
     updated += scope.where("LOWER(title) LIKE '%dir%'").update_all(job_family: 'Directors')
     updated += scope.where("LOWER(title) LIKE '%engineering development program engineer%'").update_all(job_family: 'Software Engineering')
