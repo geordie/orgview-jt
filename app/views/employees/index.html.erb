@@ -14,6 +14,8 @@
       <th>Seniority</th>
       <th>Manager</th>
       <th>Team</th>
+      <th>Team Size</th>
+      <th>Org Size</th>
       <th>Direct Reports</th>
     </tr>
   </thead>
@@ -33,6 +35,8 @@
         <td><%= employee.seniority %></td>
         <td><%= employee.manager ? link_to(employee.manager.person_id, employee.manager) : "" %></td>
         <td><%= employee.teams.first&.pretty_name.presence %></td>
+        <td><%= employee.teams.first&.member_count&.then { |n| n > 0 ? n : nil } %></td>
+        <td><%= employee.teams.first&.org_member_count&.then { |n| n > 0 ? n : nil } %></td>
         <td><%= employee.direct_reports.count %></td>
       </tr>
     <% end %>
