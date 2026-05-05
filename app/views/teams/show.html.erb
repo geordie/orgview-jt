@@ -137,6 +137,7 @@
     <thead>
       <tr>
         <th>Name</th>
+        <th>Pretty Name</th>
         <th>Team Size</th>
         <th>Org Size</th>
       </tr>
@@ -145,6 +146,7 @@
       <% @sub_teams.each do |sub_team| %>
         <tr>
           <td><%= link_to sub_team.name, team_path(sub_team) %></td>
+          <td><%= sub_team.pretty_name.presence %></td>
           <td><%= sub_team.member_count %></td>
           <td><%= sub_team.org_member_count %></td>
         </tr>
