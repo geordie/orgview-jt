@@ -334,7 +334,9 @@ class ReportsController < ApplicationController
         .where(teams_employees: { team_id: descendant_teams.pluck(:id), data_version_id: @current_data_version.id })
     end
 
-    subquery       = base_query.group(:manager_id).select('COUNT(*) AS team_size')
+    subquery       = base_query
+      .joins("INNER JOIN employees AS mgr ON mgr.person_id = employees.manager_id AND mgr.data_version_id = employees.data_version_id")
+      .group(:manager_id).select('COUNT(*) AS team_size')
     all_team_sizes = Employee.from(subquery, :A).group(:team_size).order(team_size: :desc).count
 
     agg = { '> 15' => 0, '11-15' => 0, '5-10' => 0, '3-4' => 0, '1-2' => 0 }

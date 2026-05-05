@@ -13,8 +13,8 @@ class EmployeesController < ApplicationController
 
     if params[:direct_reports_bucket].present?
       min, max = direct_reports_bucket_to_range(params[:direct_reports_bucket])
-      manager_ids = Employee.current.group(:manager_id).having("COUNT(*) >= ? AND COUNT(*) <= ?", min, max).select(:manager_id)
-      @employees = @employees.where(id: manager_ids)
+      manager_ids = Employee.current.group(:manager_id).having("COUNT(*) >= ? AND COUNT(*) <= ?", min, max).pluck(:manager_id)
+      @employees = @employees.where(person_id: manager_ids)
     end
 
     if params[:team_id].present?
