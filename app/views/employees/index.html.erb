@@ -1,6 +1,6 @@
 <p style="color: green"><%= notice %></p>
 
-<h1>Employees</h1>
+<h1>Employees<% if params[:direct_reports_bucket].present? %> <small class="text-muted fs-6">— managers with <%= params[:direct_reports_bucket] %> direct reports</small><% end %></h1>
 
 <%= will_paginate_with_bootstrap @employees %>
 

@@ -349,7 +349,9 @@ class ReportsController < ApplicationController
     percentages = build_percentages(agg)
     @table = TableColumns.new
     @table.add_column(label: 'Manager Team Size', values: agg.keys,   type: 'string')
-    @table.add_column(label: 'Count',             values: agg.values, type: 'numeric')
+    @table.add_column(label: 'Count',             values: agg.values, type: 'numeric',
+      link_info: LinkInfo.new(controller: 'employees', action: 'index',
+        link_params: [LinkParams.new(name: 'direct_reports_bucket', value_col: 'Manager Team Size')]))
     @table.add_column(label: 'Percentage',        values: percentages, type: 'percentage')
 
     @chart_data = ChartData.new(labels: agg.keys, data: agg.values, percentages: percentages, chart_id: 'managementRatiosChart', label_x_axis: '# of Managers')

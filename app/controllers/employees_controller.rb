@@ -11,6 +11,12 @@ class EmployeesController < ApplicationController
     @employees = @employees.where(job_code: params[:job_code])     if params[:job_code].present?
     @employees = @employees.where(job_family: params[:job_family]) if params[:job_family].present?
 
+    if params[:direct_reports_bucket].present?
+      min, max = direct_reports_bucket_to_range(params[:direct_reports_bucket])
+      manager_ids = Employee.current.group(:manager_id).having("COUNT(*) >= ? AND COUNT(*) <= ?", min, max).select(:manager_id)
+      @employees = @employees.where(id: manager_ids)
+    end
+
     if params[:team_id].present?
       team = Team.where(data_version_id: @current_data_version.id).find_by(id: params[:team_id])
       if team
@@ -126,6 +132,17 @@ class EmployeesController < ApplicationController
 
   def set_employee
     @employee = Employee.find(params[:id])
+  end
+
+  def direct_reports_bucket_to_range(bucket)
+    case bucket
+    when '> 15' then [16, 9999]
+    when '11-15' then [11, 15]
+    when '5-10'  then [5, 10]
+    when '3-4'   then [3, 4]
+    when '1-2'   then [1, 2]
+    else [0, 0]
+    end
   end
 
   def employee_params
