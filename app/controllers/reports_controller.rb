@@ -268,27 +268,29 @@ class ReportsController < ApplicationController
   end
 
   def job_family
-    raw = Employee.current
+    raw = employee_base_query
       .group(:job_family).count.sort_by { |_, v| v }.reverse.to_h
 
     data = raw.transform_keys { |k| k.presence || 'Unassigned' }
 
     @report_title    = 'Employee Job Family Report'
-    @report_subtitle = 'Distribution of employees by job family'
+    @report_subtitle = 'Distribution of employees by job family' + team_subtitle
+
+    team_id_param = params[:team_id].present? ? [LinkParams.new(name: 'team_id', value: params[:team_id])] : []
 
     @table = TableColumns.new
     @table.add_column(
       label: 'Job Family', values: data.keys, type: 'string',
       link_info: LinkInfo.new(
         controller: 'reports', action: 'roles',
-        link_params: [LinkParams.new(name: 'job_family', value_col: 'Job Family')]
+        link_params: [LinkParams.new(name: 'job_family', value_col: 'Job Family')] + team_id_param
       )
     )
     @table.add_column(
       label: 'Count', values: data.values, type: 'numeric',
       link_info: LinkInfo.new(
         controller: 'employees', action: 'index',
-        link_params: [LinkParams.new(name: 'job_family', value_col: 'Job Family')]
+        link_params: [LinkParams.new(name: 'job_family', value_col: 'Job Family')] + team_id_param
       )
     )
     percentages = build_percentages(data)
