@@ -4,17 +4,19 @@ services:
     image: mysql:8.0
     ports:
       - "3308:3308"
-    volumes_from:
-      - dbdata
+    volumes:
+      - orgview-gr-mysql-data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=dev
       - MYSQL_TCP_PORT=3308
-
-  dbdata:
-    image: busybox
-    volumes:
-      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "3308", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    mem_limit: 1g
 
   app-gr:
     build: .
@@ -22,12 +24,19 @@ services:
       RAILS_ENV: development
     ports:
       - '3001:3001'
-    volumes_from:
-      - appdata
-    links:
-      - "mysql"
-
-  appdata:
-    image: busybox
     volumes:
-      - ".:/workspace"
+      - .:/workspace
+      - orgview-gr-app-log:/workspace/log
+      - orgview-gr-app-tmp:/workspace/tmp
+      - orgview-gr-app-storage:/workspace/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+    mem_limit: 1g
+
+volumes:
+  orgview-gr-mysql-data:
+    external: true
+  orgview-gr-app-log:
+  orgview-gr-app-tmp:
+  orgview-gr-app-storage:
