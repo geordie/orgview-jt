@@ -69,6 +69,7 @@
 							<th>Title</th>
 							<th>Name</th>
 							<th>Job Code</th>
+							<th>Personnel Area</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -78,6 +79,7 @@
 								<td><%= report.title %></td>
 								<td><%= report.name.presence || '—' %></td>
 								<td><%= report.job_code %></td>
+								<td><%= report.personnel_area %></td>
 							</tr>
 						<% end %>
 					</tbody>
