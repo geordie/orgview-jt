@@ -87,6 +87,27 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "seniority report filters by team_id to include only team and its sub-hierarchy" do
+    engineering = teams(:engineering)
+    ceo         = employees(:ceo)   # seniority: 30, in Leadership (outside engineering hierarchy)
+    cto         = employees(:cto)   # seniority: 28, in Engineering
+
+    get reports_seniority_url, params: { team_id: engineering.id }
+    assert_response :success
+
+    assert_includes response.body, engineering.full_path,
+      "Subtitle should include the filtered team's full path"
+    assert_includes response.body, cto.seniority.to_s,
+      "CTO seniority should appear as they are in the engineering hierarchy"
+
+    # CEO (seniority 30) is in Leadership. When filtered by engineering, only 3 employees
+    # appear (CTO, manager, engineer). The total row should reflect this, not include CEO.
+    assert_includes response.body, "<strong> 3 </strong>",
+      "Only 3 employees in the engineering hierarchy should be counted"
+    assert_not_includes response.body, "<strong> #{Employee.current.count} </strong>",
+      "Full employee count should not appear when filtered by team"
+  end
+
   test "should get job_code" do
     get reports_job_code_url
     assert_response :success
@@ -139,6 +160,32 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   test "should get team_size" do
     get reports_team_size_url
     assert_response :success
+  end
+
+  test "team_size report filters by team_id to include only team and its sub-hierarchy" do
+    engineering = teams(:engineering)
+    leadership  = teams(:leadership)
+
+    # Leadership (member_count: 2) should appear in unfiltered report
+    get reports_team_size_url
+    assert_response :success
+    assert_includes response.body, leadership.member_count.to_s
+
+    # When filtered by engineering, Leadership should be excluded.
+    # Engineering sub-hierarchy: Engineering (3), Frontend (2), Backend (1)
+    # Leadership (2) is outside this hierarchy and must not affect the count.
+    # Unfiltered: member_count=2 has 2 teams (Frontend + Leadership)
+    # Filtered:   member_count=2 has 1 team  (Frontend only)
+    get reports_team_size_url, params: { team_id: engineering.id }
+    assert_response :success
+
+    assert_includes response.body, engineering.full_path,
+      "Subtitle should include the filtered team's full path"
+
+    # The report groups by member_count and counts teams.
+    # With engineering filter there should be exactly 3 rows (one per team in hierarchy).
+    assert_includes response.body, engineering.member_count.to_s
+    assert_not_includes response.body, leadership.full_path
   end
 
   test "should get team_depth" do

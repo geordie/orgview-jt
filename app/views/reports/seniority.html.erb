@@ -1,4 +1,7 @@
 <h1>Seniority Report</h1>
+<% if @report_subtitle.present? %>
+  <h2 style="font-size: 1.5rem; color: #6c757d;"><%= @report_subtitle %></h2>
+<% end %>
 
 <%= render partial: 'countTable', locals: { labelheader: 'Seniority', labels: @seniorities, counts: @counts, percentages: @percentages } %>
 

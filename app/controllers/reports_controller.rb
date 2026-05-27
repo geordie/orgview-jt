@@ -188,9 +188,9 @@ class ReportsController < ApplicationController
 
   def seniority
     @report_title    = 'Seniority Report'
-    @report_subtitle = 'Distribution of employees by job level'
+    @report_subtitle = "Distribution of employees by job level#{team_subtitle}"
 
-    data = Employee.current
+    data = employee_base_query
       .then { |q| params[:country].present?        ? q.where(country: params[:country])               : q }
       .then { |q| params[:personnel_area].present? ? q.where(personnel_area: params[:personnel_area]) : q }
       .group(:seniority).count.sort_by { |k, _| k }.reverse.to_h
@@ -382,11 +382,11 @@ class ReportsController < ApplicationController
   end
 
   def team_size
-    data = Team.where(data_version_id: @current_data_version.id)
+    data = team_base_query
       .group(:member_count).count.sort_by { |k, _| k }.reverse.to_h
 
     @report_title    = 'Team Size Report'
-    @report_subtitle = 'Distribution of teams by member count'
+    @report_subtitle = "Distribution of teams by member count#{team_subtitle}"
     build_simple_count_report(data, 'Team Size', 'teamSizeChart', '# of Teams')
     render 'report'
   end
@@ -441,6 +441,22 @@ class ReportsController < ApplicationController
           data_version_id: @current_data_version.id
         )
         query = query.joins(:teams_employees).where(teams_employees: { team_id: descendant_teams.pluck(:id) })
+      end
+    end
+
+    query
+  end
+
+  def team_base_query
+    query = Team.where(data_version_id: @current_data_version.id)
+
+    if params[:team_id].present?
+      parent_team = query.find_by(id: params[:team_id])
+      if parent_team
+        query = query.where(
+          "full_path = :path OR full_path LIKE :like_path",
+          path: parent_team.full_path, like_path: "#{parent_team.full_path} > %"
+        )
       end
     end
 
