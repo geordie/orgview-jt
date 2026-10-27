@@ -63,6 +63,46 @@ module EmployeeCsvImporter
     end
   end
 
+  # Creates one top-level team per distinct Department (stored in emp.org_unit)
+  # and puts each employee on the team named by their department.
+  def assign_teams_from_departments(current_version)
+    now = Time.current
+
+    department_names = Emp.where.not(org_unit: [nil, '']).distinct.pluck(:org_unit).map(&:strip).uniq
+    return if department_names.empty?
+
+    Team.insert_all!(department_names.map do |name|
+      {
+        name:            name,
+        full_path:       name,
+        depth:           1,
+        data_version_id: current_version.id,
+        created_at:      now,
+        updated_at:      now
+      }
+    end)
+
+    team_ids = Team.where(data_version_id: current_version.id).pluck(:name, :id).to_h
+    employee_ids = Employee.where(data_version_id: current_version.id).pluck(:person_id, :id).to_h
+
+    records = Emp.where.not(org_unit: [nil, '']).pluck(:person_id, :org_unit).filter_map do |person_id, department|
+      employee_id = employee_ids[person_id]
+      team_id     = team_ids[department.strip]
+      next unless employee_id && team_id
+
+      {
+        employee_id:     employee_id,
+        team_id:         team_id,
+        allocation:      1.0,
+        data_version_id: current_version.id,
+        created_at:      now,
+        updated_at:      now
+      }
+    end
+
+    records.each_slice(5000) { |batch| TeamsEmployee.insert_all!(batch) }
+  end
+
   def process_csv(temp_file)
     csv = begin
       CSV.read(temp_file, encoding: 'bom|utf-8', headers: true)
@@ -161,6 +201,9 @@ module EmployeeCsvImporter
       end
     end
     Employee.insert_all!(employee_batch) if employee_batch.any?
+
+    # --- Stage 3: build teams from Department and assign employees to them ---
+    assign_teams_from_departments(current_version)
 
     flash[:notice] = "Imported #{Employee.where(data_version_id: current_version.id).count} employees successfully."
     redirect_to root_path

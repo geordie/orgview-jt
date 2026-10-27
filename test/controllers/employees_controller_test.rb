@@ -237,6 +237,20 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_not bob.is_manager
   end
 
+  test "import_csv creates teams from Department and assigns employees" do
+    file = fixture_file_upload("rippling_employees.csv", "text/csv")
+
+    post import_csv_employees_url, params: { csv_file: file }
+
+    version = DataVersion.active.first
+    team = Team.find_by!(data_version_id: version.id, name: "Engineering")
+    assert_equal "Engineering", team.full_path
+    assert_equal 1, team.depth
+
+    member_ids = TeamsEmployee.where(team_id: team.id).joins(:employee).pluck("employees.person_id")
+    assert_equal %w[100 101], member_ids.sort
+    assert_equal 1, Team.where(data_version_id: version.id).count
+  end
 
 
 
