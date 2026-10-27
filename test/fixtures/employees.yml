@@ -10,7 +10,7 @@ ceo:
   is_manager: true
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 cto:
@@ -24,7 +24,7 @@ cto:
   is_manager: true
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 engineer:
@@ -38,7 +38,7 @@ engineer:
   is_manager: false
   country: "Canada"
   personnel_area: "Toronto"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 manager:
@@ -52,7 +52,7 @@ manager:
   is_manager: true
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 designer:
@@ -66,7 +66,7 @@ designer:
   is_manager: false
   country: "UK"
   personnel_area: "London"
-  company: "Grainger UK"
+  company: "JT UK"
   data_version_id: 1
 
 employee_2182:
@@ -80,7 +80,7 @@ employee_2182:
   is_manager: true
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 employee_2183:
@@ -94,7 +94,7 @@ employee_2183:
   is_manager: true
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 employee_2184:
@@ -108,7 +108,7 @@ employee_2184:
   is_manager: false
   country: "Canada"
   personnel_area: "Toronto"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 employee_2185:
@@ -122,7 +122,7 @@ employee_2185:
   is_manager: true
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 employee_2186:
@@ -136,7 +136,7 @@ employee_2186:
   is_manager: false
   country: "Canada"
   personnel_area: "Toronto"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 employee_2187:
@@ -150,7 +150,7 @@ employee_2187:
   is_manager: false
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 employee_2188:
@@ -164,7 +164,7 @@ employee_2188:
   is_manager: false
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 test_employee_v1_usa:
@@ -178,7 +178,7 @@ test_employee_v1_usa:
   is_manager: false
   country: "USA"
   personnel_area: "Chicago"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 test_employee_v1_canada:
@@ -192,7 +192,7 @@ test_employee_v1_canada:
   is_manager: false
   country: "Canada"
   personnel_area: "Toronto"
-  company: "Grainger"
+  company: "JT"
   data_version_id: 1
 
 test_employee_v2_uk:
@@ -206,7 +206,7 @@ test_employee_v2_uk:
   is_manager: false
   country: "UK"
   personnel_area: "London"
-  company: "Grainger UK"
+  company: "JT UK"
   data_version_id: 2
 
 test_employee_v2_germany:
@@ -220,5 +220,5 @@ test_employee_v2_germany:
   is_manager: true
   country: "Germany"
   personnel_area: "Frankfurt"
-  company: "Grainger DE"
+  company: "JT DE"
   data_version_id: 2
