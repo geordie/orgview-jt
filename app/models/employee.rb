@@ -11,6 +11,11 @@ class Employee < ApplicationRecord
   has_many :teams_employees
   has_many :teams, through: :teams_employees
 
+  # Falls back to person_id for employees imported without a name
+  def display_name
+    name.presence || person_id
+  end
+
   scope :for_version, ->(version) { where(data_version_id: version.id) }
   scope :current,     -> { joins(:data_version).where(data_versions: { is_active: true }) }
 end

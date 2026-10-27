@@ -84,7 +84,8 @@ class EmployeesController < ApplicationController
   end
 
   def treeview
-    @employees = Employee.current.where(
+    @org_sizes = org_sizes_for(@current_data_version&.id)
+    @employees = Employee.current.includes(:teams, :direct_reports).where(
       'manager_id IS NULL OR manager_id NOT IN (SELECT person_id FROM employees WHERE data_version_id = ?)',
       @current_data_version&.id
     )
@@ -93,7 +94,8 @@ class EmployeesController < ApplicationController
   def direct_reports
     manager       = Employee.find(params[:id])
     direct_reports = Employee.where(manager_id: manager.person_id)
-    @employees    = direct_reports.map { |e| build_hierarchy(e, false) }
+    org_sizes     = org_sizes_for(manager.data_version_id)
+    @employees    = direct_reports.map { |e| build_hierarchy(e, false, org_sizes) }
 
     respond_to do |format|
       format.html { render partial: 'structure', locals: { employees: @employees } }
@@ -121,11 +123,31 @@ class EmployeesController < ApplicationController
 
   private
 
-  def build_hierarchy(employee, recursive = true)
-    directs = recursive ? employee.direct_reports.map { |d| build_hierarchy(d, false) } : []
+  # Maps person_id => total number of people below them (direct and indirect)
+  # for one data version.
+  def org_sizes_for(version_id)
+    reports = Hash.new { |hash, key| hash[key] = [] }
+    Employee.where(data_version_id: version_id).pluck(:person_id, :manager_id).each do |person_id, manager_id|
+      reports[manager_id] << person_id if manager_id.present?
+    end
+
+    sizes = {}
+    size_of = lambda do |person_id, path|
+      sizes[person_id] ||= reports.fetch(person_id, []).sum do |report_id|
+        path.include?(report_id) ? 0 : 1 + size_of.call(report_id, path + [person_id])
+      end
+    end
+    Employee.where(data_version_id: version_id).pluck(:person_id).each { |person_id| size_of.call(person_id, []) }
+    sizes
+  end
+
+  def build_hierarchy(employee, recursive = true, org_sizes = {})
+    directs = recursive ? employee.direct_reports.map { |d| build_hierarchy(d, false, org_sizes) } : []
     {
       employee:       employee,
       directs_count:  employee.direct_reports.count,
+      org_size:       org_sizes[employee.person_id] || 0,
+      team_names:     employee.teams.map(&:name),
       direct_reports: directs
     }
   end

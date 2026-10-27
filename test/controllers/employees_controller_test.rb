@@ -252,6 +252,45 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, Team.where(data_version_id: version.id).count
   end
 
+  test "treeview shows employee names, falling back to person_id" do
+    version = DataVersion.active.first
+    Employee.where(data_version_id: version.id).update_all(name: nil)
+    named = Employee.where(data_version_id: version.id).where("manager_id IS NULL OR manager_id NOT IN (SELECT person_id FROM employees WHERE data_version_id = ?)", version.id).first
+    named.update_columns(name: "Ada Lovelace")
 
+    get employees_treeview_url
+    assert_response :success
+    assert_includes response.body, %(title: "Ada Lovelace")
 
+    named.update_columns(name: nil)
+    get employees_treeview_url
+    assert_includes response.body, %(title: "#{named.person_id}")
+  end
+
+  test "treeview card has no photo or group title and shows labelled rows" do
+    get employees_treeview_url
+    assert_response :success
+    assert_includes response.body, %(options.defaultTemplateName = "employeeCardTemplate")
+    assert_not_includes response.body, %("name": "photo")
+    assert_not_includes response.body, "groupTitle"
+    %w[Team Title Direct\ Reports Org\ Size].each { |label| assert_includes response.body, %("#{label}") }
+  end
+
+  test "direct_reports json includes org size counting indirect reports" do
+    manager = employees(:employee_2183)
+    version_id = manager.data_version_id
+    by_manager = Employee.where(data_version_id: version_id).where.not(manager_id: nil).group_by(&:manager_id)
+    count_below = lambda { |pid| (by_manager[pid] || []).sum { |e| 1 + count_below.call(e.person_id) } }
+
+    top = Employee.find_by!(data_version_id: version_id, person_id: "EMP001")
+    get direct_reports_url(top, format: :json)
+    assert_response :success
+
+    rows = JSON.parse(response.body)
+    assert rows.any?
+    rows.each do |row|
+      assert_equal count_below.call(row["employee"]["person_id"]), row["org_size"]
+    end
+    assert rows.any? { |row| row["org_size"] > row["directs_count"] }, "expected an indirect report to be counted"
+  end
 end
