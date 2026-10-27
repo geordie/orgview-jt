@@ -257,4 +257,44 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
       assert_response :success, "Failed to load #{route}"
     end
   end
+
+  test "tenure report groups employees by completed years of service" do
+    version = data_versions(:test_version)
+    ids = Employee.where(data_version_id: version.id).order(:id).limit(9).pluck(:id)
+    Employee.where(data_version_id: version.id).update_all(start_date: nil)
+
+    today = ReportsController::TENURE_AS_OF
+    starts = [
+      today - 6.months,                  # < 1 year
+      today - 1.year - 1.day,            # 1 - 2 years
+      today - 3.years - 1.day,           # 3 - 5 years
+      today - 3.years - 2.days,          # 3 - 5 years
+      today - 7.years,                   # 5 - 10 years
+      today - 15.years,                  # 10 - 20 years
+      today - 25.years,                  # > 20 years
+      today - 2.years - 364.days         # still 2 completed years -> 1 - 2 years
+    ]
+    starts.each_with_index { |date, i| Employee.where(id: ids[i]).update_all(start_date: date) }
+
+    get reports_tenure_url
+    assert_response :success
+
+    rows = css_select("table tbody tr").to_h do |tr|
+      cells = tr.css("td").map { |td| td.text.strip }
+      [cells[0], cells[1].to_i]
+    end
+
+    total = Employee.where(data_version_id: version.id).count
+    assert_includes response.body, "as of Oct 26, 2026"
+    assert_equal total, rows.delete("Totals")
+
+    assert_equal 1, rows["< 1 year"]
+    assert_equal 2, rows["1 - 2 years"]
+    assert_equal 2, rows["3 - 5 years"]
+    assert_equal 1, rows["5 - 10 years"]
+    assert_equal 1, rows["10 - 20 years"]
+    assert_equal 1, rows["> 20 years"]
+    assert_equal total - 8, rows["Unknown"]
+    assert_equal ["< 1 year", "1 - 2 years", "3 - 5 years", "5 - 10 years", "10 - 20 years", "> 20 years", "Unknown"], rows.keys
+  end
 end

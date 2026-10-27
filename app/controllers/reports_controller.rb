@@ -200,6 +200,26 @@ class ReportsController < ApplicationController
     @percentages = build_percentages(data)
   end
 
+  TENURE_BUCKETS = ['< 1 year', '1 - 2 years', '3 - 5 years', '5 - 10 years', '10 - 20 years', '> 20 years'].freeze
+
+  # Tenure is measured from each start date up to this fixed date, not today
+  TENURE_AS_OF = Date.new(2026, 10, 26)
+
+  def tenure
+    @report_title    = 'Tenure Report'
+    @report_subtitle = "Distribution of employees by years of service as of #{TENURE_AS_OF.strftime('%b %-d, %Y')}#{team_subtitle}"
+
+    data  = TENURE_BUCKETS.index_with { 0 }
+    employee_base_query.distinct.pluck(:id, :start_date).each do |_, start_date|
+      bucket = start_date ? tenure_bucket(completed_years(start_date, TENURE_AS_OF)) : 'Unknown'
+      data[bucket] = data.fetch(bucket, 0) + 1
+    end
+    data.delete('Unknown') if data['Unknown'].to_i.zero?
+
+    build_simple_count_report(data, 'Years of Service', 'tenureChart', '# of Employees')
+    render 'report'
+  end
+
   def job_code
     base_query = employee_base_query
 
@@ -469,6 +489,24 @@ class ReportsController < ApplicationController
 
   def filtered_by_job_family(query)
     params[:job_family].present? ? query.where(job_family: params[:job_family]) : query
+  end
+
+  def completed_years(start_date, today)
+    years = today.year - start_date.year
+    years -= 1 if ([today.month, today.day] <=> [start_date.month, start_date.day]) < 0
+    years
+  end
+
+  # Buckets are half-open on completed years so every tenure falls in exactly one:
+  # 0, 1-2, 3-4, 5-9, 10-19, 20+
+  def tenure_bucket(years)
+    if    years < 1  then '< 1 year'
+    elsif years < 3  then '1 - 2 years'
+    elsif years < 5  then '3 - 5 years'
+    elsif years < 10 then '5 - 10 years'
+    elsif years < 20 then '10 - 20 years'
+    else                  '> 20 years'
+    end
   end
 
   def team_subtitle

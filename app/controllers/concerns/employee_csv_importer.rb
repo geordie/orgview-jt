@@ -6,6 +6,7 @@ module EmployeeCsvImporter
   EXPECTED_CSV_HEADERS = [
     'Employee - ID',
     'Employee',
+    'Start date',
     'Current entity information - legal entity name',
     'Work location - Country',
     'Rippling profile number',
@@ -55,6 +56,13 @@ module EmployeeCsvImporter
   end
 
   private
+
+  # Returns nil for blank or unparseable dates rather than failing the whole import
+  def parse_date(value)
+    Date.parse(value.to_s) if value.present?
+  rescue Date::Error
+    nil
+  end
 
   def parse_boolean(value)
     case value.to_s.strip.downcase
@@ -142,6 +150,7 @@ module EmployeeCsvImporter
       emp_batch << {
         person_id:      person_id,
         name:           row['Employee'],
+        start_date:     parse_date(row['Start date']),
         business_title: row['Title'],
         job_code:       row['Rippling profile number'],
         job_level:      row['Level name'],
@@ -181,6 +190,7 @@ module EmployeeCsvImporter
       employee_batch << {
         person_id:      emp.person_id,
         name:           emp.name,
+        start_date:     emp.start_date,
         title:          emp.business_title,
         job_code:       emp.job_code,
         job_level:      emp.job_level,

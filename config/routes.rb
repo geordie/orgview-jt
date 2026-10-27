@@ -24,6 +24,7 @@ Rails.application.routes.draw do
   get 'reports/title_density',      to: 'reports#title_density'
   get 'reports/job_code_density',   to: 'reports#job_code_density'
   get 'reports/seniority',          to: 'reports#seniority'
+  get 'reports/tenure',             to: 'reports#tenure'
   get 'reports/job_code',           to: 'reports#job_code'
   get 'reports/employee_country',   to: 'reports#employee_country'
   get 'reports/personnel_area',     to: 'reports#personnel_area'
