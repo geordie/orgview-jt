@@ -216,4 +216,28 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
         message: "Employee #{employee.person_id} from inactive data version should not be visible"
     end
   end
+
+  test "import_csv imports the Rippling export format" do
+    file = fixture_file_upload("rippling_employees.csv", "text/csv")
+
+    post import_csv_employees_url, params: { csv_file: file }
+
+    version = DataVersion.active.first
+    alice = Employee.find_by!(data_version_id: version.id, person_id: "100")
+    bob   = Employee.find_by!(data_version_id: version.id, person_id: "101")
+
+    assert_equal "Alice Boss", alice.name
+    assert alice.is_manager
+    assert_equal "Canada", bob.country
+    assert_equal "Acme Inc", bob.company
+    assert_equal "Software Engineer", bob.title
+    assert_equal "Software Engineering", bob.job_family
+    assert_equal "100", bob.manager_id
+    assert_equal 22, bob.seniority
+    assert_not bob.is_manager
+  end
+
+
+
+
 end

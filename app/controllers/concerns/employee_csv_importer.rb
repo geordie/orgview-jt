@@ -3,16 +3,18 @@ module EmployeeCsvImporter
 
   require 'csv'
 
-  EXPECTED_CSV_HEADERS = %w[
-    Person\ ID
-    Business\ Title
-    Job\ Code
-    Job\ Level
-    Country
-    Personnel\ Area
-    Company/Subsidiary
-    Org\ Unit
-    Leader\ ID
+  EXPECTED_CSV_HEADERS = [
+    'Employee - ID',
+    'Employee',
+    'Current entity information - legal entity name',
+    'Work location - Country',
+    'Rippling profile number',
+    'Title',
+    'Department',
+    'Level name',
+    'Job family name',
+    'Manager - ID',
+    'Is a manager'
   ].freeze
 
   # Parses "(P22) Sr" or "(M25) Dir" → [is_manager, seniority_int]
@@ -54,6 +56,13 @@ module EmployeeCsvImporter
 
   private
 
+  def parse_boolean(value)
+    case value.to_s.strip.downcase
+    when 'true', 'yes', 'y', '1' then true
+    when 'false', 'no', 'n', '0' then false
+    end
+  end
+
   def process_csv(temp_file)
     csv = begin
       CSV.read(temp_file, encoding: 'bom|utf-8', headers: true)
@@ -86,20 +95,22 @@ module EmployeeCsvImporter
     seen_ids      = {}
 
     csv.each do |row|
-      person_id = row['Person ID'].to_s.strip
+      person_id = row['Employee - ID'].to_s.strip
       next if person_id.blank? || seen_ids[person_id]
 
       seen_ids[person_id] = true
       emp_batch << {
         person_id:      person_id,
-        business_title: row['Business Title'],
-        job_code:       row['Job Code'],
-        job_level:      row['Job Level'],
-        country:        row['Country'],
-        personnel_area: row['Personnel Area'],
-        company:        row['Company/Subsidiary'],
-        org_unit:       row['Org Unit'],
-        leader_id:      row['Leader ID'],
+        name:           row['Employee'],
+        business_title: row['Title'],
+        job_code:       row['Rippling profile number'],
+        job_level:      row['Level name'],
+        job_family:     row['Job family name'],
+        country:        row['Work location - Country'],
+        company:        row['Current entity information - legal entity name'],
+        org_unit:       row['Department'],
+        leader_id:      row['Manager - ID']&.strip,
+        is_manager:     parse_boolean(row['Is a manager']),
         created_at:     Time.current,
         updated_at:     Time.current
       }
@@ -122,19 +133,22 @@ module EmployeeCsvImporter
     Emp.import_filter.each do |emp|
       is_manager, seniority = parse_job_level(emp.job_level)
 
-      # Fall back to leader_id scan when job_level prefix is absent
+      # Prefer the explicit "Is a manager" column, then the job_level prefix,
+      # then fall back to a leader_id scan
+      is_manager = emp.is_manager unless emp.is_manager.nil?
       is_manager = leader_ids.include?(emp.person_id) if is_manager.nil?
 
       employee_batch << {
         person_id:      emp.person_id,
+        name:           emp.name,
         title:          emp.business_title,
         job_code:       emp.job_code,
         job_level:      emp.job_level,
+        job_family:     emp.job_family,
         seniority:      seniority,
         manager_id:     emp.leader_id.presence,
         is_manager:     is_manager || false,
         country:        emp.country,
-        personnel_area: emp.personnel_area,
         company:        emp.company,
         data_version_id: current_version.id,
         created_at:     Time.current,
