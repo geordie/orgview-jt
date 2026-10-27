@@ -5,7 +5,7 @@ services:
     ports:
       - "3308:3308"
     volumes:
-      - orgview-gr-mysql-data:/var/lib/mysql
+      - orgview-jt-mysql-data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=dev
@@ -18,7 +18,7 @@ services:
       start_period: 30s
     mem_limit: 1g
 
-  app-gr:
+  app:
     build: .
     environment:
       RAILS_ENV: development
@@ -26,17 +26,20 @@ services:
       - '3001:3001'
     volumes:
       - .:/workspace
-      - orgview-gr-app-log:/workspace/log
-      - orgview-gr-app-tmp:/workspace/tmp
-      - orgview-gr-app-storage:/workspace/storage
+      - orgview-jt-app-log:/workspace/log
+      - orgview-jt-app-tmp:/workspace/tmp
+      - orgview-jt-app-storage:/workspace/storage
     depends_on:
       mysql:
         condition: service_healthy
     mem_limit: 1g
 
 volumes:
-  orgview-gr-mysql-data:
-    external: true
-  orgview-gr-app-log:
-  orgview-gr-app-tmp:
-  orgview-gr-app-storage:
+  orgview-jt-mysql-data:
+    name: orgview-jt-mysql-data
+  orgview-jt-app-log:
+    name: orgview-jt-app-log
+  orgview-jt-app-tmp:
+    name: orgview-jt-app-tmp
+  orgview-jt-app-storage:
+    name: orgview-jt-app-storage
