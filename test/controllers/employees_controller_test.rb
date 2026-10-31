@@ -293,4 +293,23 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     end
     assert rows.any? { |row| row["org_size"] > row["directs_count"] }, "expected an indirect report to be counted"
   end
+
+  test "destroy_all deletes only the active version's employees and their team memberships" do
+    active   = data_versions(:test_version)
+    inactive = data_versions(:inactive_version)
+    other_version_count = Employee.where(data_version_id: inactive.id).count
+    team_count = Team.count
+    assert Employee.where(data_version_id: active.id).exists?
+    assert TeamsEmployee.where(data_version_id: active.id).exists?
+    assert other_version_count.positive?
+
+    delete employees_destroy_all_url
+
+    assert_redirected_to employees_url
+    assert_not Employee.where(data_version_id: active.id).exists?
+    assert_not TeamsEmployee.where(employee_id: Employee.where(data_version_id: active.id).select(:id)).exists?
+    assert_equal 0, TeamsEmployee.where(data_version_id: active.id).count
+    assert_equal other_version_count, Employee.where(data_version_id: inactive.id).count
+    assert_equal team_count, Team.count
+  end
 end
