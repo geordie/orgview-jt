@@ -124,6 +124,22 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "title_density does not count Engineering employees under a team named Eng" do
+    data_versions(:test_version).update!(is_active: true, status: 'active')
+    Team.create!(name: "Eng", full_path: "Eng", depth: 1, org_member_count: 0, data_version_id: 1)
+
+    get reports_title_density_url
+    assert_response :success
+
+    counts = css_select("tbody tr").to_h do |row|
+      cells = row.css("td").map { |td| td.text.strip }
+      [cells[0], cells[1]]
+    end
+
+    assert_equal "0", counts["Eng"]
+    assert_not_equal "0", counts["Engineering"]
+  end
+
   # Management Reports
   test "should get individual_contributors" do
     get reports_individual_contributors_url

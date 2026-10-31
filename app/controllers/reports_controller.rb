@@ -70,7 +70,7 @@ class ReportsController < ApplicationController
       squad_title = title ? "#{title} - #{parent_team.full_path}" : "All Titles - #{parent_team.full_path}"
       @report_subtitle = "#{squad_title} (Depth: #{max_depth})"
       @back_link = build_back_link(parent_team, :title_density, max_depth, title: title)
-      base_team_query = base_team_query.where('full_path = ? OR full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
+      base_team_query = base_team_query.in_subtree(parent_team.full_path)
     end
 
     teams            = base_team_query.where(depth: max_depth).order('teams.org_member_count DESC')
@@ -84,13 +84,13 @@ class ReportsController < ApplicationController
       .then { |q| title.present? ? q.where(employees: { title: title }) : q }
 
     if team_id.present?
-      team_emp_query = team_emp_query.where('teams.full_path = ? OR teams.full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
+      team_emp_query = team_emp_query.in_subtree(parent_team.full_path)
     end
 
     team_emp_query.group(:full_path)
       .select('teams.full_path, COUNT(DISTINCT employees.id) AS employee_count')
       .each do |row|
-        teams_hash.each_key { |key| teams_hash[key][0] += row.employee_count if row.full_path.starts_with?(key) }
+        teams_hash.each_key { |key| teams_hash[key][0] += row.employee_count if Team.path_within?(row.full_path, key) }
       end
 
     counts      = teams_hash.values.map { |v| v[0] }
@@ -134,7 +134,7 @@ class ReportsController < ApplicationController
       squad_title = job_code ? "#{job_code} - #{parent_team.full_path}" : "All Job Codes - #{parent_team.full_path}"
       @report_subtitle = "#{squad_title} (Depth: #{max_depth})"
       @back_link = build_back_link(parent_team, :job_code_density, max_depth, job_code: job_code)
-      base_team_query = base_team_query.where('full_path = ? OR full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
+      base_team_query = base_team_query.in_subtree(parent_team.full_path)
     end
 
     teams       = base_team_query.where(depth: max_depth).order('teams.org_member_count DESC')
@@ -147,13 +147,13 @@ class ReportsController < ApplicationController
       .then { |q| job_code.present? ? q.where(employees: { job_code: job_code }) : q }
 
     if team_id.present?
-      team_emp_query = team_emp_query.where('teams.full_path = ? OR teams.full_path LIKE ?', parent_team.full_path, "#{parent_team.full_path} > %")
+      team_emp_query = team_emp_query.in_subtree(parent_team.full_path)
     end
 
     team_emp_query.group(:full_path)
       .select('teams.full_path, COUNT(DISTINCT employees.id) AS employee_count')
       .each do |row|
-        teams_hash.each_key { |key| teams_hash[key][0] += row.employee_count if row.full_path.starts_with?(key) }
+        teams_hash.each_key { |key| teams_hash[key][0] += row.employee_count if Team.path_within?(row.full_path, key) }
       end
 
     counts      = teams_hash.values.map { |v| v[0] }
