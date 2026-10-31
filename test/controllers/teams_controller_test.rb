@@ -90,4 +90,23 @@ class TeamsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 3, @frontend.depth
     assert_equal 3, @backend.depth
   end
+
+  # --- team_members action ---
+
+  test "team members renders as HTML" do
+    get team_members_url(@engineering)
+
+    assert_response :success
+    assert_select "table tbody tr", 2
+    assert_select "a[href=?]", employee_path(employees(:cto))
+  end
+
+  test "team members renders as JSON" do
+    get team_members_url(@engineering, format: :json)
+
+    assert_response :success
+    data = JSON.parse(response.body)
+    assert_equal [2, 4], data.map { |m| m["employee_id"] }.sort
+    assert data.all? { |m| m.key?("employee") }
+  end
 end
