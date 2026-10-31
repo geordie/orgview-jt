@@ -8,7 +8,11 @@ gem "rails", "~> 7.1.3", ">= 7.1.3.2"
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem "sprockets-rails"
 
-# Use mysql as the database for Active Record
+# Use SQLite as the database for Active Record
+gem "sqlite3", "~> 1.4"
+
+# Only needed by script/copy_mysql_to_sqlite.rb, the one-time copy of the old
+# MySQL data. Remove once the copy is done.
 gem "mysql2", "~> 0.5"
 
 # Use the Puma web server [https://github.com/puma/puma]

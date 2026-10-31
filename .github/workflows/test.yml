@@ -10,19 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: orgview_cba_test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
     env:
       RAILS_ENV: test
-      DATABASE_URL: mysql2://root:password@127.0.0.1:3306/orgview_cba_test
       CI: true
 
     steps:
@@ -45,13 +34,6 @@ jobs:
       with:
         ruby-version: 3.3.1
         bundler-cache: true
-
-    - name: Wait for MySQL
-      run: |
-        while ! mysqladmin ping -h"127.0.0.1" -P"3306" -uroot -ppassword --silent; do
-          echo "Waiting for MySQL..."
-          sleep 2
-        done
 
     - name: Set up database
       run: |
