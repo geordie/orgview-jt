@@ -1,0 +1,23 @@
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Pretty Name</th>
+      <th>Team Size</th>
+      <th>Org Size</th>
+      <th>Sub-Teams</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% sub_teams.each do |entry| %>
+      <% sub_team = entry[:sub_team] %>
+      <tr>
+        <td><%= link_to sub_team.name, team_path(sub_team) %></td>
+        <td><%= sub_team.pretty_name.presence %></td>
+        <td><%= sub_team.member_count %></td>
+        <td><%= sub_team.org_member_count %></td>
+        <td><%= entry[:sub_team_count] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
