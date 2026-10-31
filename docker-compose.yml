@@ -12,10 +12,11 @@ services:
       - MYSQL_TCP_PORT=3308
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "3308", "-u", "root", "-proot"]
-      interval: 10s
+      interval: 60s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
+      start_period: 60s
+      start_interval: 2s
     mem_limit: 1g
 
   app:
