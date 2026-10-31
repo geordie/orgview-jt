@@ -10,7 +10,9 @@ RUN apt-get update -qq && apt-get install -yq --no-install-recommends \
     nodejs \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN apt-get update -qq && apt-get install -y default-libmysqlclient-dev
+# sqlite3 is the command-line shell, handy for inspecting the database.
+# default-libmysqlclient-dev is only for the one-time MySQL copy (mysql2 gem).
+RUN apt-get update -qq && apt-get install -y sqlite3 default-libmysqlclient-dev
 
 #Cache bundle install
 WORKDIR /tmp

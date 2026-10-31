@@ -1,7 +1,11 @@
 
 services:
+  # Only needed once, to copy the old data into SQLite. It no longer starts with
+  # `docker compose up`; start it with `docker compose --profile mysql up -d mysql`.
+  # See docs/2026-10-31-move-to-sqlite.md. Remove after the copy is verified.
   mysql:
     image: mysql:8.0
+    profiles: ["mysql"]
     ports:
       - "3308:3308"
     volumes:
@@ -30,9 +34,6 @@ services:
       - orgview-jt-app-log:/workspace/log
       - orgview-jt-app-tmp:/workspace/tmp
       - orgview-jt-app-storage:/workspace/storage
-    depends_on:
-      mysql:
-        condition: service_healthy
     mem_limit: 1g
 
 volumes:
