@@ -4,3 +4,4 @@
 //= link primitives.js
 //= link @rails--ujs.js
 //= link data_version_switcher.js
+//= link chartjs.js
