@@ -1,0 +1,384 @@
+package views
+
+import "github.com/geordie/orgview-jt/internal/store"
+
+func employeePath(id int64) templ.SafeURL { return templ.SafeURL("/employees/" + itoa(id)) }
+func teamPath(id int64) templ.SafeURL     { return templ.SafeURL("/teams/" + itoa(id)) }
+
+// EmployeeRow is a row of the employee list.
+type EmployeeRow struct {
+	store.Employee
+	Manager       *store.Employee
+	Team          *store.Team
+	DirectReports int
+}
+
+type EmployeesData struct {
+	Bucket string
+	Pager  Pager
+	Rows   []EmployeeRow
+}
+
+templ EmployeesIndex(p Page, d EmployeesData) {
+	@Layout(p) {
+		@Notice(p)
+		<h1>
+			Employees
+			if d.Bucket != "" {
+				<small class="text-muted fs-6">— managers with { d.Bucket } direct reports</small>
+			}
+		</h1>
+		@Pagination(d.Pager)
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Person ID</th>
+					<th>Name</th>
+					<th>Title</th>
+					<th>Job Code</th>
+					<th>Seniority</th>
+					<th>Manager</th>
+					<th>Team</th>
+					<th>Team Size</th>
+					<th>Org Size</th>
+					<th>Direct Reports</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, e := range d.Rows {
+					<tr>
+						<td><a href={ employeePath(e.ID) }>{ e.PersonID }</a></td>
+						<td>
+							<span class="emp-name-display" data-employee-id={ itoa(e.ID) } data-original={ str(e.Name) }>
+								if presentStr(e.Name) {
+									{ e.Name.String }
+								} else {
+									@EmptyDash()
+								}
+							</span>
+						</td>
+						<td>{ str(e.Title) }</td>
+						<td>{ str(e.JobCode) }</td>
+						<td>{ num(e.Seniority) }</td>
+						<td>
+							if e.Manager != nil {
+								<a href={ employeePath(e.Manager.ID) }>{ e.Manager.PersonID }</a>
+							}
+						</td>
+						if e.Team != nil {
+							<td>{ presence(e.Team.PrettyName) }</td>
+							<td>{ positive(e.Team.MemberCount) }</td>
+							<td>{ positive(e.Team.OrgMemberCount) }</td>
+						} else {
+							<td></td>
+							<td></td>
+							<td></td>
+						}
+						<td>{ itoa(int64(e.DirectReports)) }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<script src={ p.asset("js/inline_edit.js") } data-selector="span.emp-name-display" data-url="/employees/" data-id="employeeId" data-model="employee" data-field="name" data-width="160px"></script>
+	}
+}
+
+type EmployeeData struct {
+	Employee      store.Employee
+	Manager       *store.Employee
+	DirectReports []store.Employee
+	Teams         []store.Team
+}
+
+templ EmployeeShow(p Page, d EmployeeData) {
+	@Layout(p) {
+		@Notice(p)
+		<div id={ "employee_" + itoa(d.Employee.ID) }>
+			<div class="row px-4">
+				<div class="col-md-6">
+					<h3>Employee Details:</h3>
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="bg-light"><strong>Person ID</strong></td>
+								<td>{ d.Employee.PersonID }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Name</strong></td>
+								<td>
+									<span class="emp-name-display" data-employee-id={ itoa(d.Employee.ID) } data-original={ str(d.Employee.Name) }>
+										if presentStr(d.Employee.Name) {
+											{ d.Employee.Name.String }
+										} else {
+											@EmptyDash()
+										}
+									</span>
+								</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Title</strong></td>
+								<td>{ str(d.Employee.Title) }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Job Code</strong></td>
+								<td>{ str(d.Employee.JobCode) }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Job Level</strong></td>
+								<td>{ str(d.Employee.JobLevel) }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Seniority</strong></td>
+								<td>{ num(d.Employee.Seniority) }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Country</strong></td>
+								<td>{ str(d.Employee.Country) }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Personnel Area</strong></td>
+								<td>{ str(d.Employee.PersonnelArea) }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Company</strong></td>
+								<td>{ str(d.Employee.Company) }</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Manager</strong></td>
+								<td>
+									if d.Manager != nil {
+										<a href={ employeePath(d.Manager.ID) }>{ d.Manager.PersonID }</a>
+									} else {
+										None
+									}
+								</td>
+							</tr>
+							<tr>
+								<td class="bg-light"><strong>Is Manager</strong></td>
+								<td>
+									if d.Employee.IsManager.Valid && d.Employee.IsManager.Bool {
+										Yes
+									} else {
+										No
+									}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="col-md-6">
+					<h3>Direct Reports:</h3>
+					if len(d.DirectReports) > 0 {
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Person ID</th>
+									<th>Title</th>
+									<th>Name</th>
+									<th>Job Code</th>
+									<th>Personnel Area</th>
+								</tr>
+							</thead>
+							<tbody>
+								for _, r := range d.DirectReports {
+									<tr>
+										<td><a href={ employeePath(r.ID) }>{ r.PersonID }</a></td>
+										<td>{ str(r.Title) }</td>
+										<td>
+											if presentStr(r.Name) {
+												{ r.Name.String }
+											} else {
+												—
+											}
+										</td>
+										<td>{ str(r.JobCode) }</td>
+										<td>{ str(r.PersonnelArea) }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+						<p class="text-muted">Total: { itoa(int64(len(d.DirectReports))) } direct reports</p>
+					} else {
+						<p class="text-muted">No direct reports</p>
+					}
+					if len(d.Teams) > 0 {
+						<h3>Team Memberships:</h3>
+						<ul class="list-group">
+							for _, t := range d.Teams {
+								<li class="list-group-item">
+									if presentStr(t.PrettyName) {
+										<strong><a href={ teamPath(t.ID) }>{ t.PrettyName.String }</a></strong>
+										<br/><small class="text-muted">({ t.Name })</small>
+									} else {
+										<strong><a href={ teamPath(t.ID) }>{ t.FullPath }</a></strong>
+									}
+								</li>
+							}
+						</ul>
+					}
+				</div>
+			</div>
+		</div>
+		<div class="row px-4">
+			<table class="table table-borderless">
+				<thead>
+					<tr>
+						<td>
+							<a class="btn btn-warning" href={ employeePath(d.Employee.ID) + "/edit" }>Edit</a>
+							<a data-confirm="Are you sure?" class="btn btn-danger" rel="nofollow" data-method="delete" href={ employeePath(d.Employee.ID) }>Delete</a>
+							<a class="btn btn-secondary" href="/employees">Back to employees</a>
+						</td>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<script src={ p.asset("js/inline_edit.js") } data-selector="span.emp-name-display" data-url="/employees/" data-id="employeeId" data-model="employee" data-field="name" data-width="220px"></script>
+	}
+}
+
+// EmployeeForm is the submitted or stored values of the employee form.
+type EmployeeForm struct {
+	ID                                                                   int64
+	PersonID, Title, JobCode, JobLevel, Seniority, Country, PersonnelArea string
+	Company, ManagerID, IsManager                                        string
+	Errors                                                               []string
+}
+
+templ EmployeeFormPage(p Page, f EmployeeForm) {
+	@Layout(p) {
+		<form
+			id="employee-form"
+			if f.ID != 0 {
+				action={ employeePath(f.ID) }
+			} else {
+				action="/employees"
+			}
+			accept-charset="UTF-8"
+			method="post"
+		>
+			if f.ID != 0 {
+				<input type="hidden" name="_method" value="patch" autocomplete="off"/>
+			}
+			<div class="row px-4">
+				<div class="col-md-3">
+					<h3>Employee Details:</h3>
+					if len(f.Errors) > 0 {
+						<div class="alert alert-danger">
+							<ul class="mb-0">
+								for _, m := range f.Errors {
+									<li>{ m }</li>
+								}
+							</ul>
+						</div>
+					}
+					<table class="table">
+						<tbody>
+							@employeeField("Person ID", "text", "person_id", f.PersonID, "")
+							@employeeField("Title", "text", "title", f.Title, "")
+							@employeeField("Job Code", "text", "job_code", f.JobCode, "")
+							@employeeField("Job Level", "text", "job_level", f.JobLevel, "")
+							@employeeField("Seniority", "number", "seniority", f.Seniority, "")
+							@employeeField("Country", "text", "country", f.Country, "")
+							@employeeField("Personnel Area", "text", "personnel_area", f.PersonnelArea, "")
+							@employeeField("Company", "text", "company", f.Company, "")
+							@employeeField("Manager ID", "text", "manager_id", f.ManagerID, "Person ID of manager")
+							<tr>
+								<td class="bg-light"><strong>Is Manager</strong></td>
+								<td>
+									<select class="form-control" name="employee[is_manager]" id="employee_is_manager">
+										<option selected?={ f.IsManager == "true" } value="true">Yes</option>
+										<option selected?={ f.IsManager == "false" } value="false">No</option>
+									</select>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<table class="table table-borderless">
+						<thead>
+							<tr>
+								<td>
+									<a class="btn btn-primary" id="submit-form" href="#">Save</a>
+									if f.ID != 0 {
+										<a data-method="delete" data-confirm="Are you sure?" class="btn btn-danger" href={ employeePath(f.ID) }>Delete</a>
+									}
+									<a class="btn btn-secondary" href="/employees">Back to employees</a>
+								</td>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</form>
+		<script src={ p.asset("js/employee_form.js") }></script>
+	}
+}
+
+templ employeeField(label, typ, name, value, placeholder string) {
+	<tr>
+		<td class="bg-light"><strong>{ label }</strong></td>
+		<td>
+			<input
+				class="form-control"
+				if placeholder != "" {
+					placeholder={ placeholder }
+				}
+				type={ typ }
+				if value != "" {
+					value={ value }
+				}
+				name={ "employee[" + name + "]" }
+				id={ "employee_" + name }
+			/>
+		</td>
+	</tr>
+}
+
+templ EmployeeTree(p Page, rootsJSON string) {
+	@Layout(p) {
+		@templ.Raw(`<script type="application/json" id="tree-roots">` + rootsJSON + `</script>`)
+		<script type="module" src={ p.asset("js/employee_tree.js") }></script>
+		<div class="container-md">
+			<div class="d-flex justify-content-center">
+				<div class="content-md" id="basicdiagram" style="width: 1200px; height: 800px; border-style: dotted; border-width: 1px;"></div>
+			</div>
+		</div>
+	}
+}
+
+// StructureEntry is an employee in the reporting-line accordion.
+type StructureEntry struct {
+	Employee     store.Employee
+	DirectsCount int
+}
+
+// EmployeeStructure is the accordion fragment of an employee's reports.
+templ EmployeeStructure(entries []StructureEntry) {
+	for _, e := range entries {
+		<ul>
+			<div class="accordion-item">
+				<h2 class="accordion-header" id={ "heading" + itoa(e.Employee.ID) }>
+					<button
+						class="accordion-button collapsed"
+						type="button"
+						if e.DirectsCount > 0 {
+							data-bs-toggle="collapse"
+						}
+						data-bs-target={ "#collapse" + itoa(e.Employee.ID) }
+						aria-expanded="false"
+						aria-controls={ "collapse" + itoa(e.Employee.ID) }
+						data-url={ "/employees/" + itoa(e.Employee.ID) + "/direct_reports" }
+						data-directs-count={ itoa(int64(e.DirectsCount)) }
+					>
+						if e.DirectsCount > 0 {
+							<i class="bi bi-chevron-right me-2" id={ "icon" + itoa(e.Employee.ID) }></i>
+						}
+						{ e.Employee.DisplayName() } ( { str(e.Employee.Title) } )
+					</button>
+				</h2>
+				<div id={ "collapse" + itoa(e.Employee.ID) } class="accordion-collapse collapse" aria-labelledby={ "heading" + itoa(e.Employee.ID) }>
+					<div class="accordion-body"></div>
+				</div>
+			</div>
+		</ul>
+	}
+}

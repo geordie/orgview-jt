@@ -1,0 +1,180 @@
+package views
+
+import "github.com/geordie/orgview-jt/internal/store"
+
+// VersionRow is a version with its row counts.
+type VersionRow struct {
+	store.DataVersion
+	Employees, Teams int64
+}
+
+type HomeData struct {
+	Active   *VersionRow
+	Versions []VersionRow
+}
+
+templ Home(p Page, d HomeData) {
+	@Layout(p) {
+		@Notice(p)
+		@Alert(p)
+		<h1>Welcome to OrgView JT</h1>
+		<div class="container" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+			<h2>Data Import and Generation</h2>
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<div class="col-4">
+					<h5>Step 1: Import employee data</h5>
+					<small class="text-muted">CSV columns: Person ID, Business Title, Job Code, Job Level, Country, Personnel Area, Company/Subsidiary, Org Unit, Leader ID</small>
+				</div>
+				<div class="col-8">
+					<form enctype="multipart/form-data" id="import-form" action="/employees/import_csv" accept-charset="UTF-8" method="post">
+						<div class="mb-3 d-flex align-items-center" style="width: 50%; margin-top: 40px;">
+							<input type="text" name="file_name" id="file-name" class="form-control me-2" placeholder="Select a CSV File" readonly="readonly"/>
+							<label class="btn btn-primary btn-sm me-5" id="file-label" style="height: 2.5rem;" for="csv_file">...</label>
+							<input style="display: none;" id="file-input" accept=".csv" type="file" name="csv_file"/>
+							<input type="submit" name="commit" value="Import" class="btn btn-success" id="import-button" disabled="disabled" data-disable-with="Import"/>
+						</div>
+					</form>
+				</div>
+			</div>
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<div class="col-4">
+					<h5>Step 1b: Import contractor data</h5>
+					<small class="text-muted">CSV columns: Person, Team, Role, Leader Level 4, FTC Count, Vendor, Team_ID</small>
+				</div>
+				<div class="col-8">
+					<form enctype="multipart/form-data" id="import-contractors-form" action="/employees/import_csv_contractors" accept-charset="UTF-8" method="post">
+						<div class="mb-3 d-flex align-items-center" style="width: 50%; margin-top: 40px;">
+							<input type="text" name="file_name_contractors" id="file-name-contractors" class="form-control me-2" placeholder="Select a CSV File" readonly="readonly"/>
+							<label class="btn btn-primary btn-sm me-5" id="file-label-contractors" style="height: 2.5rem;" for="csv_file">...</label>
+							<input style="display: none;" id="file-input-contractors" accept=".csv" type="file" name="csv_file"/>
+							<input type="submit" name="commit" value="Import" class="btn btn-success" id="import-button-contractors" disabled="disabled" data-disable-with="Import"/>
+						</div>
+					</form>
+				</div>
+			</div>
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<div class="col-4">
+					<h5>Step 2: Generate Team Stats</h5>
+				</div>
+				<div class="col-3">
+					<form style="display: inline-block; margin: 0;" action="/teams/build_all_teams_stats" accept-charset="UTF-8" method="post">
+						<input type="submit" name="commit" value="Go" class="btn btn-success" data-disable-with="Go"/>
+					</form>
+				</div>
+			</div>
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<div class="col-4">
+					<h5>Step 3: Populate Job Families <span class="badge bg-secondary">Optional</span></h5>
+					<small class="text-muted">Sets job_family based on employee title (e.g. "Software Engineer..." → "Software Engineering")</small>
+				</div>
+				<div class="col-3">
+					<form style="display: inline-block; margin: 0;" action="/employees/populate_job_families" accept-charset="UTF-8" method="post">
+						<input type="submit" name="commit" value="Go" class="btn btn-success" data-disable-with="Go"/>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="container" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+			<h2>Data Version Management</h2>
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<div class="col-12">
+					<div class="d-flex justify-content-between align-items-center mb-3">
+						<h5>Current Active Version</h5>
+						<a class="btn btn-primary" href="/data_versions">Manage All Versions</a>
+					</div>
+					if d.Active != nil {
+						<div class="alert alert-info">
+							<strong>{ d.Active.Name }</strong>
+							<span class="badge bg-success">Active</span>
+							<br/>
+							<small class="text-muted">
+								Snapshot Date: { fmtTime(d.Active.SnapshotDate, longTime) }
+							</small>
+							<br/>
+							<small class="text-muted">
+								{ presence(d.Active.Description) }
+							</small>
+							<br/>
+							<div class="mt-2">
+								<span class="badge bg-secondary">Employees: { itoa(d.Active.Employees) }</span>
+								<span class="badge bg-secondary">Teams: { itoa(d.Active.Teams) }</span>
+							</div>
+						</div>
+					} else {
+						<div class="alert alert-warning">
+							No active data version found. Please create and activate a version.
+						</div>
+					}
+				</div>
+			</div>
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<div class="col-12">
+					<h5>Recent Versions</h5>
+					if len(d.Versions) > 0 {
+						<div class="table-responsive">
+							<table class="table table-sm">
+								<thead>
+									<tr>
+										<th>Name</th>
+										<th>Status</th>
+										<th>Snapshot Date</th>
+										<th>Employees</th>
+										<th>Teams</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									for _, v := range d.Versions {
+										<tr class={ templ.KV("table-success", v.IsActive) }>
+											<td>
+												<a href={ templ.SafeURL("/data_versions/" + itoa(v.ID)) }>{ v.Name }</a>
+												if v.IsActive {
+													<span class="badge bg-success ms-1">Active</span>
+												}
+											</td>
+											<td>
+												<span class={ statusBadge(v.Status) }>
+													{ capitalize(v.Status) }
+												</span>
+											</td>
+											<td>{ fmtTime(v.SnapshotDate, date4) }</td>
+											<td>{ itoa(v.Employees) }</td>
+											<td>{ itoa(v.Teams) }</td>
+											<td>
+												if !v.IsActive {
+													<form class="button_to" method="post" action={ templ.SafeURL("/data_versions/" + itoa(v.ID) + "/activate") }>
+														<input type="hidden" name="_method" value="patch" autocomplete="off"/>
+														<button data-confirm="Make this the active version?" class="btn btn-sm btn-success" type="submit">Activate</button>
+													</form>
+												}
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					} else {
+						<p class="text-muted">No data versions found.</p>
+					}
+				</div>
+			</div>
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<div class="col-4">
+					<h5>Create New Version</h5>
+				</div>
+				<div class="col-8">
+					<form class="d-flex align-items-center" action="/data_versions" accept-charset="UTF-8" method="post">
+						<div class="me-2" style="flex: 1;">
+							<input class="form-control" placeholder="Version name (e.g., 'september_2025')" type="text" name="data_version[name]" id="data_version_name"/>
+						</div>
+						<div class="me-2" style="flex: 2;">
+							<textarea class="form-control" rows="1" placeholder="Description (optional)" name="data_version[description]" id="data_version_description"></textarea>
+						</div>
+						<input type="submit" name="commit" value="Create Version" class="btn btn-primary" data-disable-with="Create Version"/>
+					</form>
+				</div>
+			</div>
+		</div>
+		<script src={ p.asset("js/home.js") }></script>
+	}
+}

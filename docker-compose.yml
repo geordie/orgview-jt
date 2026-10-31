@@ -23,12 +23,25 @@ services:
       start_interval: 2s
     mem_limit: 1g
 
+  # The Go app. It serves the same SQLite file the Rails app used.
   app:
     build: .
-    environment:
-      RAILS_ENV: development
     ports:
       - '3001:3001'
+    volumes:
+      - orgview-jt-app-storage:/app/storage
+    mem_limit: 256m
+
+  # The old Rails app, only for the one-time MySQL copy. Start it with
+  # `docker compose --profile rails run --rm rails ...`; see
+  # docs/2026-10-31-move-to-sqlite.md. Remove once the copy is verified.
+  rails:
+    build:
+      context: .
+      dockerfile: Dockerfile.rails
+    profiles: ["rails"]
+    environment:
+      RAILS_ENV: development
     volumes:
       - .:/workspace
       - orgview-jt-app-log:/workspace/log

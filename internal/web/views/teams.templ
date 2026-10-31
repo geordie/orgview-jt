@@ -1,0 +1,388 @@
+package views
+
+import "github.com/geordie/orgview-jt/internal/store"
+
+type TeamsData struct {
+	Pager  Pager
+	Search string
+	Teams  []store.Team
+	// SortURL returns the link that sorts by a column.
+	SortURL func(col string) string
+}
+
+func healthColor(h string) string {
+	switch h {
+	case "amber":
+		return "color: orange;"
+	case "red":
+		return "color: red;"
+	}
+	return "color: green;"
+}
+
+templ TeamsIndex(p Page, d TeamsData) {
+	@Layout(p) {
+		@Notice(p)
+		<h1>Teams</h1>
+		@Pagination(d.Pager)
+		<div class="row mb-3">
+			<div class="col-md-6">
+				<form action="/teams" accept-charset="UTF-8" method="get">
+					<div class="input-group">
+						<input type="text" name="search" id="search" value={ d.Search } class="form-control" placeholder="Search by team name"/>
+						<button class="btn btn-outline-secondary" type="submit">Search</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th><a href={ templ.SafeURL(d.SortURL("name")) }>Name</a></th>
+					<th>Pretty Name</th>
+					<th style="text-align: center;"><a href={ templ.SafeURL(d.SortURL("member_count")) }>Size</a></th>
+					<th style="text-align: center;"><a href={ templ.SafeURL(d.SortURL("manager_count")) }>Managers</a></th>
+					<th style="text-align: center;"><a href={ templ.SafeURL(d.SortURL("children")) }>Sub-Teams</a></th>
+					<th style="text-align: center;"><a href={ templ.SafeURL(d.SortURL("descendents")) }>Descendents</a></th>
+					<th style="text-align: center;"><a href={ templ.SafeURL(d.SortURL("org_member_count")) }>Org Size</a></th>
+					<th style="text-align: center;"><a href={ templ.SafeURL(d.SortURL("team_health")) }>Org Health</a></th>
+					<th style="text-align: center;">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, t := range d.Teams {
+					<tr>
+						<td data-bs-toggle="tooltip" title={ t.FullPath }>
+							<a href={ templ.SafeURL("/teams?parent_id=" + itoa(t.ID)) }>{ t.Name }</a>
+						</td>
+						<td>
+							<span class="pn-display" data-team-id={ itoa(t.ID) } data-original={ str(t.PrettyName) }>
+								if presentStr(t.PrettyName) {
+									{ t.PrettyName.String }
+								} else {
+									@EmptyDash()
+								}
+							</span>
+						</td>
+						<td style="text-align: center;">{ itoa(t.MemberCount) }</td>
+						<td style="text-align: center;">{ itoa(t.ManagerCount) }</td>
+						<td style="text-align: center;">{ itoa(t.Children) }</td>
+						<td style="text-align: center;">{ itoa(t.Descendents) }</td>
+						<td style="text-align: center;">{ itoa(t.OrgMemberCount) }</td>
+						<td data-bs-toggle="tooltip" title={ t.TeamHealthDetails } style="text-align: center;">
+							<span style={ healthColor(t.TeamHealth) }>&#x25cf;</span>
+						</td>
+						<td style="text-align: center;">
+							<div class="btn-group" role="group" style="gap: 8px;">
+								<a class="btn btn-primary btn-sm" href={ teamPath(t.ID) }>Detail</a>
+								@moveButton(t, "btn btn-outline-secondary btn-sm", "Move")
+							</div>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		@moveModal(p)
+		<script src={ p.asset("js/inline_edit.js") } data-selector="span.pn-display" data-url="/teams/" data-id="teamId" data-model="team" data-field="pretty_name" data-width="160px" data-move-button></script>
+	}
+}
+
+templ moveButton(t store.Team, class, label string) {
+	<button class={ class } data-bs-toggle="modal" data-bs-target="#moveTeamModal" data-team-id={ itoa(t.ID) } data-team-name={ t.DisplayName() } data-team-fallback={ t.Name }>
+		{ label }
+	</button>
+}
+
+templ moveModal(p Page) {
+	<div class="modal fade" id="moveTeamModal" tabindex="-1" aria-labelledby="moveTeamModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="moveTeamModalLabel">
+						Move Team: <span id="moveTeamName"></span>
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="mb-3">
+						<input type="text" id="moveTeamSearch" class="form-control" placeholder="Search teams..."/>
+					</div>
+					<ul id="moveTeamList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+						<li class="list-group-item list-group-item-action" data-parent-id="" style="cursor: pointer;">
+							<em>Make Root Team</em>
+						</li>
+					</ul>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary" id="moveTeamConfirm" disabled>Move Team</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="module" src={ p.asset("js/move_modal.js") }></script>
+}
+
+type TeamData struct {
+	Team        store.Team
+	Parent      *store.Team
+	MemberCount int
+	SubTeams    []store.Team
+	Members     []store.TeamMember
+	// SortURL returns the link that sorts the member table by a column.
+	SortURL func(col string) string
+}
+
+templ TeamShow(p Page, d TeamData) {
+	@Layout(p) {
+		<h1>Team Overview: { d.Team.DisplayName() }</h1>
+		<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+			<h2>Team Summary</h2>
+			<div class="row">
+				<div class="col-2"><strong>Pretty Name</strong></div>
+				<div class="col-10">
+					<span class="pn-display" data-team-id={ itoa(d.Team.ID) } data-original={ str(d.Team.PrettyName) }>
+						if presentStr(d.Team.PrettyName) {
+							{ d.Team.PrettyName.String }
+						} else {
+							@EmptyDash()
+						}
+					</span>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-2"><strong>Name</strong></div>
+				<div class="col-10">{ d.Team.Name }</div>
+			</div>
+			<div class="row">
+				<div class="col-2"><strong>Parent</strong></div>
+				<div class="col-10">
+					if d.Parent != nil {
+						<a href={ teamPath(d.Parent.ID) }>{ d.Parent.FullPath }</a>
+					} else {
+						<span>None</span>
+					}
+					@moveButton(d.Team, "btn btn-outline-secondary btn-sm ms-2", "Move Team")
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-2"><strong>Team Members</strong></div>
+				<div class="col-2">{ itoa(int64(d.MemberCount)) }</div>
+			</div>
+			<div class="row">
+				<div class="col-2"><strong>Managers</strong></div>
+				<div class="col-2">{ itoa(d.Team.ManagerCount) }</div>
+			</div>
+			<div class="row">
+				<div class="col-2"><strong>Sub-Teams</strong></div>
+				<div class="col-2">{ itoa(int64(len(d.SubTeams))) }</div>
+			</div>
+			<div class="row">
+				<div class="col-2"><strong>Org Size</strong></div>
+				<div class="col-2">{ itoa(d.Team.OrgMemberCount) }</div>
+			</div>
+			<div class="row">
+				<div class="col-2"><strong>Depth</strong></div>
+				<div class="col-2">{ num(d.Team.Depth) }</div>
+			</div>
+		</div>
+		@moveModal(p)
+		<script src={ p.asset("js/inline_edit.js") } data-selector="span.pn-display" data-url="/teams/" data-id="teamId" data-model="team" data-field="pretty_name" data-width="220px" data-move-button></script>
+		<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+			<h2>Team Reports</h2>
+			<div class="row">
+				<div class="col-12">
+					<a class="btn btn-primary me-2" href={ templ.SafeURL("/reports/roles?team_id=" + itoa(d.Team.ID)) }>Roles Report for { d.Team.Name }</a>
+					<a class="btn btn-secondary me-2" href={ templ.SafeURL("/reports/title_density?max_depth=" + itoa(d.Team.Depth.Int64+1) + "&team_id=" + itoa(d.Team.ID)) }>Title Density Report for { d.Team.Name }</a>
+					<a class="btn btn-info me-2" href={ templ.SafeURL("/reports/job_code_density?max_depth=" + itoa(d.Team.Depth.Int64+1) + "&team_id=" + itoa(d.Team.ID)) }>Job Code Density Report for { d.Team.Name }</a>
+					<a class="btn btn-outline-primary" href={ templ.SafeURL("/reports/job_family?team_id=" + itoa(d.Team.ID)) }>Job Family Report for { d.Team.Name }</a>
+				</div>
+			</div>
+		</div>
+		if len(d.SubTeams) > 0 {
+			<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+				<h2>Sub-Teams</h2>
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Pretty Name</th>
+							<th>Team Size</th>
+							<th>Org Size</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, st := range d.SubTeams {
+							<tr>
+								<td><a href={ teamPath(st.ID) }>{ st.Name }</a></td>
+								<td>{ presence(st.PrettyName) }</td>
+								<td>{ itoa(st.MemberCount) }</td>
+								<td>{ itoa(st.OrgMemberCount) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+		<div class="row" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-top: 20px;">
+			<h2>Team Members</h2>
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<th><a href={ templ.SafeURL(d.SortURL("employees.person_id")) }>Person ID</a></th>
+						<th><a href={ templ.SafeURL(d.SortURL("employees.job_code")) }>Job Code</a></th>
+						<th><a href={ templ.SafeURL(d.SortURL("employees.title")) }>Title</a></th>
+						<th><a href={ templ.SafeURL(d.SortURL("employees.seniority")) }>Seniority</a></th>
+						<th><a href={ templ.SafeURL(d.SortURL("employees.manager_id")) }>Manager ID</a></th>
+						<th><a href={ templ.SafeURL(d.SortURL("employees.country")) }>Country</a></th>
+					</tr>
+				</thead>
+				<tbody>
+					@memberRows(d.Members)
+				</tbody>
+			</table>
+		</div>
+	}
+}
+
+templ memberRows(members []store.TeamMember) {
+	for _, m := range members {
+		<tr>
+			<td><a href={ employeePath(m.Employee.ID) }>{ m.Employee.PersonID }</a></td>
+			<td>{ str(m.Employee.JobCode) }</td>
+			<td>{ str(m.Employee.Title) }</td>
+			<td>{ num(m.Employee.Seniority) }</td>
+			<td>{ str(m.Employee.ManagerID) }</td>
+			<td>{ str(m.Employee.Country) }</td>
+		</tr>
+	}
+}
+
+// TeamMembersPartial is the HTML fragment of a team's members.
+templ TeamMembersPartial(members []store.TeamMember) {
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Person ID</th>
+				<th>Job Code</th>
+				<th>Title</th>
+				<th>Seniority</th>
+				<th>Manager ID</th>
+				<th>Country</th>
+			</tr>
+		</thead>
+		<tbody>
+			@memberRows(members)
+		</tbody>
+	</table>
+}
+
+// SubTeam is a team with its number of sub-teams.
+type SubTeam struct {
+	Team  store.Team
+	Count int
+}
+
+// SubTeamsPartial is the HTML fragment of a team's sub-teams.
+templ SubTeamsPartial(subs []SubTeam) {
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Pretty Name</th>
+				<th>Team Size</th>
+				<th>Org Size</th>
+				<th>Sub-Teams</th>
+			</tr>
+		</thead>
+		<tbody>
+			for _, s := range subs {
+				<tr>
+					<td><a href={ teamPath(s.Team.ID) }>{ s.Team.Name }</a></td>
+					<td>{ presence(s.Team.PrettyName) }</td>
+					<td>{ itoa(s.Team.MemberCount) }</td>
+					<td>{ itoa(s.Team.OrgMemberCount) }</td>
+					<td>{ itoa(int64(s.Count)) }</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+// TeamForm is the submitted or stored values of the team form.
+type TeamForm struct {
+	ID                               int64
+	Name, FullPath, ParentID, Depth string
+	Errors                           []string
+}
+
+templ TeamFormPage(p Page, f TeamForm) {
+	@Layout(p) {
+		if f.ID != 0 {
+			<h1>Edit Team</h1>
+		} else {
+			<h1>New Team</h1>
+		}
+		<form
+			if f.ID != 0 {
+				action={ teamPath(f.ID) }
+			} else {
+				action="/teams"
+			}
+			accept-charset="UTF-8"
+			method="post"
+		>
+			if f.ID != 0 {
+				<input type="hidden" name="_method" value="patch" autocomplete="off"/>
+			}
+			if len(f.Errors) > 0 {
+				<div class="alert alert-danger">
+					<ul>
+						for _, m := range f.Errors {
+							<li>{ m }</li>
+						}
+					</ul>
+				</div>
+			}
+			<div class="mb-3">
+				<label class="form-label" for="team_name">Name</label>
+				<input class="form-control" type="text" value={ f.Name } name="team[name]" id="team_name"/>
+			</div>
+			<div class="mb-3">
+				<label class="form-label" for="team_full_path">Full path</label>
+				<input class="form-control" type="text" value={ f.FullPath } name="team[full_path]" id="team_full_path"/>
+			</div>
+			<div class="mb-3">
+				<label class="form-label" for="team_parent_id">Parent</label>
+				<input class="form-control" type="number" value={ f.ParentID } name="team[parent_id]" id="team_parent_id"/>
+			</div>
+			<div class="mb-3">
+				<label class="form-label" for="team_depth">Depth</label>
+				<input class="form-control" type="number" value={ f.Depth } name="team[depth]" id="team_depth"/>
+			</div>
+			if f.ID != 0 {
+				<input type="submit" name="commit" value="Update Team" class="btn btn-primary" data-disable-with="Update Team"/>
+			} else {
+				<input type="submit" name="commit" value="Create Team" class="btn btn-primary" data-disable-with="Create Team"/>
+			}
+		</form>
+		if f.ID != 0 {
+			<a class="btn btn-secondary mt-2" href={ teamPath(f.ID) }>Back to team</a>
+		} else {
+			<a class="btn btn-secondary mt-2" href="/teams">Back to teams</a>
+		}
+	}
+}
+
+templ TeamTree(p Page, rootsJSON string) {
+	@Layout(p) {
+		@templ.Raw(`<script type="application/json" id="tree-roots">` + rootsJSON + `</script>`)
+		<script type="module" src={ p.asset("js/team_tree.js") }></script>
+		<div style="width: 100%">
+			<div class="d-flex">
+				<div class="content-md" id="basicdiagram" style="width: 80%; height: 800px; border-style: dotted; border-width: 1px; margin: 10px;"></div>
+				<div class="content-md" id="sidecontainer" style="width: 20%; height: 800px; border-style: dotted; border-width: 1px; margin: 10px;"></div>
+			</div>
+		</div>
+	}
+}

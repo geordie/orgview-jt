@@ -1,0 +1,127 @@
+package views
+
+func cellClass(c Column) string {
+	if c.Type != ColString {
+		return "text-center border"
+	}
+	return "border"
+}
+
+templ ReportPage(p Page, r Report) {
+	@Layout(p) {
+		<div class="container-md">
+			if r.Back != nil {
+				<div style="margin-bottom: 1rem;">
+					<a class="btn btn-outline-secondary btn-sm" href={ templ.SafeURL(r.Back.URL) }>{ r.Back.Text }</a>
+				</div>
+			}
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+				<h2 style="margin: 0;">{ r.Title }</h2>
+				<span style="margin: 0;">{ itoa(int64(r.Table.Rows())) } results</span>
+			</div>
+			<div style="margin-bottom: 2rem;">
+				<h2 style="margin: 0; font-size: 1.5rem; color: #6c757d;">{ r.Subtitle }</h2>
+			</div>
+			@reportTable(r.Table)
+			if r.Chart != nil {
+				@chart(r.Chart.ID, r.Chart.Labels, r.Chart.Data, r.Chart.Percentages, r.Chart.XLabel)
+			}
+		</div>
+	}
+}
+
+templ reportTable(t Table) {
+	<div class="table-container">
+		<div class="row justify-content-center">
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						for _, c := range t.Columns {
+							<th scope="col" class={ cellClass(c) }>{ c.Label }</th>
+						}
+					</tr>
+				</thead>
+				<tbody>
+					for row := 0; row < t.Rows(); row++ {
+						<tr>
+							for _, c := range t.Columns {
+								<td class={ cellClass(c) }>
+									if link := t.CellLink(c, row); c.Type == ColAction && c.Link != nil {
+										if link != "" {
+											<a class="btn btn-primary btn-sm" href={ templ.SafeURL(link) }>{ c.Display(row) }</a>
+										} else {
+											<span class="text-muted">N/A</span>
+										}
+									} else if link != "" {
+										<a href={ templ.SafeURL(link) }>{ c.Display(row) }</a>
+									} else {
+										{ c.Display(row) }
+									}
+								</td>
+							}
+						</tr>
+					}
+					<tr>
+						for i, c := range t.Columns {
+							if i == 0 {
+								<td class="text-end border"><strong>Totals</strong></td>
+							} else {
+								<td class={ cellClass(c) }><strong>{ c.Summary() }</strong></td>
+							}
+						}
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+}
+
+templ chart(id string, labels, data, percentages []Value, xlabel string) {
+	<div class="container-md">
+		<div class="row justify-content-center">
+			<canvas id={ id }></canvas>
+		</div>
+	</div>
+	@templ.Raw(`<script type="module">` + chartScript(id, labels, data, percentages, xlabel) + `</script>`)
+}
+
+templ CountReportPage(p Page, r CountReport) {
+	@Layout(p) {
+		<h1>{ r.Title }</h1>
+		if r.Subtitle != "" {
+			<h2 style="font-size: 1.5rem; color: #6c757d;">{ r.Subtitle }</h2>
+		}
+		<div class="container-md">
+			<div class="row justify-content-center">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th scope="col" class="text-left border">{ r.LabelHeader }</th>
+							<th scope="col" class="text-center border">Count</th>
+							<th scope="col" class="text-center border">Percentage</th>
+						</tr>
+					</thead>
+					<tbody>
+						for i, l := range r.Labels {
+							<tr>
+								<td class="text-left border">
+									{ l.String() }
+								</td>
+								<td class="text-center border">
+									{ r.Counts[i].String() }
+								</td>
+								<td class="text-center border">{ r.Percentages[i].Round(1).String() }%</td>
+							</tr>
+						}
+						<tr>
+							<td class="text-left border"><strong>Total</strong></td>
+							<td class="text-center border"><strong>{ Sum(r.Counts).String() }</strong></td>
+							<td class="text-center border"><strong>100%</strong></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		@chart("rolesChart", r.Labels, r.Counts, r.Percentages, r.XLabel)
+	}
+}

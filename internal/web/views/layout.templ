@@ -1,0 +1,192 @@
+package views
+
+templ Layout(p Page) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>Workspace</title>
+			<meta name="viewport" content="width=device-width,initial-scale=1"/>
+			<link rel="stylesheet" href={ p.asset("css/application.css") }/>
+			<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet"/>
+			@templ.Raw(`<script type="importmap">` + p.importMap() + `</script>`)
+			<link rel="modulepreload" href={ p.asset("js/application.js") }/>
+			<link rel="modulepreload" href={ p.asset("js/primitives.js") }/>
+			<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"/>
+			<link rel="modulepreload" href={ p.asset("js/data_version_switcher.js") }/>
+			<script type="module">import "application"</script>
+		</head>
+		<body>
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<a class="navbar-brand" href="/">JT Org View</a>
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarNav">
+					<ul class="navbar-nav">
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" href="#" id="employeesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+								Employees
+							</a>
+							<ul class="dropdown-menu" aria-labelledby="employeesDropdown">
+								<li><a class="dropdown-item" href="/employees">List</a></li>
+								<li><a class="dropdown-item" href="/employees/treeview">Structure</a></li>
+							</ul>
+						</li>
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" href="#" id="teamsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+								Teams
+							</a>
+							<ul class="dropdown-menu" aria-labelledby="teamsDropdown">
+								<li><a class="dropdown-item" href="/teams">List</a></li>
+								<li><a class="dropdown-item" href="/teams/treeview">Structure</a></li>
+							</ul>
+						</li>
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+								Reports
+							</a>
+							<ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+								<li><a class="dropdown-item" href="/reports/roles">Employee Roles</a></li>
+								<li><a class="dropdown-item" href="/reports/title_density">Employee Role Density</a></li>
+								<li><a class="dropdown-item" href="/reports/job_code">Employee Job Code</a></li>
+								<li><a class="dropdown-item" href="/reports/job_code_density">Employee Job Code Density</a></li>
+								<li><a class="dropdown-item" href="/reports/seniority">Employee Seniority</a></li>
+								<li><a class="dropdown-item" href="/reports/tenure">Employee Tenure</a></li>
+								<li><a class="dropdown-item" href="/reports/employee_country">Employee Countries</a></li>
+								<li><a class="dropdown-item" href="/reports/personnel_area">Employee Personnel Areas</a></li>
+								<li><a class="dropdown-item" href="/reports/company">Employee Companies</a></li>
+								<li><a class="dropdown-item" href="/reports/job_family">Employee Job Families</a></li>
+								<li><a class="dropdown-item" href="/reports/management_ratios">Employee Management Ratios</a></li>
+								<li><a class="dropdown-item" href="/reports/individual_contributors">Managers vs Individual Contributors</a></li>
+								<li><hr class="dropdown-divider"/></li>
+								<li><a class="dropdown-item" href="/reports/team_size">Team Size</a></li>
+								<li><a class="dropdown-item" href="/reports/team_depth">Team Depth</a></li>
+								<li><a class="dropdown-item" href="/reports/team_health">Team Health</a></li>
+								<li><a class="dropdown-item" href="/reports/team_health_details">Team Health Details</a></li>
+								<li><a class="dropdown-item" href="/reports/team_children">Team Children</a></li>
+								<li><a class="dropdown-item" href="/reports/team_members_managers">Team Members Managers</a></li>
+							</ul>
+						</li>
+					</ul>
+					<!-- Data Version Badge on the right side -->
+					<ul class="navbar-nav ms-auto">
+						if p.Current != nil {
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="dataVersionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+									<span class={ "badge", templ.KV("bg-primary", p.Current.IsActive), templ.KV("bg-warning", !p.Current.IsActive), "me-2" }>
+										<i class="bi bi-database"></i> { p.Current.Name }
+										if !p.Current.IsActive {
+											<i class="bi bi-exclamation-triangle ms-1"></i>
+										}
+									</span>
+									<small class="text-muted">Data Version</small>
+								</a>
+								<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dataVersionDropdown">
+									<li class="dropdown-header">Switch Data Version</li>
+									if !p.Current.IsActive {
+										<li><small class="dropdown-item-text text-warning">⚠️ No active version set</small></li>
+									}
+									<li><hr class="dropdown-divider"/></li>
+									for _, v := range p.Versions {
+										<li>
+											<form class="data-version-switch" method="post" action={ templ.SafeURL("/data_versions/" + itoa(v.ID) + "/activate") }>
+												<input type="hidden" name="_method" value="patch" autocomplete="off"/>
+												<button class={ "dropdown-item", templ.KV("active", v.IsActive) } type="submit">
+													<div class="d-flex justify-content-between align-items-center">
+														<span>
+															{ v.Name }
+															if v.IsActive {
+																<i class="bi bi-check-circle text-success ms-1"></i>
+															}
+														</span>
+														<small class="text-muted">{ fmtTime(v.SnapshotDate, date2) }</small>
+													</div>
+												</button>
+											</form>
+										</li>
+									}
+									<li><hr class="dropdown-divider"/></li>
+									<li><a class="dropdown-item" href="/data_versions">Manage Versions</a></li>
+								</ul>
+							</li>
+						} else {
+							<li class="nav-item">
+								<a class="nav-link" href="/data_versions">
+									<span class="badge bg-danger me-2">
+										<i class="bi bi-exclamation-triangle"></i> No Data
+									</span>
+									<small class="text-muted">No Versions</small>
+								</a>
+							</li>
+						}
+					</ul>
+				</div>
+			</nav>
+			{ children... }
+		</body>
+	</html>
+}
+
+// Notice is the green flash line most pages start with.
+templ Notice(p Page) {
+	<p style="color: green">{ p.Notice }</p>
+}
+
+// Alert is the red flash line.
+templ Alert(p Page) {
+	<p style="color: red">{ p.Alert }</p>
+}
+
+// Flash shows both flash lines when set, for pages the Rails app gave none.
+templ Flash(p Page) {
+	if p.Notice != "" {
+		<p style="color: green">{ p.Notice }</p>
+	}
+	if p.Alert != "" {
+		<p style="color: red">{ p.Alert }</p>
+	}
+}
+
+// Pagination renders a Bootstrap pagination bar, or nothing for one page.
+templ Pagination(pg Pager) {
+	if pg.TotalPages() > 1 {
+		<ul class="pagination" role="navigation" aria-label="Pagination">
+			if pg.Page > 1 {
+				<li class="page-item"><a class="page-link" rel="prev" href={ templ.SafeURL(pg.URL(pg.Page - 1)) }>&laquo;</a></li>
+			} else {
+				<li class="page-item disabled"><a class="page-link">&laquo;</a></li>
+			}
+			for _, n := range pg.Window() {
+				if n == Gap {
+					<li class="disabled page-item"><a class="page-link">&hellip;</a></li>
+				} else {
+					<li class={ "page-item", templ.KV("active", n == pg.Page) }>
+						<a class="page-link" rel={ relValue(pg.Page, n) } href={ templ.SafeURL(pg.URL(n)) }>{ itoa(int64(n)) }</a>
+					</li>
+				}
+			}
+			if pg.Page < pg.TotalPages() {
+				<li class="page-item"><a class="page-link" rel="next" href={ templ.SafeURL(pg.URL(pg.Page + 1)) }>&raquo;</a></li>
+			} else {
+				<li class="page-item disabled"><a class="page-link">&raquo;</a></li>
+			}
+		</ul>
+	}
+}
+
+func relValue(current, n int) string {
+	switch n {
+	case current - 1:
+		return "prev"
+	case current + 1:
+		return "next"
+	case 1:
+		return "start"
+	}
+	return ""
+}
+
+// EmptyDash is the muted dash shown for a blank name.
+templ EmptyDash() {
+	<span class="text-muted small">—</span>
+}

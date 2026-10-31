@@ -1,29 +1,20 @@
-FROM ruby:3.3.1-slim
-ENV LANG C.UTF-8
+# OrgView, the Go app. The Rails app's image is Dockerfile.rails, kept only for
+# the one-time MySQL copy (docs/2026-10-31-move-to-sqlite.md).
+FROM golang:1.25-bookworm AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY cmd ./cmd
+COPY internal ./internal
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/orgview ./cmd/orgview
 
-RUN apt-get update -qq && apt-get install -yq --no-install-recommends \
-    build-essential \
-    gnupg2 \
-    less \
-    git \
-    telnet \
-    nodejs \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
+FROM debian:bookworm-slim
 # sqlite3 is the command-line shell, handy for inspecting the database.
-# default-libmysqlclient-dev is only for the one-time MySQL copy (mysql2 gem).
-RUN apt-get update -qq && apt-get install -y sqlite3 default-libmysqlclient-dev
-
-#Cache bundle install
-WORKDIR /tmp
-ADD ./Gemfile Gemfile
-ADD ./Gemfile.lock Gemfile.lock
-RUN bundle install
-
-ENV APP_ROOT /workspace
-RUN mkdir -p $APP_ROOT
-WORKDIR $APP_ROOT
-COPY . $APP_ROOT
-
-EXPOSE  3001
-CMD rm -f tmp/pids/server.pid && rake db:migrate && rake db:seed && rails s -b '0.0.0.0' -p 3001
+RUN apt-get update -qq && apt-get install -yq --no-install-recommends sqlite3 ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /out/orgview /usr/local/bin/orgview
+WORKDIR /app
+ENV ORGVIEW_ADDR=:3001 \
+    ORGVIEW_DB=/app/storage/development.sqlite3
+EXPOSE 3001
+CMD ["orgview"]
