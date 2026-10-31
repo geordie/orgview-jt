@@ -1,24 +1,16 @@
-# README
+# OrgView
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Org charts, teams and reports from Rippling employee exports.
 
-Things you may want to cover:
+```sh
+docker compose up -d --build app   # http://localhost:3001
+```
 
-* Ruby version
+The app is written in Go and stores its data in SQLite. See
+[docs/2026-10-31-go-app.md](docs/2026-10-31-go-app.md) for running it without
+Docker, the code layout and how it differs from the old Rails app, and
+[docs/2026-10-31-move-to-sqlite.md](docs/2026-10-31-move-to-sqlite.md) for the
+one-time copy of the old MySQL data.
 
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+The Rails app (`app/`, `config/`, `Gemfile`, `Dockerfile.rails`) is still here
+until the Go app is verified on real data.

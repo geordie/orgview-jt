@@ -19,16 +19,16 @@ docker compose --profile mysql up -d mysql
 # 2. Back it up to a file outside Docker before anything else.
 docker compose exec mysql mysqldump -uroot -proot -P3308 --single-transaction dev > orgview-mysql-backup.sql
 
-# 3. Build the app image and create the SQLite database.
-docker compose build app
-docker compose run --rm app bin/rails db:migrate
+# 3. Build the Rails image and create the SQLite database.
+docker compose --profile rails build rails
+docker compose --profile rails run --rm rails bin/rails db:migrate
 
 # 4. Copy every table into SQLite. Runs in one transaction and rolls back if
 #    row counts or id sums differ for any table or data version.
-docker compose run --rm app bin/rails runner script/copy_mysql_to_sqlite.rb
+docker compose --profile rails run --rm rails bin/rails runner script/copy_mysql_to_sqlite.rb
 
-# 5. Start the app and stop MySQL.
-docker compose up -d app
+# 5. Start the app (the Go app, see docs/2026-10-31-go-app.md) and stop MySQL.
+docker compose up -d --build app
 docker compose --profile mysql stop mysql
 ```
 
@@ -46,8 +46,9 @@ before the copy. Re-run with `FORCE=1` to replace it with the MySQL data.
 
 - Remove the `mysql` service and `orgview-jt-mysql-data` volume from
   `docker-compose.yml`, then `docker volume rm orgview-jt-mysql-data`.
-- Remove the `mysql2` gem, `default-libmysqlclient-dev` from the Dockerfile and
-  `script/copy_mysql_to_sqlite.rb`.
+- Remove the `mysql2` gem, `default-libmysqlclient-dev` from `Dockerfile.rails` and
+  `script/copy_mysql_to_sqlite.rb`. Once the Go app is verified, the whole Rails
+  app goes (see docs/2026-10-31-go-app.md).
 
 ## What changed
 

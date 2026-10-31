@@ -1,0 +1,29 @@
+FROM ruby:3.3.1-slim
+ENV LANG C.UTF-8
+
+RUN apt-get update -qq && apt-get install -yq --no-install-recommends \
+    build-essential \
+    gnupg2 \
+    less \
+    git \
+    telnet \
+    nodejs \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# sqlite3 is the command-line shell, handy for inspecting the database.
+# default-libmysqlclient-dev is only for the one-time MySQL copy (mysql2 gem).
+RUN apt-get update -qq && apt-get install -y sqlite3 default-libmysqlclient-dev
+
+#Cache bundle install
+WORKDIR /tmp
+ADD ./Gemfile Gemfile
+ADD ./Gemfile.lock Gemfile.lock
+RUN bundle install
+
+ENV APP_ROOT /workspace
+RUN mkdir -p $APP_ROOT
+WORKDIR $APP_ROOT
+COPY . $APP_ROOT
+
+EXPOSE  3001
+CMD rm -f tmp/pids/server.pid && rake db:migrate && rake db:seed && rails s -b '0.0.0.0' -p 3001

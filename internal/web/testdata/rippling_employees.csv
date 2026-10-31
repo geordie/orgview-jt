@@ -1,0 +1,3 @@
+Employee - ID,Employee,Start date,Current entity information - legal entity name,Work location - Country,Rippling profile number,Title,Department,Level name,Job family name,Manager - ID,Manager,Is a manager
+100,Alice Boss,2020-01-01,Acme Inc,Canada,RP100,VP Engineering,Engineering,(M25) Dir,Engineering Management,,,TRUE
+101,Bob Dev,2021-02-02,Acme Inc,Canada,RP101,Software Engineer,Engineering,(P22) Sr,Software Engineering,100,Alice Boss,FALSE

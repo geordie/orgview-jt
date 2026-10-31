@@ -1,0 +1,355 @@
+package views
+
+import "github.com/geordie/orgview-jt/internal/store"
+
+func versionPath(id int64) templ.SafeURL { return templ.SafeURL("/data_versions/" + itoa(id)) }
+
+templ VersionsIndex(p Page, active *store.DataVersion, versions []VersionRow) {
+	@Layout(p) {
+		@Flash(p)
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h1>Data Version Management</h1>
+			<a class="btn btn-secondary" href="/">← Back to Home</a>
+		</div>
+		if active != nil {
+			<div class="alert alert-info mb-4">
+				<h5>Current Active Version: { active.Name }</h5>
+				<p class="mb-1">{ presence(active.Description) }</p>
+				<small class="text-muted">
+					Snapshot Date: { fmtTime(active.SnapshotDate, longTime) }
+				</small>
+			</div>
+		} else {
+			<div class="alert alert-warning mb-4">
+				<strong>No Active Version:</strong> Please activate a version to use the application.
+			</div>
+		}
+		<div class="card">
+			<div class="card-header d-flex justify-content-between align-items-center">
+				<h5 class="mb-0">All Data Versions</h5>
+				<a class="btn btn-primary" href="/data_versions/new">Create New Version</a>
+			</div>
+			<div class="card-body">
+				if len(versions) > 0 {
+					<div class="table-responsive">
+						<table class="table table-hover">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Description</th>
+									<th>Status</th>
+									<th>Snapshot Date</th>
+									<th>Employees</th>
+									<th>Teams</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								for _, v := range versions {
+									<tr class={ templ.KV("table-success", v.IsActive) }>
+										<td>
+											<a class="fw-bold text-decoration-none" href={ versionPath(v.ID) }>{ v.Name }</a>
+											if v.IsActive {
+												<span class="badge bg-success ms-1">Active</span>
+											}
+										</td>
+										<td>
+											<small class="text-muted">
+												if presentStr(v.Description) {
+													{ truncate(v.Description.String, 50) }
+												}
+											</small>
+										</td>
+										<td>
+											<span class={ statusBadge(v.Status) }>
+												{ capitalize(v.Status) }
+											</span>
+										</td>
+										<td>{ fmtTime(v.SnapshotDate, shortTime) }</td>
+										<td>{ delimit(v.Employees) }</td>
+										<td>{ delimit(v.Teams) }</td>
+										<td>
+											<div class="btn-group" role="group">
+												<a class="btn btn-sm btn-outline-primary" href={ versionPath(v.ID) }>View</a>
+												<a class="btn btn-sm btn-outline-secondary" href={ versionPath(v.ID) + "/edit" }>Edit</a>
+												if !v.IsActive {
+													<a class="btn btn-sm btn-success" data-confirm={ "Make '" + v.Name + "' the active version?" } rel="nofollow" data-method="patch" href={ versionPath(v.ID) + "/activate" }>Activate</a>
+												}
+												if v.Status != "archived" && !v.IsActive {
+													<a class="btn btn-sm btn-warning" data-confirm={ "Archive '" + v.Name + "'?" } rel="nofollow" data-method="patch" href={ versionPath(v.ID) + "/archive" }>Archive</a>
+												}
+												if !v.IsActive {
+													<a class="btn btn-sm btn-danger" data-confirm={ "Permanently delete '" + v.Name + "' and all its data?" } rel="nofollow" data-method="delete" href={ versionPath(v.ID) }>Delete</a>
+												}
+											</div>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				} else {
+					<div class="text-center py-5">
+						<h5 class="text-muted">No data versions found</h5>
+						<p class="text-muted">Create your first data version to get started.</p>
+						<a class="btn btn-primary" href="/data_versions/new">Create Version</a>
+					</div>
+				}
+			</div>
+		</div>
+	}
+}
+
+templ VersionShow(p Page, v VersionRow) {
+	@Layout(p) {
+		@Flash(p)
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h1>{ v.Name }</h1>
+			<div>
+				<a class="btn btn-outline-primary" href={ versionPath(v.ID) + "/edit" }>Edit Version</a>
+				if !v.IsActive {
+					<a class="btn btn-success" data-confirm={ "Make '" + v.Name + "' the active version?" } rel="nofollow" data-method="patch" href={ versionPath(v.ID) + "/activate" }>Activate This Version</a>
+				}
+				<a class="btn btn-secondary" href="/data_versions">← Back to Versions</a>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-8">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="mb-0">Version Details</h5>
+					</div>
+					<div class="card-body">
+						<dl class="row">
+							<dt class="col-sm-3">Name:</dt>
+							<dd class="col-sm-9">
+								{ v.Name }
+								if v.IsActive {
+									<span class="badge bg-success ms-2">Active</span>
+								}
+							</dd>
+							<dt class="col-sm-3">Status:</dt>
+							<dd class="col-sm-9">
+								<span class={ statusBadge(v.Status) }>
+									{ capitalize(v.Status) }
+								</span>
+							</dd>
+							<dt class="col-sm-3">Snapshot Date:</dt>
+							<dd class="col-sm-9">{ fmtTime(v.SnapshotDate, longTime) }</dd>
+							<dt class="col-sm-3">Created:</dt>
+							<dd class="col-sm-9">{ fmtTime(v.CreatedAt, longTime) }</dd>
+							if presentStr(v.Description) {
+								<dt class="col-sm-3">Description:</dt>
+								<dd class="col-sm-9">{ v.Description.String }</dd>
+							}
+						</dl>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="mb-0">Data Statistics</h5>
+					</div>
+					<div class="card-body">
+						<div class="d-flex justify-content-between mb-2">
+							<span>Employees:</span>
+							<strong>{ delimit(v.Employees) }</strong>
+						</div>
+						<div class="d-flex justify-content-between">
+							<span>Teams:</span>
+							<strong>{ delimit(v.Teams) }</strong>
+						</div>
+					</div>
+				</div>
+				if !v.IsActive {
+					<div class="card mt-3">
+						<div class="card-header">
+							<h5 class="mb-0">Actions</h5>
+						</div>
+						<div class="card-body">
+							<div class="d-grid gap-2">
+								<a class="btn btn-success" data-confirm="Make this the active version?" rel="nofollow" data-method="patch" href={ versionPath(v.ID) + "/activate" }>Activate Version</a>
+								if v.Status != "archived" {
+									<a class="btn btn-warning" data-confirm="Archive this version?" rel="nofollow" data-method="patch" href={ versionPath(v.ID) + "/archive" }>Archive Version</a>
+								}
+								<a class="btn btn-danger" data-confirm="Permanently delete this version and all its data?" rel="nofollow" data-method="delete" href={ versionPath(v.ID) }>Delete Version</a>
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+	}
+}
+
+// VersionForm is what the new and edit forms show: the submitted values and
+// any validation errors.
+type VersionForm struct {
+	Name, Description, Status, SnapshotDate string
+	Errors                                  []string
+}
+
+templ versionErrors(f VersionForm) {
+	if len(f.Errors) > 0 {
+		<div class="alert alert-danger">
+			<h6>{ pluralize(len(f.Errors), "error") } prohibited this version from being saved:</h6>
+			<ul class="mb-0">
+				for _, m := range f.Errors {
+					<li>{ m }</li>
+				}
+			</ul>
+		</div>
+	}
+}
+
+templ statusOption(value, label, selected string) {
+	<option value={ value } selected?={ value == selected }>{ label }</option>
+}
+
+templ VersionNew(p Page, f VersionForm) {
+	@Layout(p) {
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h1>Create New Data Version</h1>
+			<a class="btn btn-secondary" href="/data_versions">← Back to Versions</a>
+		</div>
+		<div class="card">
+			<div class="card-body">
+				<form action="/data_versions" accept-charset="UTF-8" method="post">
+					@versionErrors(f)
+					<div class="mb-3">
+						<label class="form-label" for="data_version_name">Name</label>
+						<input class="form-control" placeholder="e.g., september_2025, q3_2025" type="text" value={ f.Name } name="data_version[name]" id="data_version_name"/>
+						<div class="form-text">
+							Choose a descriptive name for this data version. Use lowercase letters, numbers, and underscores.
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label" for="data_version_description">Description</label>
+						<textarea class="form-control" rows="3" placeholder="Describe what this version contains..." name="data_version[description]" id="data_version_description">{ f.Description }</textarea>
+						<div class="form-text">
+							Optional description to help identify this version later.
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label" for="data_version_status">Status</label>
+						<select class="form-select" name="data_version[status]" id="data_version_status">
+							@statusOption("draft", "Draft", "draft")
+							@statusOption("active", "Active", "draft")
+						</select>
+						<div class="form-text">
+							Start as 'Draft' to import data, then activate when ready.
+						</div>
+					</div>
+					<div class="d-flex gap-2">
+						<input type="submit" name="commit" value="Create Version" class="btn btn-primary" data-disable-with="Create Version"/>
+						<a class="btn btn-secondary" href="/data_versions">Cancel</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	}
+}
+
+templ VersionEdit(p Page, v VersionRow, f VersionForm) {
+	@Layout(p) {
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h1>Edit Data Version</h1>
+			<div>
+				<a class="btn btn-outline-primary" href={ versionPath(v.ID) }>View Version</a>
+				<a class="btn btn-secondary" href="/data_versions">← Back to Versions</a>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-8">
+				<div class="card">
+					<div class="card-body">
+						<form action={ versionPath(v.ID) } accept-charset="UTF-8" method="post">
+							<input type="hidden" name="_method" value="patch" autocomplete="off"/>
+							@versionErrors(f)
+							<div class="mb-3">
+								<label class="form-label" for="data_version_name">Name</label>
+								<input class="form-control" placeholder="e.g., september_2025, q3_2025" type="text" value={ f.Name } name="data_version[name]" id="data_version_name"/>
+								<div class="form-text">
+									Choose a descriptive name for this data version. Use lowercase letters, numbers, and underscores.
+								</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label" for="data_version_description">Description</label>
+								<textarea class="form-control" rows="3" placeholder="Describe what this version contains..." name="data_version[description]" id="data_version_description">{ f.Description }</textarea>
+								<div class="form-text">
+									Optional description to help identify this version later.
+								</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label" for="data_version_snapshot_date">Snapshot Date</label>
+								<input class="form-control" value={ f.SnapshotDate } type="datetime-local" name="data_version[snapshot_date]" id="data_version_snapshot_date"/>
+								<div class="form-text">
+									The date and time this data version represents.
+								</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label" for="data_version_status">Status</label>
+								<select class="form-select" name="data_version[status]" id="data_version_status">
+									@statusOption("draft", "Draft", f.Status)
+									@statusOption("active", "Active", f.Status)
+									@statusOption("archived", "Archived", f.Status)
+								</select>
+								<div class="form-text">
+									if v.IsActive {
+										<strong>Note:</strong> This version is currently active. Changing the status will affect the entire application.
+									} else {
+										Set the status of this version. Only one version can be active at a time.
+									}
+								</div>
+							</div>
+							<div class="d-flex gap-2">
+								<input type="submit" name="commit" value="Update Version" class="btn btn-primary" data-disable-with="Update Version"/>
+								<a class="btn btn-secondary" href={ versionPath(v.ID) }>Cancel</a>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="mb-0">Current Version Info</h5>
+					</div>
+					<div class="card-body">
+						<dl class="row">
+							<dt class="col-sm-5">Status:</dt>
+							<dd class="col-sm-7">
+								<span class={ statusBadge(v.Status) }>
+									{ capitalize(v.Status) }
+								</span>
+								if v.IsActive {
+									<span class="badge bg-success ms-1">Active</span>
+								}
+							</dd>
+							<dt class="col-sm-5">Created:</dt>
+							<dd class="col-sm-7">{ fmtTime(v.CreatedAt, shortTime) }</dd>
+							<dt class="col-sm-5">Last Updated:</dt>
+							<dd class="col-sm-7">{ fmtTime(v.UpdatedAt, shortTime) }</dd>
+						</dl>
+						<hr/>
+						<h6>Data Counts</h6>
+						<div class="d-flex justify-content-between mb-1">
+							<span>Employees:</span>
+							<strong>{ delimit(v.Employees) }</strong>
+						</div>
+						<div class="d-flex justify-content-between mb-1">
+							<span>Teams:</span>
+							<strong>{ delimit(v.Teams) }</strong>
+						</div>
+					</div>
+				</div>
+				if v.IsActive {
+					<div class="alert alert-warning mt-3">
+						<strong>Active Version:</strong> Changes to this version will immediately affect the entire application.
+					</div>
+				}
+			</div>
+		</div>
+	}
+}
