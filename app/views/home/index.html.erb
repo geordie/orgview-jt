@@ -138,8 +138,8 @@
                   <td><%= version.team_count %></td>
                   <td>
                     <% unless version.is_active? %>
-                      <%= link_to "Activate", activate_data_version_path(version),
-                          data: { turbo_method: :patch, confirm: "Make this the active version?" },
+                      <%= button_to "Activate", activate_data_version_path(version), method: :patch,
+                          data: { confirm: "Make this the active version?" },
                           class: "btn btn-sm btn-success" %>
                     <% end %>
                   </td>

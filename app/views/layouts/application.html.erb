@@ -87,10 +87,9 @@
               <li><hr class="dropdown-divider"></li>
               <% @all_data_versions.each do |version| %>
                 <li>
-                  <%= link_to activate_data_version_path(version), method: :patch, class: "dropdown-item #{'active' if version.active?}",
-                      data: {
-                        turbo_method: :patch
-                      } do %>
+                  <%= button_to activate_data_version_path(version), method: :patch,
+                      class: "dropdown-item #{'active' if version.active?}",
+                      form: { class: "data-version-switch" } do %>
                     <div class="d-flex justify-content-between align-items-center">
                       <span>
                         <%= version.name %>
