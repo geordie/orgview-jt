@@ -1,0 +1,24 @@
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Person ID</th>
+      <th>Job Code</th>
+      <th>Title</th>
+      <th>Seniority</th>
+      <th>Manager ID</th>
+      <th>Country</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% team_members.each do |member| %>
+      <tr>
+        <td><%= link_to member.employee.person_id, member.employee %></td>
+        <td><%= member.employee.job_code %></td>
+        <td><%= member.employee.title %></td>
+        <td><%= member.employee.seniority %></td>
+        <td><%= member.employee.manager_id %></td>
+        <td><%= member.employee.country %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
