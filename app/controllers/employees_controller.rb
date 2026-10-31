@@ -78,9 +78,24 @@ class EmployeesController < ApplicationController
     end
   end
 
+  # Deletes the employees of the current data version only, along with their
+  # team memberships (which would otherwise block the delete via foreign key).
+  # Other data versions and the teams themselves are left untouched.
   def destroy_all
-    Employee.delete_all
-    redirect_to employees_path, notice: 'All employees have been deleted.'
+    unless @current_data_version
+      redirect_to employees_path, alert: 'No data version selected, so no employees were deleted.'
+      return
+    end
+
+    employees = Employee.where(data_version_id: @current_data_version.id)
+    deleted = 0
+    Employee.transaction do
+      TeamsEmployee.where(employee_id: employees.select(:id)).delete_all
+      deleted = employees.delete_all
+    end
+
+    redirect_to employees_path,
+                notice: "Deleted #{deleted} employees from #{@current_data_version.name}."
   end
 
   def treeview
