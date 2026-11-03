@@ -1399,7 +1399,7 @@ func EmployeeTree(p Page, rootsJSON string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "\"></script> <div class=\"container-md\"><div class=\"d-flex justify-content-center\"><div class=\"content-md\" id=\"basicdiagram\" style=\"width: 1200px; height: 800px; border-style: dotted; border-width: 1px;\"></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "\"></script> <div class=\"tree-fill\" id=\"basicdiagram\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1449,7 +1449,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var72 string
 			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue("heading" + itoa(e.Employee.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 396, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 392, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
 			if templ_7745c5c3_Err != nil {
@@ -1472,7 +1472,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var73 string
 			templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue("#collapse" + itoa(e.Employee.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 403, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 399, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
 			if templ_7745c5c3_Err != nil {
@@ -1485,7 +1485,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var74 string
 			templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue("collapse" + itoa(e.Employee.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 405, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 401, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 			if templ_7745c5c3_Err != nil {
@@ -1498,7 +1498,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue("/employees/" + itoa(e.Employee.ID) + "/direct_reports")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 406, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 402, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 			if templ_7745c5c3_Err != nil {
@@ -1511,7 +1511,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var76 string
 			templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoa(int64(e.DirectsCount)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 407, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 403, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 			if templ_7745c5c3_Err != nil {
@@ -1529,7 +1529,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 				var templ_7745c5c3_Var77 string
 				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue("icon" + itoa(e.Employee.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 410, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 406, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 				if templ_7745c5c3_Err != nil {
@@ -1543,7 +1543,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var78 string
 			templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(e.Employee.DisplayName())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 412, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 408, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 			if templ_7745c5c3_Err != nil {
@@ -1556,7 +1556,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var79 string
 			templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(str(e.Employee.Title))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 412, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 408, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 			if templ_7745c5c3_Err != nil {
@@ -1569,7 +1569,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var80 string
 			templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue("collapse" + itoa(e.Employee.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 415, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 411, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var80)
 			if templ_7745c5c3_Err != nil {
@@ -1582,7 +1582,7 @@ func EmployeeStructure(entries []StructureEntry) templ.Component {
 			var templ_7745c5c3_Var81 string
 			templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.ResolveAttributeValue("heading" + itoa(e.Employee.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 415, Col: 134}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `employees.templ`, Line: 411, Col: 134}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var81)
 			if templ_7745c5c3_Err != nil {
