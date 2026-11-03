@@ -15,6 +15,7 @@ import (
 	"os"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -260,6 +261,34 @@ func TestEmployeeIndexFilters(t *testing.T) {
 	// Team filter includes sub-teams: Engineering covers CTO, manager and the engineer on Frontend.
 	res = a.get("/employees?team_id=1")
 	res.wantContains(t, "EMP002", "EMP003", "EMP004").wantLacks(t, "EMP005")
+}
+
+func TestEmployeeIndexSearch(t *testing.T) {
+	a := newApp(t)
+	storetest.Exec(t, a.st, `UPDATE employees SET name = 'Ada Lovelace' WHERE person_id = 'EMP003'`)
+	// row matches an employee's own row, not a link to them as a manager.
+	row := func(id int) string { return `data-employee-id="` + strconv.Itoa(id) + `"` }
+	// By name, ignoring case; the box keeps the search text.
+	res := a.get("/employees?q=lovelace")
+	res.wantContains(t, row(3), "1 match", `value="lovelace"`).wantLacks(t, row(1), row(2))
+	// Every word has to match, in any searchable column.
+	a.get("/employees?q=ada+EMP003").wantContains(t, row(3))
+	a.get("/employees?q=ada+EMP002").wantContains(t, "0 matches").wantLacks(t, row(3))
+	// By person ID.
+	a.get("/employees?q=emp002").wantContains(t, row(2)).wantLacks(t, row(3))
+	// LIKE wildcards are literal.
+	a.get("/employees?q=%25").wantContains(t, "0 matches")
+	// Inactive versions stay hidden.
+	a.get("/employees?q=TEST003").wantContains(t, "0 matches")
+	// Other filters are kept: search within a team.
+	res = a.get("/employees?team_id=1&q=EMP00")
+	res.wantContains(t, `name="team_id" value="1"`, row(2)).wantLacks(t, row(5))
+	// JSON gets the same filtering.
+	var list []map[string]any
+	a.getJSON("/employees?q=lovelace", &list)
+	if len(list) != 1 || list[0]["id"] != float64(3) {
+		t.Errorf("JSON search = %v", list)
+	}
 }
 
 func TestPagination(t *testing.T) {

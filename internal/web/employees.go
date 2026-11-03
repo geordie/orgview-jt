@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -40,6 +42,8 @@ func (s *Server) employeesIndex(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := r.URL.Query()
 	var f store.EmployeeFilter
+	search := strings.TrimSpace(q.Get("q"))
+	f.Search = search
 	if present(q.Get("title")) {
 		f.Title = q.Get("title")
 	}
@@ -101,7 +105,22 @@ func (s *Server) employeesIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, r, http.StatusOK, views.EmployeesIndex(p, views.EmployeesData{
-		Bucket: bucket, Pager: pagerFor(r, page, employeesPerPage, total), Rows: rows}))
+		Bucket: bucket, Pager: pagerFor(r, page, employeesPerPage, total), Rows: rows,
+		Search: search, Total: total, KeepParams: keepParams(q, "q", "page")}))
+}
+
+// keepParams returns the query parameters except those named, so a form
+// can carry the other filters along as hidden fields.
+func keepParams(q url.Values, drop ...string) [][2]string {
+	var out [][2]string
+	for k, v := range q {
+		if slices.Contains(drop, k) || len(v) == 0 || v[0] == "" {
+			continue
+		}
+		out = append(out, [2]string{k, v[0]})
+	}
+	slices.SortFunc(out, func(a, b [2]string) int { return strings.Compare(a[0], b[0]) })
+	return out
 }
 
 // employeeRows adds each employee's manager, first team and number of

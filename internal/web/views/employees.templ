@@ -17,6 +17,19 @@ type EmployeesData struct {
 	Bucket string
 	Pager  Pager
 	Rows   []EmployeeRow
+	// Search is the text in the search box; Total is the number of matches.
+	Search string
+	Total  int
+	// KeepParams are the other filters, carried along when searching.
+	KeepParams [][2]string
+}
+
+func clearSearchURL(keep [][2]string) templ.SafeURL {
+	q := map[string]string{}
+	for _, kv := range keep {
+		q[kv[0]] = kv[1]
+	}
+	return templ.SafeURL("/employees" + Query(q))
 }
 
 templ EmployeesIndex(p Page, d EmployeesData) {
@@ -28,6 +41,30 @@ templ EmployeesIndex(p Page, d EmployeesData) {
 				<small class="text-muted fs-6">— managers with { d.Bucket } direct reports</small>
 			}
 		</h1>
+		<form action="/employees" method="get" role="search" class="row g-2 align-items-center mb-3">
+			for _, kv := range d.KeepParams {
+				<input type="hidden" name={ kv[0] } value={ kv[1] }/>
+			}
+			<div class="col-auto">
+				<label class="visually-hidden" for="employee_search">Search employees</label>
+				<input type="search" class="form-control" id="employee_search" name="q" value={ d.Search } placeholder="Name, person ID, title or job code" size="36" autofocus?={ d.Search != "" }/>
+			</div>
+			<div class="col-auto">
+				<button type="submit" class="btn btn-primary">Search</button>
+			</div>
+			if d.Search != "" {
+				<div class="col-auto">
+					<a href={ clearSearchURL(d.KeepParams) } class="btn btn-outline-secondary">Clear</a>
+				</div>
+				<div class="col-auto text-muted">
+					if d.Total == 1 {
+						1 match
+					} else {
+						{ itoa(int64(d.Total)) } matches
+					}
+				</div>
+			}
+		</form>
 		@Pagination(d.Pager)
 		<table class="table table-striped">
 			<thead>
