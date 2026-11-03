@@ -800,10 +800,12 @@ func (s *Server) reportICs(w http.ResponseWriter, r *http.Request) {
 	s.renderReport(w, r, simpleReport("Managers vs Individual Contributors", sub, gs, "Type", "icManagerChart", employeesLabel))
 }
 
-// reportManagersByTitle is, for each title, how many people hold it and how
-// many of them have at least one direct report: someone in the same
-// version whose manager_id is their person_id. A team_id narrows the
-// people counted, but their direct reports may sit on any team.
+// reportManagersByTitle is, for each title held by at least one manager,
+// how many people hold it, how many of them have at least one direct
+// report (someone in the same version whose manager_id is their
+// person_id), and how many direct reports those managers have in all.
+// Titles with no managers are left out. A team_id narrows the people
+// counted, but their direct reports may sit on any team.
 func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 	rc, ok := s.reportContext(w, r)
 	if !ok {
@@ -824,6 +826,15 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
+	// DISTINCT first, so a manager on several teams counts once.
+	joins, where, args := f.SQL()
+	reportsByTitle, err := s.st.GroupCounts(rc.ctx, `SELECT title, SUM(reports) FROM (SELECT DISTINCT employees.id, employees.title,
+		(SELECT COUNT(*) FROM employees AS dr WHERE dr.manager_id = employees.person_id AND dr.data_version_id = employees.data_version_id) AS reports
+		FROM employees`+joins+where+hasDirectReports+`) GROUP BY title`, args...)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	sub, err := s.teamSubtitle(rc)
 	if err != nil {
 		s.fail(w, r, err)
@@ -834,13 +845,20 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 	for _, g := range withReports {
 		managersByTitle[groupKey(g.Key)] = g.Count
 	}
-	type row struct {
-		title            views.Value
-		people, managers int
+	directReports := map[string]int{}
+	for _, g := range toGroups(reportsByTitle) {
+		directReports[groupKey(g.Key)] = g.Count
 	}
-	rows := make([]row, len(totals))
-	for i, g := range totals {
-		rows[i] = row{title: g.Key, people: g.Count, managers: managersByTitle[groupKey(g.Key)]}
+	type row struct {
+		title                     views.Value
+		people, managers, reports int
+	}
+	var rows []row
+	for _, g := range totals {
+		k := groupKey(g.Key)
+		if managersByTitle[k] > 0 {
+			rows = append(rows, row{title: g.Key, people: g.Count, managers: managersByTitle[k], reports: directReports[k]})
+		}
 	}
 	// Most managers first; then the higher share, then the larger title.
 	slices.SortStableFunc(rows, func(a, b row) int {
@@ -854,18 +872,20 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 	people := make([]views.Value, len(rows))
 	managers := make([]views.Value, len(rows))
 	rates := make([]views.Value, len(rows))
+	reports := make([]views.Value, len(rows))
 	sumPeople, sumManagers := 0, 0
 	for i, rw := range rows {
 		titles[i] = rw.title
 		people[i] = views.I(int64(rw.people))
 		managers[i] = views.I(int64(rw.managers))
 		rates[i] = rate(rw.managers, rw.people)
+		reports[i] = views.I(int64(rw.reports))
 		sumPeople += rw.people
 		sumManagers += rw.managers
 	}
 	overall := rate(sumManagers, sumPeople)
 
-	rep := views.Report{Title: "Managers by Title", Subtitle: sub}
+	rep := views.Report{Title: "Managers by Title Report", Subtitle: "Titles held by people with direct reports" + sub}
 	titleLinks := append([]views.LinkParam{views.FromCol("title", "Title")}, teamIDParam(rc)...)
 	rep.Table.Add(views.Column{Label: "Title", Type: views.ColString, Values: titles})
 	rep.Table.Add(views.Column{Label: employeesLabel, Type: views.ColNumeric, Values: people,
@@ -873,6 +893,7 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 	rep.Table.Add(views.Column{Label: "# With Direct Reports", Type: views.ColNumeric, Values: managers,
 		Link: &views.LinkInfo{Path: "/employees", Params: append(titleLinks, views.Fixed("direct_reports_bucket", views.S("1+")))}})
 	rep.Table.Add(views.Column{Label: "% With Direct Reports", Type: views.ColPercentage, Values: rates, Total: &overall})
+	rep.Table.Add(views.Column{Label: "Total Direct Reports", Type: views.ColNumeric, Values: reports})
 	rep.Chart = &views.Chart{ID: "managersByTitleChart", Labels: titles, Data: managers, Percentages: rates, XLabel: "# With Direct Reports"}
 	s.renderReport(w, r, rep)
 }
