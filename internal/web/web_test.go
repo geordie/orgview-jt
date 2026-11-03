@@ -598,23 +598,26 @@ func TestManagersByTitle(t *testing.T) {
 	// Titles held by no manager are left out, including Engineering Manager:
 	// EMP004 has is_manager set but nobody reports to them.
 	res.wantLacks(t, "Test Engineer", "Software Developer", "Engineering Manager")
-	rows := res.rows()
-	if !slices.Equal(rows[0], []string{"CTO", "2", "2", "100.0%", "3"}) {
-		t.Errorf("first row = %v", rows[0])
+	// Ordered by direct reports; CTO and Director tie on 3, and CTO has more
+	// managers. Each title's share is of the 13 direct reports listed.
+	want := [][]string{
+		{"CEO", "2", "1", "50.0%", "5", "38.5%"},
+		{"CTO", "2", "2", "100.0%", "3", "23.1%"},
+		{"Director, Software Development", "1", "1", "100.0%", "3", "23.1%"},
+		{"Principal Software Engineer", "1", "1", "100.0%", "1", "7.7%"},
+		{"VP, Product Management", "1", "1", "100.0%", "1", "7.7%"},
+		// The overall share of managers (6 of 7), not a sum of rates.
+		{"Totals", "7", "6", "85.7%", "13", "100%"},
 	}
-	if !slices.ContainsFunc(rows, func(row []string) bool { return slices.Equal(row, []string{"CEO", "2", "1", "50.0%", "5"}) }) {
-		t.Errorf("CEO row missing from %v", rows)
+	if rows := res.rows(); !slices.EqualFunc(rows, want, slices.Equal) {
+		t.Errorf("rows = %v", rows)
 	}
-	// The totals row shows the overall share (6 of 7), not a sum of rates,
-	// and all 13 direct reports.
-	if total := rows[len(rows)-1]; !slices.Equal(total, []string{"Totals", "7", "6", "85.7%", "13"}) {
-		t.Errorf("totals = %v", total)
-	}
+	res.wantContains(t, "data: [5,3,3,1,1]")
 
 	// On Engineering only EMP002 (CTO, 2 reports) manages anyone.
 	res = a.get("/reports/managers_by_title?team_id=1").wantContains(t, " - Engineering")
-	want := [][]string{{"CTO", "1", "1", "100.0%", "2"}, {"Totals", "1", "1", "100.0%", "2"}}
-	if rows = res.rows(); !slices.EqualFunc(rows, want, slices.Equal) {
+	want = [][]string{{"CTO", "1", "1", "100.0%", "2", "100.0%"}, {"Totals", "1", "1", "100.0%", "2", "100%"}}
+	if rows := res.rows(); !slices.EqualFunc(rows, want, slices.Equal) {
 		t.Errorf("team rows = %v", rows)
 	}
 

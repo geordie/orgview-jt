@@ -803,8 +803,9 @@ func (s *Server) reportICs(w http.ResponseWriter, r *http.Request) {
 // reportManagersByTitle is, for each title held by at least one manager,
 // how many people hold it, how many of them have at least one direct
 // report (someone in the same version whose manager_id is their
-// person_id), and how many direct reports those managers have in all.
-// Titles with no managers are left out. A team_id narrows the people
+// person_id), how many direct reports those managers have in all, and
+// that as a share of all the direct reports listed. Titles with no
+// managers are left out; the rest are ordered by direct reports. A team_id narrows the people
 // counted, but their direct reports may sit on any team.
 func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 	rc, ok := s.reportContext(w, r)
@@ -860,9 +861,11 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 			rows = append(rows, row{title: g.Key, people: g.Count, managers: managersByTitle[k], reports: directReports[k]})
 		}
 	}
-	// Most managers first; then the higher share, then the larger title.
+	// Most direct reports first; then most managers, the higher share of
+	// managers, the larger title, and the title.
 	slices.SortStableFunc(rows, func(a, b row) int {
-		return cmp.Or(cmp.Compare(b.managers, a.managers),
+		return cmp.Or(cmp.Compare(b.reports, a.reports),
+			cmp.Compare(b.managers, a.managers),
 			cmp.Compare(b.managers*a.people, a.managers*b.people),
 			cmp.Compare(b.people, a.people),
 			compareValues(a.title, b.title))
@@ -873,6 +876,7 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 	managers := make([]views.Value, len(rows))
 	rates := make([]views.Value, len(rows))
 	reports := make([]views.Value, len(rows))
+	reportCounts := make([]int, len(rows))
 	sumPeople, sumManagers := 0, 0
 	for i, rw := range rows {
 		titles[i] = rw.title
@@ -880,10 +884,12 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 		managers[i] = views.I(int64(rw.managers))
 		rates[i] = rate(rw.managers, rw.people)
 		reports[i] = views.I(int64(rw.reports))
+		reportCounts[i] = rw.reports
 		sumPeople += rw.people
 		sumManagers += rw.managers
 	}
 	overall := rate(sumManagers, sumPeople)
+	reportShares := percentages(reportCounts)
 
 	rep := views.Report{Title: "Managers by Title Report", Subtitle: "Titles held by people with direct reports" + sub}
 	titleLinks := append([]views.LinkParam{views.FromCol("title", "Title")}, teamIDParam(rc)...)
@@ -894,7 +900,8 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 		Link: &views.LinkInfo{Path: "/employees", Params: append(titleLinks, views.Fixed("direct_reports_bucket", views.S("1+")))}})
 	rep.Table.Add(views.Column{Label: "% With Direct Reports", Type: views.ColPercentage, Values: rates, Total: &overall})
 	rep.Table.Add(views.Column{Label: "Total Direct Reports", Type: views.ColNumeric, Values: reports})
-	rep.Chart = &views.Chart{ID: "managersByTitleChart", Labels: titles, Data: managers, Percentages: rates, XLabel: "# With Direct Reports"}
+	rep.Table.Add(views.Column{Label: "% Total Direct Reports", Type: views.ColPercentage, Values: reportShares})
+	rep.Chart = &views.Chart{ID: "managersByTitleChart", Labels: titles, Data: reports, Percentages: reportShares, XLabel: "Total Direct Reports"}
 	s.renderReport(w, r, rep)
 }
 
