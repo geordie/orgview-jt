@@ -1,0 +1,26 @@
+# Air rebuilds and restarts the app when code changes: `make dev`, then open
+# http://localhost:3000 (Air's proxy, which reloads the browser after each
+# rebuild). The app itself listens on :3002, so it can run alongside the Docker
+# container on :3001.
+root = "."
+tmp_dir = "tmp/air"
+
+[build]
+  # Regenerate the templ views, then build. The static files and schema.sql are
+  # embedded in the binary, so they need a rebuild too.
+  cmd = "bin/templ generate -path internal/web/views && go build -o ./tmp/air/orgview ./cmd/orgview"
+  entrypoint = ["./tmp/air/orgview", "-addr", ":3002"]
+  include_dir = ["cmd", "internal"]
+  include_ext = ["go", "templ", "sql", "css", "js", "svg", "png", "jpg", "gif", "ico", "txt", "woff", "woff2", "ttf"]
+  # _templ.go files are written by the build step; watching them would loop.
+  exclude_regex = ["_test\\.go$", "_templ\\.go$"]
+  exclude_dir = ["cmd/parity"]
+  delay = 300
+  send_interrupt = true
+  kill_delay = "5s"
+  log = "air-build-errors.log"
+
+[proxy]
+  enabled = true
+  proxy_port = 3000
+  app_port = 3002
