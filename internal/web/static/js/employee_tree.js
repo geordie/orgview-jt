@@ -101,6 +101,18 @@ document.addEventListener('DOMContentLoaded', function () {
 	};
 
 	control = primitives.OrgDiagram(document.getElementById("basicdiagram"), options);
+
+	// The placeholder is sized by CSS to fill the window; the diagram only
+	// re-measures it on update, so redraw (once per frame) when its size changes.
+	var pending = false;
+	new ResizeObserver(function () {
+		if (pending) return;
+		pending = true;
+		requestAnimationFrame(function () {
+			pending = false;
+			control.update(primitives.UpdateMode.Refresh);
+		});
+	}).observe(document.getElementById("basicdiagram"));
 });
 
 function getDirectReports(managerId) {

@@ -374,11 +374,7 @@ templ EmployeeTree(p Page, rootsJSON string) {
 	@Layout(p) {
 		@templ.Raw(`<script type="application/json" id="tree-roots">` + rootsJSON + `</script>`)
 		<script type="module" src={ p.asset("js/employee_tree.js") }></script>
-		<div class="container-md">
-			<div class="d-flex justify-content-center">
-				<div class="content-md" id="basicdiagram" style="width: 1200px; height: 800px; border-style: dotted; border-width: 1px;"></div>
-			</div>
-		</div>
+		<div class="tree-fill" id="basicdiagram"></div>
 	}
 }
 
