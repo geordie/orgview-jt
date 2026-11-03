@@ -13,8 +13,8 @@ run: generate
 ## dev: serve $(DB) with live reload on http://localhost:3000 (see .air.toml)
 dev:
 	go build -o bin/templ github.com/a-h/templ/cmd/templ
-	go build -o bin/air github.com/air-verse/air
-	ORGVIEW_DB=$(DB) bin/air
+	@command -v air >/dev/null || { echo "air not found; install it with: go install github.com/air-verse/air@latest"; exit 1; }
+	ORGVIEW_DB=$(DB) air
 
 ## build: build bin/orgview
 build: generate
