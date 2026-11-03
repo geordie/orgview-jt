@@ -16,7 +16,13 @@ type EmployeeFilter struct {
 	DirectReports *[2]int
 	// TeamIDs keeps employees on any of these teams; nil means no filter.
 	TeamIDs []int64
+	// Search keeps employees where every word appears in the name, person
+	// ID, title or job code, ignoring case.
+	Search string
 }
+
+// likeEscaper escapes LIKE wildcards so search text matches literally.
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
 // SQL is the joins, WHERE clause and arguments that select the filtered
 // employees of the active version.
@@ -47,6 +53,12 @@ func (f EmployeeFilter) SQL() (joins, where string, args []any) {
 		for _, id := range f.TeamIDs {
 			args = append(args, id)
 		}
+	}
+	for _, word := range strings.Fields(f.Search) {
+		pat := "%" + likeEscaper.Replace(word) + "%"
+		where += ` AND (employees.name LIKE ? ESCAPE '\' OR employees.person_id LIKE ? ESCAPE '\'
+			OR employees.title LIKE ? ESCAPE '\' OR employees.job_code LIKE ? ESCAPE '\')`
+		args = append(args, pat, pat, pat, pat)
 	}
 	return
 }
