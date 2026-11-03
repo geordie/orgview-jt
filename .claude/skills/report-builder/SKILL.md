@@ -200,7 +200,7 @@ mixes snapshots.
 
 Common targets: another report (`/reports/roles?job_code=...`), or the employee
 list, which accepts `title`, `job_code`, `job_family`, `team_id`,
-`direct_reports_bucket` (`1-2`, `3-4`, `5-10`, `11-15`, `> 15`) and `q`. If a
+`direct_reports_bucket` (`1+`, `1-2`, `3-4`, `5-10`, `11-15`, `> 15`) and `q`. If a
 report needs to link to a list filter that does not exist yet, add the field to
 `EmployeeFilter` and parse it in `employeesIndex` rather than inventing a new
 list page.

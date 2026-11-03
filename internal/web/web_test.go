@@ -587,22 +587,35 @@ func TestChartData(t *testing.T) {
 
 func TestManagersByTitle(t *testing.T) {
 	a := newApp(t)
+	// Version 1's managers (see TestManagementRatios) and their direct
+	// reports: EMP001 (CEO) 5, EMP2185 (Director) 3, EMP002 and EMP2182
+	// (both CTO) 2 and 1, EMP2183 and EMP2184 1 each. Give the CEO title
+	// to the UX Designer, who has no reports, so one rate is below 100%.
+	storetest.Exec(t, a.st, `UPDATE employees SET title = 'CEO' WHERE title = 'UX Designer' AND data_version_id = 1`)
 	res := a.get("/reports/managers_by_title")
-	res.wantContains(t, "Managers by Title", `href="/employees?direct_reports_bucket=1%2B&amp;title=CTO"`)
+	res.wantContains(t, "Managers by Title Report", "Titles held by people with direct reports",
+		`href="/employees?direct_reports_bucket=1%2B&amp;title=CTO"`)
+	// Titles held by no manager are left out, including Engineering Manager:
+	// EMP004 has is_manager set but nobody reports to them.
+	res.wantLacks(t, "Test Engineer", "Software Developer", "Engineering Manager")
 	rows := res.rows()
-	if !slices.Equal(rows[0], []string{"CTO", "2", "2", "100.0%"}) {
+	if !slices.Equal(rows[0], []string{"CTO", "2", "2", "100.0%", "3"}) {
 		t.Errorf("first row = %v", rows[0])
 	}
-	// Six people in version 1 have direct reports (see TestManagementRatios);
-	// the totals row shows their overall share, not a sum of the rates.
-	if total := rows[len(rows)-1]; !slices.Equal(total, []string{"Totals", "14", "6", "42.9%"}) {
+	if !slices.ContainsFunc(rows, func(row []string) bool { return slices.Equal(row, []string{"CEO", "2", "1", "50.0%", "5"}) }) {
+		t.Errorf("CEO row missing from %v", rows)
+	}
+	// The totals row shows the overall share (6 of 7), not a sum of rates,
+	// and all 13 direct reports.
+	if total := rows[len(rows)-1]; !slices.Equal(total, []string{"Totals", "7", "6", "85.7%", "13"}) {
 		t.Errorf("totals = %v", total)
 	}
 
+	// On Engineering only EMP002 (CTO, 2 reports) manages anyone.
 	res = a.get("/reports/managers_by_title?team_id=1").wantContains(t, " - Engineering")
-	rows = res.rows()
-	if total := rows[len(rows)-1]; !slices.Equal(total, []string{"Totals", "3", "1", "33.3%"}) {
-		t.Errorf("team totals = %v", total)
+	want := [][]string{{"CTO", "1", "1", "100.0%", "2"}, {"Totals", "1", "1", "100.0%", "2"}}
+	if rows = res.rows(); !slices.EqualFunc(rows, want, slices.Equal) {
+		t.Errorf("team rows = %v", rows)
 	}
 
 	a.get("/employees?direct_reports_bucket=1%2B&title=CTO").wantContains(t, "managers with 1+ direct reports")
