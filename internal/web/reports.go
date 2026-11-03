@@ -800,6 +800,104 @@ func (s *Server) reportICs(w http.ResponseWriter, r *http.Request) {
 	s.renderReport(w, r, simpleReport("Managers vs Individual Contributors", sub, gs, "Type", "icManagerChart", employeesLabel))
 }
 
+// reportManagersByTitle is, for each title, how many people hold it and how
+// many of them have at least one direct report: someone in the same
+// version whose manager_id is their person_id. A team_id narrows the
+// people counted, but their direct reports may sit on any team.
+func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
+	rc, ok := s.reportContext(w, r)
+	if !ok {
+		return
+	}
+	f, err := s.employeeFilter(rc)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	totals, err := s.employeeGroups(rc, f, "COUNT(DISTINCT employees.id)", "title", "")
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	withReports, err := s.employeeGroups(rc, f, "COUNT(DISTINCT employees.id)", "title", hasDirectReports)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	sub, err := s.teamSubtitle(rc)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+
+	managersByTitle := map[string]int{}
+	for _, g := range withReports {
+		managersByTitle[groupKey(g.Key)] = g.Count
+	}
+	type row struct {
+		title            views.Value
+		people, managers int
+	}
+	rows := make([]row, len(totals))
+	for i, g := range totals {
+		rows[i] = row{title: g.Key, people: g.Count, managers: managersByTitle[groupKey(g.Key)]}
+	}
+	// Most managers first; then the higher share, then the larger title.
+	slices.SortStableFunc(rows, func(a, b row) int {
+		return cmp.Or(cmp.Compare(b.managers, a.managers),
+			cmp.Compare(b.managers*a.people, a.managers*b.people),
+			cmp.Compare(b.people, a.people),
+			compareValues(a.title, b.title))
+	})
+
+	titles := make([]views.Value, len(rows))
+	people := make([]views.Value, len(rows))
+	managers := make([]views.Value, len(rows))
+	rates := make([]views.Value, len(rows))
+	sumPeople, sumManagers := 0, 0
+	for i, rw := range rows {
+		titles[i] = rw.title
+		people[i] = views.I(int64(rw.people))
+		managers[i] = views.I(int64(rw.managers))
+		rates[i] = rate(rw.managers, rw.people)
+		sumPeople += rw.people
+		sumManagers += rw.managers
+	}
+	overall := rate(sumManagers, sumPeople)
+
+	rep := views.Report{Title: "Managers by Title", Subtitle: sub}
+	titleLinks := append([]views.LinkParam{views.FromCol("title", "Title")}, teamIDParam(rc)...)
+	rep.Table.Add(views.Column{Label: "Title", Type: views.ColString, Values: titles})
+	rep.Table.Add(views.Column{Label: employeesLabel, Type: views.ColNumeric, Values: people,
+		Link: &views.LinkInfo{Path: "/employees", Params: titleLinks}})
+	rep.Table.Add(views.Column{Label: "# With Direct Reports", Type: views.ColNumeric, Values: managers,
+		Link: &views.LinkInfo{Path: "/employees", Params: append(titleLinks, views.Fixed("direct_reports_bucket", views.S("1+")))}})
+	rep.Table.Add(views.Column{Label: "% With Direct Reports", Type: views.ColPercentage, Values: rates, Total: &overall})
+	rep.Chart = &views.Chart{ID: "managersByTitleChart", Labels: titles, Data: managers, Percentages: rates, XLabel: "# With Direct Reports"}
+	s.renderReport(w, r, rep)
+}
+
+// hasDirectReports keeps employees someone in their version reports to.
+const hasDirectReports = ` AND EXISTS (SELECT 1 FROM employees AS dr
+	WHERE dr.manager_id = employees.person_id AND dr.data_version_id = employees.data_version_id)`
+
+// groupKey is a GROUP BY key as a map key, keeping NULL apart from "".
+func groupKey(v views.Value) string {
+	if v.IsNil() {
+		return "\x00nil"
+	}
+	return strings.ToLower(v.String())
+}
+
+// rate is part as a percentage of whole, rounded to two places, or
+// integer 0 when whole is 0.
+func rate(part, whole int) views.Value {
+	if whole == 0 {
+		return views.I(0)
+	}
+	return views.F(views.RubyRound(float64(part)/float64(whole)*100, 2))
+}
+
 func (s *Server) reportManagementRatios(w http.ResponseWriter, r *http.Request) {
 	rc, ok := s.reportContext(w, r)
 	if !ok {

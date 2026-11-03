@@ -44,6 +44,9 @@ type Column struct {
 	Type   string
 	Values []Value
 	Link   *LinkInfo
+	// Total, when set, is shown in the totals row in place of the sum of
+	// Values, for columns such as a rate where a sum means nothing.
+	Total *Value
 }
 
 // Display is the text of the cell at row.
@@ -59,6 +62,12 @@ func (c Column) Display(row int) string {
 
 // Summary is the column's text in the totals row.
 func (c Column) Summary() string {
+	if c.Total != nil {
+		if c.Type == ColPercentage {
+			return c.Total.Round(1).String() + "%"
+		}
+		return c.Total.String()
+	}
 	switch c.Type {
 	case ColNumeric:
 		return Sum(c.Values).String()
