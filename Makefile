@@ -4,11 +4,17 @@ export GOFLAGS := -mod=mod
 
 DB ?= storage/development.sqlite3
 
-.PHONY: run build test generate vet docker
+.PHONY: run dev build test generate vet docker
 
 ## run: serve the app on :3001 from $(DB)
 run: generate
 	go run ./cmd/orgview -db $(DB)
+
+## dev: serve $(DB) with live reload on http://localhost:3000 (see .air.toml)
+dev:
+	go build -o bin/templ github.com/a-h/templ/cmd/templ
+	go build -o bin/air github.com/air-verse/air
+	ORGVIEW_DB=$(DB) bin/air
 
 ## build: build bin/orgview
 build: generate
