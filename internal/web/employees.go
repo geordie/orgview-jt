@@ -32,6 +32,8 @@ func directReportsRange(bucket string) [2]int {
 		return [2]int{3, 4}
 	case "1-2":
 		return [2]int{1, 2}
+	case "1+":
+		return [2]int{1, 9999}
 	}
 	return [2]int{0, 0}
 }

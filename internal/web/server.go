@@ -145,6 +145,7 @@ func (s *Server) Handler() http.Handler {
 		"job_family":              s.reportJobFamily,
 		"individual_contributors": s.reportICs,
 		"management_ratios":       s.reportManagementRatios,
+		"managers_by_title":       s.reportManagersByTitle,
 		"team_depth":              s.reportTeamDepth,
 		"team_size":               s.reportTeamSize,
 		"team_health":             s.reportTeamHealth,

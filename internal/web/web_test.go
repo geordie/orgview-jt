@@ -191,7 +191,7 @@ func TestEveryPageLoads(t *testing.T) {
 		"/reports/seniority", "/reports/tenure", "/reports/employee_country", "/reports/personnel_area",
 		"/reports/company", "/reports/job_family", "/reports/individual_contributors", "/reports/management_ratios",
 		"/reports/team_size", "/reports/team_depth", "/reports/team_health", "/reports/team_health_details",
-		"/reports/team_children", "/reports/team_members_managers",
+		"/reports/team_children", "/reports/team_members_managers", "/reports/managers_by_title",
 		"/reports/roles?team_id=999999", "/reports/roles?job_code=ENGR03", "/reports/job_code_density?max_depth=2",
 		"/reports/title_density?team_id=2&max_depth=3&title=CTO", "/reports/management_ratios?team_id=1",
 		"/static/js/application.js", "/images/ui-bg_glass_65_ffffff_1x400.png", "/robots.txt",
@@ -583,4 +583,27 @@ func TestChartData(t *testing.T) {
 	res.wantContains(t, "labels: [2,1]", "data: [2,2]", "percentages: [50.0,50.0]", "label: '# of Teams'")
 	res = a.get("/reports/title_density?title=Nobody")
 	res.wantContains(t, "percentages: [0,0]")
+}
+
+func TestManagersByTitle(t *testing.T) {
+	a := newApp(t)
+	res := a.get("/reports/managers_by_title")
+	res.wantContains(t, "Managers by Title", `href="/employees?direct_reports_bucket=1%2B&amp;title=CTO"`)
+	rows := res.rows()
+	if !slices.Equal(rows[0], []string{"CTO", "2", "2", "100.0%"}) {
+		t.Errorf("first row = %v", rows[0])
+	}
+	// Six people in version 1 have direct reports (see TestManagementRatios);
+	// the totals row shows their overall share, not a sum of the rates.
+	if total := rows[len(rows)-1]; !slices.Equal(total, []string{"Totals", "14", "6", "42.9%"}) {
+		t.Errorf("totals = %v", total)
+	}
+
+	res = a.get("/reports/managers_by_title?team_id=1").wantContains(t, " - Engineering")
+	rows = res.rows()
+	if total := rows[len(rows)-1]; !slices.Equal(total, []string{"Totals", "3", "1", "33.3%"}) {
+		t.Errorf("team totals = %v", total)
+	}
+
+	a.get("/employees?direct_reports_bucket=1%2B&title=CTO").wantContains(t, "managers with 1+ direct reports")
 }

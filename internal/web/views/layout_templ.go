@@ -89,7 +89,7 @@ func Layout(p Page) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><script type=\"module\">import \"application\"</script></head><body><nav class=\"navbar navbar-expand-lg navbar-light bg-light\"><a class=\"navbar-brand\" href=\"/\">JT Org View</a> <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarNav\" aria-controls=\"navbarNav\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"><span class=\"navbar-toggler-icon\"></span></button><div class=\"collapse navbar-collapse\" id=\"navbarNav\"><ul class=\"navbar-nav\"><li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"employeesDropdown\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">Employees</a><ul class=\"dropdown-menu\" aria-labelledby=\"employeesDropdown\"><li><a class=\"dropdown-item\" href=\"/employees\">List</a></li><li><a class=\"dropdown-item\" href=\"/employees/treeview\">Structure</a></li></ul></li><li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"teamsDropdown\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">Teams</a><ul class=\"dropdown-menu\" aria-labelledby=\"teamsDropdown\"><li><a class=\"dropdown-item\" href=\"/teams\">List</a></li><li><a class=\"dropdown-item\" href=\"/teams/treeview\">Structure</a></li></ul></li><li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"reportsDropdown\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">Reports</a><ul class=\"dropdown-menu\" aria-labelledby=\"reportsDropdown\"><li><a class=\"dropdown-item\" href=\"/reports/roles\">Employee Roles</a></li><li><a class=\"dropdown-item\" href=\"/reports/title_density\">Employee Role Density</a></li><li><a class=\"dropdown-item\" href=\"/reports/job_code\">Employee Job Code</a></li><li><a class=\"dropdown-item\" href=\"/reports/job_code_density\">Employee Job Code Density</a></li><li><a class=\"dropdown-item\" href=\"/reports/seniority\">Employee Seniority</a></li><li><a class=\"dropdown-item\" href=\"/reports/tenure\">Employee Tenure</a></li><li><a class=\"dropdown-item\" href=\"/reports/employee_country\">Employee Countries</a></li><li><a class=\"dropdown-item\" href=\"/reports/personnel_area\">Employee Personnel Areas</a></li><li><a class=\"dropdown-item\" href=\"/reports/company\">Employee Companies</a></li><li><a class=\"dropdown-item\" href=\"/reports/job_family\">Employee Job Families</a></li><li><a class=\"dropdown-item\" href=\"/reports/management_ratios\">Employee Management Ratios</a></li><li><a class=\"dropdown-item\" href=\"/reports/individual_contributors\">Managers vs Individual Contributors</a></li><li><hr class=\"dropdown-divider\"></li><li><a class=\"dropdown-item\" href=\"/reports/team_size\">Team Size</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_depth\">Team Depth</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_health\">Team Health</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_health_details\">Team Health Details</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_children\">Team Children</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_members_managers\">Team Members Managers</a></li></ul></li></ul><!-- Data Version Badge on the right side --><ul class=\"navbar-nav ms-auto\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><script type=\"module\">import \"application\"</script></head><body><nav class=\"navbar navbar-expand-lg navbar-light bg-light\"><a class=\"navbar-brand\" href=\"/\">JT Org View</a> <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarNav\" aria-controls=\"navbarNav\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"><span class=\"navbar-toggler-icon\"></span></button><div class=\"collapse navbar-collapse\" id=\"navbarNav\"><ul class=\"navbar-nav\"><li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"employeesDropdown\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">Employees</a><ul class=\"dropdown-menu\" aria-labelledby=\"employeesDropdown\"><li><a class=\"dropdown-item\" href=\"/employees\">List</a></li><li><a class=\"dropdown-item\" href=\"/employees/treeview\">Structure</a></li></ul></li><li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"teamsDropdown\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">Teams</a><ul class=\"dropdown-menu\" aria-labelledby=\"teamsDropdown\"><li><a class=\"dropdown-item\" href=\"/teams\">List</a></li><li><a class=\"dropdown-item\" href=\"/teams/treeview\">Structure</a></li></ul></li><li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"reportsDropdown\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">Reports</a><ul class=\"dropdown-menu\" aria-labelledby=\"reportsDropdown\"><li><a class=\"dropdown-item\" href=\"/reports/roles\">Employee Roles</a></li><li><a class=\"dropdown-item\" href=\"/reports/title_density\">Employee Role Density</a></li><li><a class=\"dropdown-item\" href=\"/reports/job_code\">Employee Job Code</a></li><li><a class=\"dropdown-item\" href=\"/reports/job_code_density\">Employee Job Code Density</a></li><li><a class=\"dropdown-item\" href=\"/reports/seniority\">Employee Seniority</a></li><li><a class=\"dropdown-item\" href=\"/reports/tenure\">Employee Tenure</a></li><li><a class=\"dropdown-item\" href=\"/reports/employee_country\">Employee Countries</a></li><li><a class=\"dropdown-item\" href=\"/reports/personnel_area\">Employee Personnel Areas</a></li><li><a class=\"dropdown-item\" href=\"/reports/company\">Employee Companies</a></li><li><a class=\"dropdown-item\" href=\"/reports/job_family\">Employee Job Families</a></li><li><a class=\"dropdown-item\" href=\"/reports/management_ratios\">Employee Management Ratios</a></li><li><a class=\"dropdown-item\" href=\"/reports/individual_contributors\">Managers vs Individual Contributors</a></li><li><a class=\"dropdown-item\" href=\"/reports/managers_by_title\">Managers by Title</a></li><li><hr class=\"dropdown-divider\"></li><li><a class=\"dropdown-item\" href=\"/reports/team_size\">Team Size</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_depth\">Team Depth</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_health\">Team Health</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_health_details\">Team Health Details</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_children\">Team Children</a></li><li><a class=\"dropdown-item\" href=\"/reports/team_members_managers\">Team Members Managers</a></li></ul></li></ul><!-- Data Version Badge on the right side --><ul class=\"navbar-nav ms-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -123,7 +123,7 @@ func Layout(p Page) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(p.Current.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 77, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 78, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -161,7 +161,7 @@ func Layout(p Page) templ.Component {
 				var templ_7745c5c3_Var9 templ.SafeURL
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/data_versions/" + itoa(v.ID) + "/activate"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 92, Col: 127}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 93, Col: 127}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -196,7 +196,7 @@ func Layout(p Page) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(v.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 97, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 98, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -219,7 +219,7 @@ func Layout(p Page) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmtTime(v.SnapshotDate, date2))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 102, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 103, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -285,7 +285,7 @@ func Notice(p Page) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(p.Notice)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 132, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 133, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -328,7 +328,7 @@ func Alert(p Page) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(p.Alert)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 137, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 138, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -372,7 +372,7 @@ func Flash(p Page) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(p.Notice)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 143, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 144, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -391,7 +391,7 @@ func Flash(p Page) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(p.Alert)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 146, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 147, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -441,7 +441,7 @@ func Pagination(pg Pager) templ.Component {
 				var templ_7745c5c3_Var22 templ.SafeURL
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(pg.URL(pg.Page - 1)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 155, Col: 99}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 156, Col: 99}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -489,7 +489,7 @@ func Pagination(pg Pager) templ.Component {
 					var templ_7745c5c3_Var25 string
 					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(relValue(pg.Page, n))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 164, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 165, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 					if templ_7745c5c3_Err != nil {
@@ -502,7 +502,7 @@ func Pagination(pg Pager) templ.Component {
 					var templ_7745c5c3_Var26 templ.SafeURL
 					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(pg.URL(n)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 164, Col: 87}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 165, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 					if templ_7745c5c3_Err != nil {
@@ -515,7 +515,7 @@ func Pagination(pg Pager) templ.Component {
 					var templ_7745c5c3_Var27 string
 					templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(itoa(int64(n)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 164, Col: 106}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 165, Col: 106}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 					if templ_7745c5c3_Err != nil {
@@ -535,7 +535,7 @@ func Pagination(pg Pager) templ.Component {
 				var templ_7745c5c3_Var28 templ.SafeURL
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(pg.URL(pg.Page + 1)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 169, Col: 99}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout.templ`, Line: 170, Col: 99}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
