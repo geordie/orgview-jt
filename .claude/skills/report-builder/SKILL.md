@@ -45,8 +45,12 @@ Every handler has the same five steps, in this order:
    `[]group` (a `views.Value` key and an int count).
 4. **Order.** `byCountDesc(gs)` (largest first, the default), `byKeyDesc(gs)`
    (numeric keys like depth or size), or a fixed bucket list (see "Buckets").
+   Then, if the first column is text, `gs = searchGroups(rc, gs)` (see
+   "Filtering by the first column").
 5. **Build and render.** Either `simpleReport(...)` for the standard three
    columns, or build a `views.Report` by hand, then `s.renderReport(w, r, rep)`.
+   Set `rep.Search = reportSearch(rc, "<first column label>")` when step 4
+   filtered.
 
 Every error goes to `s.fail(w, r, err)` and returns. `fail` answers 404 for
 `store.ErrNotFound` and 500 (logged) for anything else, so never write your own
@@ -205,6 +209,37 @@ report needs to link to a list filter that does not exist yet, add the field to
 `EmployeeFilter` and parse it in `employeesIndex` rather than inventing a new
 list page.
 
+### Filtering by the first column (`q`)
+
+Every report whose first column is text takes `?q=`, which keeps the rows
+whose first-column value contains every word of `q`, ignoring case (like the
+employee list search). `/reports/roles?q=senior eng` keeps "Senior Software
+Engineer". It is two lines in the handler:
+
+```go
+gs = searchGroups(rc, byCountDesc(gs))     // after ordering and any relabelling
+rep.Search = reportSearch(rc, "Role")      // the box above the table; the label is the first column's
+```
+
+- Filter the `[]group` in Go, after relabelling (job family's "Unassigned"),
+  so `q` matches exactly what the table shows. Don't add `q` to the SQL.
+- Percentages, totals and the chart are then over the rows kept, the same
+  way a `team_id` filter works. When a report joins a second query onto the
+  groups (Managers by Title), filter the groups that drive the rows.
+- The box keeps every other query parameter as a hidden field and has a
+  Clear link. `q` is not passed on in cell links: it describes this report's
+  first column, not the next page's.
+- It is a plain substring match, so `cto` also matches "Director".
+- Leave it out (no `searchGroups`, no `Search`) when the first column is a
+  number (seniority, team size, depth, children, manager count), a fixed
+  bucket list (tenure, management ratios, managers vs ICs), or a list of
+  teams (the density drill-downs). A substring of a number or a bucket name
+  isn't a useful filter. If a new report doesn't fit either case, ask
+  rather than bending the helper.
+
+The older `views.CountReport` page shows the box too (`rep.Search`), which
+the text-keyed team reports (team health) use.
+
 ### Buckets
 
 When rows are bands (tenure years, team sizes), keep the bands in a package
@@ -269,6 +304,8 @@ against Rails.
 6. Tests in `internal/web/web_test.go`:
    - add `/reports/foo` (and a `?team_id=1` variant if it filters) to
      `TestEveryPageLoads`;
+   - if it takes `q`, add a case to `TestReportSearch`, or add it to that
+     test's list of reports without the box;
    - add `TestFoo` that loads the page with `newApp(t)` and checks real numbers:
      `a.get("/reports/foo").rows()` gives each table row's cell text, the last
      row being Totals; `wantContains` / `wantLacks` check text and link hrefs

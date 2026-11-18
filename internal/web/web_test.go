@@ -623,3 +623,43 @@ func TestManagersByTitle(t *testing.T) {
 
 	a.get("/employees?direct_reports_bucket=1%2B&title=CTO").wantContains(t, "managers with 1+ direct reports")
 }
+
+func TestReportSearch(t *testing.T) {
+	a := newApp(t)
+	// Every word must appear in the role, ignoring case: four of the 13
+	// fixture titles contain both "software" and "dev" (one as part of
+	// "Development"). Percentages are shares of the rows kept.
+	res := a.get("/reports/roles?q=software+DEV&team_id=999999")
+	want := [][]string{
+		{"Staff Software Developer", "", "1", "25.0%"},
+		{"Software Developer", "", "1", "25.0%"},
+		{"Principal Software Developer", "", "1", "25.0%"},
+		{"Director, Software Development", "", "1", "25.0%"},
+		{"Totals", "", "4", "100%"},
+	}
+	if rows := res.rows(); !slices.EqualFunc(rows, want, slices.Equal) {
+		t.Errorf("rows = %v", rows)
+	}
+	// The box shows the text and keeps the other parameters.
+	res.wantContains(t, `name="q" value="software DEV"`, `placeholder="Role contains"`,
+		`<input type="hidden" name="team_id" value="999999">`, `href="?team_id=999999"`)
+
+	// q matches the label shown, after blanks become "Unassigned".
+	if rows := a.get("/reports/job_family?q=unassigned").rows(); len(rows) != 2 || rows[0][0] != "Unassigned" {
+		t.Errorf("job family rows = %v", rows)
+	}
+	if rows := a.get("/reports/employee_country?q=a").rows(); len(rows) != 3 || rows[0][0] != "USA" || rows[1][0] != "Canada" {
+		t.Errorf("country rows = %v", rows)
+	}
+	a.get("/reports/team_health?q=RE").wantContains(t, "green", "red").wantLacks(t, "amber")
+	// It is a plain substring match: "cto" is also in "Director".
+	if rows := a.get("/reports/managers_by_title?q=cto").rows(); len(rows) != 3 || rows[0][0] != "CTO" {
+		t.Errorf("managers by title rows = %v", rows)
+	}
+
+	// Reports keyed by numbers or fixed buckets have no box and ignore q.
+	for _, p := range []string{"/reports/seniority", "/reports/tenure", "/reports/team_size", "/reports/team_children",
+		"/reports/individual_contributors", "/reports/management_ratios", "/reports/title_density"} {
+		a.get(p+"?q=x").wantLacks(t, `name="q"`)
+	}
+}

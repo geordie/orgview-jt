@@ -188,8 +188,19 @@ type Report struct {
 	Title    string
 	Subtitle string
 	Back     *Link
-	Table    Table
-	Chart    *Chart
+	// Search, when set, shows a box that filters the rows by their first
+	// column (the q parameter).
+	Search *Search
+	Table  Table
+	Chart  *Chart
+}
+
+// Search is a report's filter box: the column it filters, the current
+// text, and the other query parameters to keep when it is submitted.
+type Search struct {
+	Column string
+	Q      string
+	Keep   [][2]string
 }
 
 // CountReport is a page with a count table and a chart, used by the older
@@ -202,6 +213,7 @@ type CountReport struct {
 	Counts      []Value
 	Percentages []Value
 	XLabel      string
+	Search      *Search
 }
 
 func jsonValues(v []Value) string {
