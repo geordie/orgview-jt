@@ -7,6 +7,40 @@ func cellClass(c Column) string {
 	return "border"
 }
 
+// clearURL is the report without its filter: the same path with the
+// other parameters.
+func (s Search) clearURL() templ.SafeURL {
+	q := map[string]string{}
+	for _, kv := range s.Keep {
+		q[kv[0]] = kv[1]
+	}
+	if len(q) == 0 {
+		return "?"
+	}
+	return templ.SafeURL(Query(q))
+}
+
+// reportSearch is the filter box above a report's table.
+templ reportSearch(s Search) {
+	<form method="get" role="search" class="row g-2 align-items-center mb-3">
+		for _, kv := range s.Keep {
+			<input type="hidden" name={ kv[0] } value={ kv[1] }/>
+		}
+		<div class="col-auto">
+			<label class="visually-hidden" for="report_search">Filter by { s.Column }</label>
+			<input type="search" class="form-control" id="report_search" name="q" value={ s.Q } placeholder={ s.Column + " contains" } size="30" autofocus?={ s.Q != "" }/>
+		</div>
+		<div class="col-auto">
+			<button type="submit" class="btn btn-primary">Filter</button>
+		</div>
+		if s.Q != "" {
+			<div class="col-auto">
+				<a href={ s.clearURL() } class="btn btn-outline-secondary">Clear</a>
+			</div>
+		}
+	</form>
+}
+
 templ ReportPage(p Page, r Report) {
 	@Layout(p) {
 		<div class="container-md">
@@ -22,6 +56,9 @@ templ ReportPage(p Page, r Report) {
 			<div style="margin-bottom: 2rem;">
 				<h2 style="margin: 0; font-size: 1.5rem; color: #6c757d;">{ r.Subtitle }</h2>
 			</div>
+			if r.Search != nil {
+				@reportSearch(*r.Search)
+			}
 			@reportTable(r.Table)
 			if r.Chart != nil {
 				@chart(r.Chart.ID, r.Chart.Labels, r.Chart.Data, r.Chart.Percentages, r.Chart.XLabel)
@@ -90,6 +127,9 @@ templ CountReportPage(p Page, r CountReport) {
 		<h1>{ r.Title }</h1>
 		if r.Subtitle != "" {
 			<h2 style="font-size: 1.5rem; color: #6c757d;">{ r.Subtitle }</h2>
+		}
+		if r.Search != nil {
+			@reportSearch(*r.Search)
 		}
 		<div class="container-md">
 			<div class="row justify-content-center">

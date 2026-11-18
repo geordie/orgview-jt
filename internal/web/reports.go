@@ -222,6 +222,39 @@ func countReport(title, subtitle, header string, gs []group, xlabel string) view
 		Percentages: groupPercentages(gs), XLabel: xlabel}
 }
 
+// searchGroups keeps the groups whose key contains every word of the q
+// parameter, ignoring case, so ?q=senior eng keeps "Senior Engineer". It
+// runs after any relabelling (like "Unassigned"), so q matches what the
+// table shows. Percentages computed afterwards are shares of the rows kept.
+func searchGroups(rc reportCtx, gs []group) []group {
+	words := strings.Fields(strings.ToLower(rc.param("q")))
+	if len(words) == 0 {
+		return gs
+	}
+	var kept []group
+	for _, g := range gs {
+		if !g.Key.IsNil() && containsAll(strings.ToLower(g.Key.String()), words) {
+			kept = append(kept, g)
+		}
+	}
+	return kept
+}
+
+func containsAll(s string, words []string) bool {
+	for _, w := range words {
+		if !strings.Contains(s, w) {
+			return false
+		}
+	}
+	return true
+}
+
+// reportSearch is the filter box for a report whose first column, labelled
+// column, is filtered with searchGroups.
+func reportSearch(rc reportCtx, column string) *views.Search {
+	return &views.Search{Column: column, Q: rc.param("q"), Keep: keepParams(rc.r.URL.Query(), "q")}
+}
+
 // teamIDParam is the team_id link parameter when the request has one.
 func teamIDParam(rc reportCtx) []views.LinkParam {
 	if present(rc.param("team_id")) {
@@ -252,7 +285,7 @@ func (s *Server) reportRoles(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	gs = byCountDesc(gs)
+	gs = searchGroups(rc, byCountDesc(gs))
 	joins, where, args := f.SQL()
 	families, err := s.st.StringPairs(rc.ctx, `SELECT title, MAX(job_family) FROM employees`+joins+where+` GROUP BY employees.title`, args...)
 	if err != nil {
@@ -275,7 +308,7 @@ func (s *Server) reportRoles(w http.ResponseWriter, r *http.Request) {
 		parts = append(parts, sub)
 	}
 
-	rep := views.Report{Title: "Roles Report", Subtitle: strings.Join(parts, " ")}
+	rep := views.Report{Title: "Roles Report", Subtitle: strings.Join(parts, " "), Search: reportSearch(rc, "Role")}
 	roleLinks := append([]views.LinkParam{views.FromCol("title", "Role")}, teamIDParam(rc)...)
 	rep.Table.Add(views.Column{Label: "Role", Type: views.ColString, Values: keys(gs),
 		Link: &views.LinkInfo{Path: "/reports/title_density", Params: roleLinks}})
@@ -680,13 +713,13 @@ func (s *Server) reportJobCode(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	gs = byCountDesc(gs)
+	gs = searchGroups(rc, byCountDesc(gs))
 	sub, err := s.teamSubtitle(rc)
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
-	rep := views.Report{Title: "Job Code Report", Subtitle: sub}
+	rep := views.Report{Title: "Job Code Report", Subtitle: sub, Search: reportSearch(rc, "Job Code")}
 	rep.Table.Add(views.Column{Label: "Job Code", Type: views.ColString, Values: keys(gs), Link: &views.LinkInfo{
 		Path: "/reports/job_code_density", Params: append([]views.LinkParam{views.FromCol("job_code", "Job Code")}, teamIDParam(rc)...)}})
 	rep.Table.Add(views.Column{Label: "Count", Type: views.ColNumeric, Values: counts(gs), Link: &views.LinkInfo{
@@ -708,7 +741,9 @@ func (s *Server) allEmployeesReport(w http.ResponseWriter, r *http.Request, col,
 		s.fail(w, r, err)
 		return
 	}
-	s.renderReport(w, r, simpleReport(title, subtitle, byCountDesc(gs), label, chartID, employeesLabel))
+	rep := simpleReport(title, subtitle, searchGroups(rc, byCountDesc(gs)), label, chartID, employeesLabel)
+	rep.Search = reportSearch(rc, label)
+	s.renderReport(w, r, rep)
 }
 
 func (s *Server) reportCountry(w http.ResponseWriter, r *http.Request) {
@@ -754,12 +789,14 @@ func (s *Server) reportJobFamily(w http.ResponseWriter, r *http.Request) {
 		pos[k] = len(gs)
 		gs = append(gs, group{Key: views.S(k), Count: g.Count})
 	}
+	gs = searchGroups(rc, gs)
 	sub, err := s.teamSubtitle(rc)
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
-	rep := views.Report{Title: "Employee Job Family Report", Subtitle: "Distribution of employees by job family" + sub}
+	rep := views.Report{Title: "Employee Job Family Report", Subtitle: "Distribution of employees by job family" + sub,
+		Search: reportSearch(rc, "Job Family")}
 	rep.Table.Add(views.Column{Label: "Job Family", Type: views.ColString, Values: keys(gs), Link: &views.LinkInfo{
 		Path: "/reports/roles", Params: append([]views.LinkParam{views.FromCol("job_family", "Job Family")}, teamIDParam(rc)...)}})
 	rep.Table.Add(views.Column{Label: "Count", Type: views.ColNumeric, Values: counts(gs), Link: &views.LinkInfo{
@@ -822,6 +859,7 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
+	totals = searchGroups(rc, totals)
 	withReports, err := s.employeeGroups(rc, f, "COUNT(DISTINCT employees.id)", "title", hasDirectReports)
 	if err != nil {
 		s.fail(w, r, err)
@@ -891,7 +929,8 @@ func (s *Server) reportManagersByTitle(w http.ResponseWriter, r *http.Request) {
 	overall := rate(sumManagers, sumPeople)
 	reportShares := percentages(reportCounts)
 
-	rep := views.Report{Title: "Managers by Title Report", Subtitle: "Titles held by people with direct reports" + sub}
+	rep := views.Report{Title: "Managers by Title Report", Subtitle: "Titles held by people with direct reports" + sub,
+		Search: reportSearch(rc, "Title")}
 	titleLinks := append([]views.LinkParam{views.FromCol("title", "Title")}, teamIDParam(rc)...)
 	rep.Table.Add(views.Column{Label: "Title", Type: views.ColString, Values: titles})
 	rep.Table.Add(views.Column{Label: employeesLabel, Type: views.ColNumeric, Values: people,
@@ -1067,7 +1106,8 @@ func (s *Server) reportTeamSize(w http.ResponseWriter, r *http.Request) {
 }
 
 // teamCountReport is one of the older team reports: a count table by a
-// column, ordered by count or by key.
+// column, ordered by count or by key. Text columns get the q filter;
+// numeric ones (ordered by key) do not.
 func (s *Server) teamCountReport(w http.ResponseWriter, r *http.Request, col, title, header string, byKey bool) {
 	rc, ok := s.reportContext(w, r)
 	if !ok {
@@ -1079,11 +1119,12 @@ func (s *Server) teamCountReport(w http.ResponseWriter, r *http.Request, col, ti
 		return
 	}
 	if byKey {
-		gs = byKeyDesc(gs)
-	} else {
-		gs = byCountDesc(gs)
+		s.renderCountReport(w, r, countReport(title, "", header, byKeyDesc(gs), teamsLabel))
+		return
 	}
-	s.renderCountReport(w, r, countReport(title, "", header, gs, teamsLabel))
+	rep := countReport(title, "", header, searchGroups(rc, byCountDesc(gs)), teamsLabel)
+	rep.Search = reportSearch(rc, header)
+	s.renderCountReport(w, r, rep)
 }
 
 func (s *Server) reportTeamHealth(w http.ResponseWriter, r *http.Request) {
