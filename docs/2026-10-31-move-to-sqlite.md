@@ -1,6 +1,12 @@
 # Move from MySQL to SQLite
 **Date:** 2026-10-31
 
+**2026-11-18:** done. The copy was run and verified, and the Rails app, the
+`mysql` and `rails` Compose services and `script/copy_mysql_to_sqlite.rb` were
+removed. This document is kept as a record. To free the disk space, keep your
+`orgview-mysql-backup.sql` somewhere safe and run
+`docker volume rm orgview-jt-mysql-data orgview-jt-app-log orgview-jt-app-tmp`.
+
 The app now uses SQLite (`storage/development.sqlite3`, on the
 `orgview-jt-app-storage` named volume) instead of a MySQL container. This is
 phase 1 of the plan to move to Go + SQLite: the Rails app keeps working while the

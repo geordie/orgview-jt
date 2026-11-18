@@ -1,7 +1,3 @@
-# The Rails app's vendor/ folder would put Go into vendoring mode; -mod=mod
-# makes Go use go.mod instead. Remove once Rails is gone.
-export GOFLAGS := -mod=mod
-
 DB ?= storage/development.sqlite3
 
 .PHONY: run dev build test generate vet docker

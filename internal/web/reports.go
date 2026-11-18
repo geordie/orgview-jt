@@ -14,8 +14,8 @@ import (
 	"github.com/geordie/orgview-jt/internal/web/views"
 )
 
-// The reports mirror the Rails ReportsController action by action, down to
-// the SQL, so the two apps show the same rows in the same order.
+// The reports were ported from the Rails ReportsController action by action,
+// down to the SQL, and show the same rows in the same order it did.
 
 const employeesLabel = "# of Employees"
 const teamsLabel = "# of Teams"

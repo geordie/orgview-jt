@@ -14,7 +14,6 @@ tmp_dir = "tmp/air"
   include_ext = ["go", "templ", "sql", "css", "js", "svg", "png", "jpg", "gif", "ico", "txt", "woff", "woff2", "ttf"]
   # _templ.go files are written by the build step; watching them would loop.
   exclude_regex = ["_test\\.go$", "_templ\\.go$"]
-  exclude_dir = ["cmd/parity"]
   delay = 300
   send_interrupt = true
   kill_delay = "5s"

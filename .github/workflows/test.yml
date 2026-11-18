@@ -9,8 +9,6 @@ on:
 jobs:
   go:
     runs-on: ubuntu-latest
-    env:
-      GOFLAGS: -mod=mod
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -30,42 +28,3 @@ jobs:
 
     - name: Run tests
       run: make test
-
-  # The Rails app, until it is removed after the Go app is verified on real data.
-  test:
-    runs-on: ubuntu-latest
-
-    env:
-      RAILS_ENV: test
-      CI: true
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Cache Ruby installation
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.rubies
-          ~/.gem
-        key: ${{ runner.os }}-ruby-3.3.1-${{ hashFiles('Gemfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-ruby-3.3.1-
-          ${{ runner.os }}-ruby-
-
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: 3.3.1
-        bundler-cache: true
-
-    - name: Set up database
-      run: |
-        bin/rails db:prepare
-
-    - name: Run tests
-      run: bin/rails test
-
-    - name: Run system tests
-      run: bin/rails test:system

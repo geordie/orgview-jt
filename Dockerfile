@@ -1,5 +1,4 @@
-# OrgView, the Go app. The Rails app's image is Dockerfile.rails, kept only for
-# the one-time MySQL copy (docs/2026-10-31-move-to-sqlite.md).
+# OrgView.
 FROM golang:1.25-bookworm AS build
 WORKDIR /src
 COPY go.mod go.sum ./

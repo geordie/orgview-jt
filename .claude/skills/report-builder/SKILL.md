@@ -286,9 +286,8 @@ The existing reports were ported from the Rails `ReportsController` and match
 it row for row, which is why some helpers mimic Ruby (`byCountDesc` reproduces
 Ruby's unstable sort, `views.Value` prints `0` vs `0.0` like Ruby, `rubyInt`,
 the transform_keys quirk in `reportJobFamily`). New reports have no Rails
-counterpart: use the same helpers for consistency, but don't add new Ruby
-emulation, and don't add new reports to the `cmd/parity` crawler, which compares
-against Rails.
+counterpart (the Rails app has been removed): use the same helpers for
+consistency, but don't add new Ruby emulation.
 
 ## Steps
 
