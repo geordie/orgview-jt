@@ -16,7 +16,7 @@ import (
 
 var ctx = context.Background()
 
-func TestOpenCreatesSchemaRailsCanUse(t *testing.T) {
+func TestOpenCreatesSchema(t *testing.T) {
 	st := storetest.Open(t)
 	v, ok, err := st.ActiveVersion(ctx)
 	if err != nil || !ok {
@@ -39,7 +39,7 @@ func TestOpenRefusesOutdatedSchema(t *testing.T) {
 	}
 	storetest.Exec(t, st, `DELETE FROM schema_migrations WHERE version = '20261031000000'`)
 	st.Close()
-	if _, err := store.Open(path); err == nil || !strings.Contains(err.Error(), "rake db:migrate") {
+	if _, err := store.Open(path); err == nil || !strings.Contains(err.Error(), "older than migration 20261031000000") {
 		t.Fatalf("want an outdated-schema error, got %v", err)
 	}
 }

@@ -1,6 +1,5 @@
-// Package store is OrgView's database layer: one SQLite file, shared with the
-// Rails app during the migration. The schema is the one Rails creates, so
-// either app can open a database the other made.
+// Package store is OrgView's database layer: one SQLite file. The schema is
+// the one the old Rails app created, so databases it made still open.
 package store
 
 import (
@@ -20,9 +19,10 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
-// railsMigrations are the Rails migration versions that schema.sql already
-// contains. They are recorded in schema_migrations so Rails, while it still
-// exists, sees a database the Go app created as fully migrated.
+// railsMigrations are the versions of the old Rails app's migrations that
+// schema.sql contains. A new database records them in schema_migrations, and
+// an existing one must have the latest, so a database from before the move
+// to Go is caught instead of failing on a missing column.
 var railsMigrations = []string{
 	"20260319000001", "20260319000002", "20260319000003", "20260319000004",
 	"20260319000005", "20260319000006", "20260320225035", "20260322181146",
@@ -69,7 +69,7 @@ func Open(path string) (*Store, error) {
 func (s *Store) Close() error { return s.DB.Close() }
 
 // init creates the schema in an empty database, with the "initial" data
-// version that the Rails migrations create.
+// version that the Rails migrations used to create.
 func (s *Store) init(ctx context.Context) error {
 	var n int
 	if err := s.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='data_versions'`).Scan(&n); err != nil {
@@ -84,7 +84,7 @@ func (s *Store) init(ctx context.Context) error {
 			return fmt.Errorf("checking schema version: %w", err)
 		}
 		if found == 0 {
-			return fmt.Errorf("database schema is older than migration %s; migrate it with the Rails app (rake db:migrate) first", latest)
+			return fmt.Errorf("database schema is older than migration %s, from before the move to Go; migrate it with the Rails app from git history, before it was removed", latest)
 		}
 		return nil
 	}

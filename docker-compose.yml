@@ -1,29 +1,4 @@
-
 services:
-  # Only needed once, to copy the old data into SQLite. It no longer starts with
-  # `docker compose up`; start it with `docker compose --profile mysql up -d mysql`.
-  # See docs/2026-10-31-move-to-sqlite.md. Remove after the copy is verified.
-  mysql:
-    image: mysql:8.0
-    profiles: ["mysql"]
-    ports:
-      - "3308:3308"
-    volumes:
-      - orgview-jt-mysql-data:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=dev
-      - MYSQL_TCP_PORT=3308
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "3308", "-u", "root", "-proot"]
-      interval: 60s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-      start_interval: 2s
-    mem_limit: 1g
-
-  # The Go app. It serves the same SQLite file the Rails app used.
   app:
     build: .
     ports:
@@ -32,29 +7,6 @@ services:
       - orgview-jt-app-storage:/app/storage
     mem_limit: 256m
 
-  # The old Rails app, only for the one-time MySQL copy. Start it with
-  # `docker compose --profile rails run --rm rails ...`; see
-  # docs/2026-10-31-move-to-sqlite.md. Remove once the copy is verified.
-  rails:
-    build:
-      context: .
-      dockerfile: Dockerfile.rails
-    profiles: ["rails"]
-    environment:
-      RAILS_ENV: development
-    volumes:
-      - .:/workspace
-      - orgview-jt-app-log:/workspace/log
-      - orgview-jt-app-tmp:/workspace/tmp
-      - orgview-jt-app-storage:/workspace/storage
-    mem_limit: 1g
-
 volumes:
-  orgview-jt-mysql-data:
-    name: orgview-jt-mysql-data
-  orgview-jt-app-log:
-    name: orgview-jt-app-log
-  orgview-jt-app-tmp:
-    name: orgview-jt-app-tmp
   orgview-jt-app-storage:
     name: orgview-jt-app-storage
