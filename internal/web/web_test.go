@@ -304,23 +304,28 @@ func TestPagination(t *testing.T) {
 func TestEmployeeTreeviewAndDirectReports(t *testing.T) {
 	a := newApp(t)
 	storetest.Exec(t, a.st, `UPDATE employees SET name = 'Ada Lovelace' WHERE id = 1`)
-	a.get("/employees/treeview").wantContains(t, `"title":"Ada Lovelace"`, `"orgSize":13`)
+	a.get("/employees/treeview").wantContains(t, `"title":"Ada Lovelace"`, `"orgSize":13,"managersBelow":5`)
 
 	var rows []struct {
 		Employee struct {
 			PersonID string `json:"person_id"`
 		} `json:"employee"`
-		DirectsCount int `json:"directs_count"`
-		OrgSize      int `json:"org_size"`
+		DirectsCount  int `json:"directs_count"`
+		OrgSize       int `json:"org_size"`
+		ManagersBelow int `json:"managers_below"`
 	}
 	a.getJSON("/employees/1/direct_reports.json", &rows)
-	sizes := map[string]int{}
+	sizes, managers := map[string]int{}, map[string]int{}
 	for _, r := range rows {
 		sizes[r.Employee.PersonID] = r.OrgSize
+		managers[r.Employee.PersonID] = r.ManagersBelow
 	}
 	// EMP2182 > EMP2183 > EMP2184 > EMP2185 > three developers.
 	if sizes["EMP2182"] != 6 || sizes["EMP002"] != 2 || sizes["EMP005"] != 0 || len(rows) != 5 {
 		t.Errorf("org sizes = %v (%d rows)", sizes, len(rows))
+	}
+	if managers["EMP2182"] != 3 || managers["EMP005"] != 0 {
+		t.Errorf("managers below = %v", managers)
 	}
 }
 

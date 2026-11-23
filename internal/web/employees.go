@@ -381,10 +381,11 @@ type treeNode struct {
 }
 
 type treeDetails struct {
-	Title   *string `json:"title"`
-	Team    string  `json:"team"`
-	Directs int     `json:"directs"`
-	OrgSize int     `json:"orgSize"`
+	Title         *string `json:"title"`
+	Team          string  `json:"team"`
+	Directs       int     `json:"directs"`
+	OrgSize       int     `json:"orgSize"`
+	ManagersBelow int     `json:"managersBelow"`
 }
 
 func teamNames(ts []store.Team) []string {
@@ -402,7 +403,7 @@ func (s *Server) employeesTree(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	sizes, err := s.st.OrgSizes(ctx, versionID)
+	orgs, err := s.st.OrgCounts(ctx, versionID)
 	if err != nil {
 		s.fail(w, r, err)
 		return
@@ -434,9 +435,10 @@ func (s *Server) employeesTree(w http.ResponseWriter, r *http.Request) {
 		if e.Title.Valid {
 			title = &e.Title.String
 		}
+		pid := strings.ToLower(e.PersonID)
 		nodes[i] = treeNode{ID: e.ID, Title: e.DisplayName(), Details: treeDetails{
 			Title: title, Team: strings.Join(teamNames(teams[e.ID]), ", "),
-			Directs: counts[e.DataVersionID][strings.ToLower(e.PersonID)], OrgSize: sizes[strings.ToLower(e.PersonID)],
+			Directs: counts[e.DataVersionID][pid], OrgSize: orgs[pid].Size, ManagersBelow: orgs[pid].ManagersBelow,
 		}}
 	}
 	b, err := json.Marshal(nodes)
@@ -457,6 +459,7 @@ type hierarchyNode struct {
 	Employee      store.Employee  `json:"employee"`
 	DirectsCount  int             `json:"directs_count"`
 	OrgSize       int             `json:"org_size"`
+	ManagersBelow int             `json:"managers_below"`
 	TeamNames     []string        `json:"team_names"`
 	DirectReports []hierarchyNode `json:"direct_reports"`
 }
@@ -472,9 +475,9 @@ func (s *Server) directReports(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	var sizes map[string]int
+	var orgs map[string]store.OrgCount
 	if m.DataVersionID.Valid {
-		if sizes, err = s.st.OrgSizes(ctx, m.DataVersionID.Int64); err != nil {
+		if orgs, err = s.st.OrgCounts(ctx, m.DataVersionID.Int64); err != nil {
 			s.fail(w, r, err)
 			return
 		}
@@ -496,7 +499,7 @@ func (s *Server) directReports(w http.ResponseWriter, r *http.Request) {
 	nodes := make([]hierarchyNode, len(reports))
 	for i, e := range reports {
 		pid := strings.ToLower(e.PersonID)
-		nodes[i] = hierarchyNode{Employee: e, DirectsCount: counts[pid], OrgSize: sizes[pid],
+		nodes[i] = hierarchyNode{Employee: e, DirectsCount: counts[pid], OrgSize: orgs[pid].Size, ManagersBelow: orgs[pid].ManagersBelow,
 			TeamNames: teamNames(teams[e.ID]), DirectReports: []hierarchyNode{}}
 	}
 	if wantsJSON(r) {
