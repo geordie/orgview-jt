@@ -4,19 +4,19 @@ import * as primitives from 'primitives';
 
 var control;
 var items = [];
-// Card body values by employee id: { title, team, directs, orgSize }
+// Card body values by employee id: { title, team, directs, orgSize, managersBelow }
 var details = {};
 
 document.addEventListener('DOMContentLoaded', function () {
 
 	var options = new primitives.OrgConfig();
 
-	// Card: name in the header; labelled Team, Title and Direct Reports rows in the body
-	var itemSize = new primitives.Size(260, 114);
+	// Card: name in the header; labelled Team, Title, Direct Reports, Org Size and Managers Below rows in the body
+	var itemSize = new primitives.Size(260, 136);
 	var borderWidth = 1;
 	var contentWidth = itemSize.width - borderWidth * 2;
 	// Prefixed so the "rowTitle" row cannot collide with the header element named "title"
-	var rowNames = ["rowTeam", "rowTitle", "rowDirects", "rowOrgSize"];
+	var rowNames = ["rowTeam", "rowTitle", "rowDirects", "rowOrgSize", "rowManagersBelow"];
 	var cardTemplate = new primitives.TemplateConfig();
 	cardTemplate.name = "employeeCardTemplate";
 	cardTemplate.itemSize = itemSize;
@@ -55,8 +55,8 @@ document.addEventListener('DOMContentLoaded', function () {
 		var item = data.context;
 		var info = details[item.id] || {};
 		var titleColor = item.itemTitleColor || primitives.Colors.RoyalBlue;
-		var rows = { rowTeam: info.team, rowTitle: info.title, rowDirects: info.directs, rowOrgSize: info.orgSize };
-		var labels = { rowTeam: "Team", rowTitle: "Title", rowDirects: "Direct Reports", rowOrgSize: "Org Size" };
+		var rows = { rowTeam: info.team, rowTitle: info.title, rowDirects: info.directs, rowOrgSize: info.orgSize, rowManagersBelow: info.managersBelow };
+		var labels = { rowTeam: "Team", rowTitle: "Title", rowDirects: "Direct Reports", rowOrgSize: "Org Size", rowManagersBelow: "Managers Below" };
 
 		var byName = function (name) {
 			return data.element.querySelector('[name="' + name + '"]');
@@ -127,7 +127,8 @@ function getDirectReports(managerId) {
 					title: report.employee.title,
 					team: (report.team_names || []).join(', '),
 					directs: report.directs_count,
-					orgSize: report.org_size
+					orgSize: report.org_size,
+					managersBelow: report.managers_below
 				};
 				items.push(new primitives.OrgItemConfig({
 					id: report.employee.id,

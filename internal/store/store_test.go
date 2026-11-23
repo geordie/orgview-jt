@@ -176,19 +176,23 @@ func TestBuildTeamStats(t *testing.T) {
 	}
 }
 
-func TestOrgSizesCountIndirectReportsAndSurviveLoops(t *testing.T) {
+func TestOrgCountsCountIndirectReportsAndSurviveLoops(t *testing.T) {
 	st := storetest.OpenWithFixtures(t)
-	sizes, err := st.OrgSizes(ctx, 1)
+	counts, err := st.OrgCounts(ctx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// EMP2183 > EMP2184 > EMP2185 > three developers.
-	if sizes["emp2183"] != 5 || sizes["emp2185"] != 3 || sizes["emp2186"] != 0 {
-		t.Errorf("sizes = %v", sizes)
+	if counts["emp2183"].Size != 5 || counts["emp2185"].Size != 3 || counts["emp2186"].Size != 0 {
+		t.Errorf("counts = %v", counts)
+	}
+	// Managers below: the reports at any depth who have reports of their own.
+	if counts["emp2183"].ManagersBelow != 2 || counts["emp2184"].ManagersBelow != 1 || counts["emp2185"].ManagersBelow != 0 {
+		t.Errorf("counts = %v", counts)
 	}
 	// A reporting loop must not recurse forever.
 	storetest.Exec(t, st, `UPDATE employees SET manager_id = 'EMP2186' WHERE person_id = 'EMP2183'`)
-	if _, err := st.OrgSizes(ctx, 1); err != nil {
+	if _, err := st.OrgCounts(ctx, 1); err != nil {
 		t.Fatal(err)
 	}
 }

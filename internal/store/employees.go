@@ -224,9 +224,15 @@ func (s *Store) TreeRoots(ctx context.Context, versionID int64) ([]Employee, err
 	return collectEmployees(rows)
 }
 
-// OrgSizes maps lower-cased person id to the number of people below them,
-// directly or indirectly, in a version. Reporting loops are counted once.
-func (s *Store) OrgSizes(ctx context.Context, versionID int64) (map[string]int, error) {
+// OrgCount is what sits below one person in the reporting line.
+type OrgCount struct {
+	Size          int // people below them, directly or indirectly
+	ManagersBelow int // of those, the ones someone lists as their manager
+}
+
+// OrgCounts maps lower-cased person id to the people below them in a
+// version. Reporting loops are counted once.
+func (s *Store) OrgCounts(ctx context.Context, versionID int64) (map[string]OrgCount, error) {
 	rows, err := s.DB.QueryContext(ctx, `SELECT person_id, manager_id FROM employees WHERE data_version_id = ? ORDER BY id`, versionID)
 	if err != nil {
 		return nil, err
@@ -250,29 +256,34 @@ func (s *Store) OrgSizes(ctx context.Context, versionID int64) (map[string]int, 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	sizes := map[string]int{}
-	var sizeOf func(pid string, path []string) int
-	sizeOf = func(pid string, path []string) int {
-		if n, ok := sizes[pid]; ok {
-			return n
+	counts := map[string]OrgCount{}
+	var countOf func(pid string, path []string) OrgCount
+	countOf = func(pid string, path []string) OrgCount {
+		if c, ok := counts[pid]; ok {
+			return c
 		}
-		n := 0
+		var c OrgCount
 		for _, r := range reports[pid] {
 			inPath := false
 			for _, p := range path {
 				inPath = inPath || p == r
 			}
 			if !inPath {
-				n += 1 + sizeOf(r, append(append([]string{}, path...), pid))
+				rc := countOf(r, append(append([]string{}, path...), pid))
+				c.Size += 1 + rc.Size
+				c.ManagersBelow += rc.ManagersBelow
+				if len(reports[r]) > 0 {
+					c.ManagersBelow++
+				}
 			}
 		}
-		sizes[pid] = n
-		return n
+		counts[pid] = c
+		return c
 	}
 	for _, p := range people {
-		sizeOf(p, nil)
+		countOf(p, nil)
 	}
-	return sizes, nil
+	return counts, nil
 }
 
 // EmployeeFields are the editable employee fields, as submitted. A nil field
